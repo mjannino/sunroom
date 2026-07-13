@@ -7,18 +7,24 @@
 
 ## 1. What Sunroom Is
 
-Sunroom is a deployable, site-agnostic CMS for bespoke client sites. It is installed into a static
-Next.js site as an npm package and deployed once per client as its own small application.
+Sunroom is an npm package that turns a bespoke Next.js site into a client-editable one.
+
+You build a fully styled, component-based site for a client. You install Sunroom, register your
+components with a field schema, and the client gets a CMS at `/admin` on their own domain — served by
+their own site, in the same process.
 
 The product line is deliberate and load-bearing:
 
 - **The client owns content and composition.** Copy, images, which pages exist, what they are called,
   which sections appear on a page and in what order.
-- **The developer owns layout and styling.** How a section looks, its internal layout, its CSS,
-  its transitions, its behaviour. Sunroom never touches this.
+- **The developer owns layout and styling.** How a section looks, its internal layout, its CSS, its
+  transitions, its behaviour. Sunroom never touches this.
 
 Sunroom is not a page builder, a design tool, or a component library. It is a typed content layer that
 knows how to render *your* components with *their* content.
+
+**Sunroom is site-agnostic, not framework-agnostic.** One codebase serves every client; it targets Next.js
+App Router exclusively, and that coupling is where the simplicity comes from. See §3.
 
 ### Non-goals for v1
 
@@ -27,51 +33,67 @@ knows how to render *your* components with *their* content.
 - Global content editing (nav menus, footer). Navigation is derived from the page list instead.
 - Nested layout containers (rows, columns, grids). Composition is a flat, ordered section list.
 - Click-the-page inline editing. The editor is a form plus an iframe preview.
-- Multi-tenancy. One Sunroom instance serves exactly one client site.
+- Multi-tenancy. One installation serves exactly one client site.
+- Any framework other than Next.js App Router.
 
 ---
 
 ## 2. Architecture
 
-Two artifacts and one contract.
+**There is no CMS deployment.** Sunroom is a single npm package that mounts into the client's Next app.
+The client's site *is* the deployment: `acme.com` serves the site, `acme.com/admin` serves the CMS, and
+both are one Next process in one container.
 
-| Artifact | What it is | Where it runs |
-|---|---|---|
-| `@sunroom/next` | npm package installed into a client site | The client's Next.js app |
-| `sunroom` | The CMS: admin UI + content API | One deployment per client |
-| `@sunroom/core` | Field schemas and manifest types — the shared contract | Both, as a dependency |
+### The integration surface
 
-They communicate over HTTP with two keys: a **read key** (site → CMS, to fetch content) and a
-**shared secret** (CMS → site, to fetch the manifest and to trigger revalidation).
+Four files, and that is the whole of it:
 
-### The contract: the manifest
+```
+sunroom.config.ts                        # your component registry
+app/[[...slug]]/page.tsx                 # the public site   → SunroomPage
+app/admin/[[...segments]]/page.tsx       # the CMS           → SunroomAdmin
+app/api/sunroom/[[...route]]/route.ts    # oauth callback + upload presigning
+```
 
-The developer registers components with a field schema. The registry, minus the React components,
-serializes to JSON — that JSON is the **manifest**. The CMS pulls it and generates editor forms from it.
+### Everything is in-process
 
-This is why the developer's code is the single source of truth. There is no schema to keep in sync by
-hand and no build step to forget.
+The renderer and the editor share memory.
+
+- `SunroomPage` reads the content index **by function call**, not over HTTP.
+- The admin **imports the registry directly** from `sunroom.config.ts`. There is no manifest, no
+  serialization boundary, no protocol.
+- A save is a server action that mutates the index, commits to git, and calls `revalidateTag()` **in the
+  same function body**. It cannot fail to arrive.
+
+The only network calls in the entire system are the R2 upload and the R2 backup mirror. Neither is on the
+critical path for serving a page or saving an edit.
+
+### Why this is right
+
+An earlier revision of this design had Sunroom as a separately-deployed CMS talking to the site over HTTP:
+a manifest endpoint, a read key, a shared secret, a revalidation webhook with retry logic, a manifest
+cache, and four distinct failure modes. **Every one of those was an artifact of it being a distributed
+system.** Merging the two deleted them all. When a design change erases most of your failure-mode section,
+the failure modes were telling you the architecture was wrong.
 
 ### Data flow
 
 ```
-                  manifest (GET, secret)
-      ┌──────────────────────────────────────┐
-      │                                      ▼
-┌───────────┐                          ┌───────────┐         ┌──────────────┐
-│  Sunroom  │  ── revalidate (POST) ─▶ │  Client   │         │ Content repo │
-│    CMS    │                          │   site    │         │   (private)  │
-│           │ ◀── content (GET, key) ─ │  (Next)   │         └──────────────┘
-└───────────┘                          └───────────┘                 ▲
-      │                                      │                       │
-      │                                      └── snapshot at build ──┤
-      └──────────────── commit + push ───────────────────────────────┘
-
-                        ┌──────────┐
-                        │ R2 / S3  │  ◀── presigned PUT (browser) ──┐
-                        └──────────┘                                │
-                              ▲                                     │
-                              └───────── <img> at render ───────────┘
+┌──────────────────────────────────────────────────┐
+│  One Next.js container (the client's site)       │
+│                                                  │
+│   /            SunroomPage  ──┐                  │
+│   /admin       SunroomAdmin ──┤                  │      ┌───────────┐
+│                               ▼                  │      │  R2 / S3  │
+│                        ContentStore              │      │           │
+│                               │                  │      │  media    │
+│                               ▼                  │      │  backups  │
+│                    local git repo (volume)  ─────┼─────▶│           │
+│                                                  │      └───────────┘
+│                    build-time snapshot           │            ▲
+└──────────────────────────────────────────────────┘            │
+                                                       presigned PUT
+                                                        (browser)
 ```
 
 ---
@@ -80,23 +102,41 @@ hand and no build step to forget.
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Site framework | **Next.js App Router** | RSC + a catch-all route makes CMS-defined routing natural; ISR resolves the "static but editable" tension; biggest ecosystem. |
-| Delivery model | **Runtime fetch + on-demand revalidation** | Live edits in seconds with no rebuild and no CI wiring. Visitors are still served cached static HTML. |
-| Topology | **One CMS instance per client site** | No tenant scoping anywhere. Simple auth, simple data, and each client can own their instance. |
+| Framework | **Next.js App Router, exclusively** | A catch-all route makes CMS-defined routing natural; server actions + `revalidateTag` make the in-process design possible. The coupling *is* the simplification. |
+| Packaging | **One npm package, mounted into the site** | No second deployment, no protocol between two halves, no keys, no webhooks. |
+| Hosting | **Long-lived Node container** (Fly, Railway, Render, VPS) | The store needs a persistent process and a writable disk. |
+| Delivery | **In-process reads + `revalidateTag` on save** | Live edits in milliseconds. Visitors are still served cached static HTML. |
 | Composition | **Flat ordered list of sections** | Matches the product line. Clients want to move testimonials above pricing, not operate a layout engine. |
-| Schema source | **Site exposes a manifest endpoint; CMS pulls it** | Code stays the single source of truth. No build step to forget, works in local dev. |
-| Storage | **Git-backed JSON** | No database, no volume, no backup story to build. Continuous per-file point-in-time restore and an audit trail, for free. |
-| Media | **S3-compatible (R2 default), presigned uploads** | The CMS never proxies bytes. Portable across R2/S3/MinIO. `next/image` handles optimization. |
+| Schema source | **The registry in your code, imported directly** | Code is the single source of truth. Nothing to sync, no build step to forget. |
+| Storage | **Local git repo on the volume** | Full history, per-file point-in-time restore, an audit trail, and safe revertible migrations — with **zero external dependencies and zero setup**. Git is a local binary, not a vendor. |
+| Durability | **Mirror to R2 after each commit** | R2 is already in the stack for media, so this adds no new vendor, account, or token. Never on the save path. |
+| Media | **S3-compatible (R2 default), presigned uploads** | The app never proxies bytes. Portable across R2/S3/MinIO. `next/image` handles optimization. |
 | Auth | **Google OAuth + env allowlist** | No email infrastructure, no passwords, no reset burden. Real per-user identity, so git commits carry a genuine audit trail. |
-| Monorepo | **pnpm workspaces** | Three packages sharing one contract. |
+
+### The dependency ledger
+
+| Service | Used for | If it's down |
+|---|---|---|
+| Google | Sign-in only | The client can't log in. **The site serves normally.** |
+| R2 | Media storage + backup mirror | **Saves still work** (durable locally). Backups queue and retry. Existing images still serve. |
+| *(nothing else)* | | |
+
+**Nothing external is required for the client's website to serve, or for the client to edit content.**
 
 ### Explicitly rejected
 
-- **Postgres/SQLite.** A 20-page marketing site is a few hundred kilobytes of JSON. There is no query
+- **Postgres / SQLite.** A 20-page marketing site is a few hundred kilobytes of JSON. There is no query
   planner to earn its keep and no index to justify. A database here is a service you operate in exchange
   for capabilities you will never use.
-- **Build-on-publish.** Every copy tweak becomes a 1–3 minute build, and CI must be wired per client.
-- **A versioned migration system.** Cut deliberately. See §7.
+- **A git remote (GitHub or otherwise).** The remote was an unnecessary external dependency and a
+  per-client setup chore. A local repo delivers every benefit that made git the right choice; R2 covers
+  durability using infrastructure already in the stack.
+- **Build-on-publish.** Every copy tweak becomes a multi-minute build.
+- **Serverless hosting.** Incompatible with the in-process store. Chosen against deliberately.
+- **A versioned migration system.** Designed, then cut. See §7.
+- **Framework-agnosticism / a headless HTTP API.** Would preserve the serialization boundary — paid for on
+  every client — to serve a site that may never exist. The `ContentStore` interface remains the seam if
+  this is ever wrong.
 - **`mailto:` forms.** Deferred with the rest of forms, but noted as a dead end: it depends on the
   *visitor's* mail client, drops leads silently, and leaks the client's address to scrapers.
 
@@ -108,7 +148,7 @@ hand and no build step to forget.
 
 ```ts
 // sunroom.config.ts
-import { defineSunroom, defineSection, f } from '@sunroom/next'
+import { defineSunroom, defineSection, f } from 'sunroom'
 import Hero from '@/components/Hero'
 import Testimonials from '@/components/Testimonials'
 
@@ -146,18 +186,20 @@ continuing to render existing instances. See §7.
 
 `text`, `textarea`, `richText`, `image`, `number`, `boolean`, `select`, `link`, `object`, `array`.
 
-Each `f.*` returns a plain serializable descriptor: `{ type, label?, required?, ... }`. `object` and
-`array` nest other descriptors. No functions, no validators — the registry must survive `JSON.stringify`.
+Each `f.*` returns a plain descriptor: `{ type, label?, required?, ... }`. `object` and `array` nest other
+descriptors.
 
 Rich text is edited with TipTap and stored as an HTML string, so a component renders it directly.
 
-### Routing
+> Note: descriptors no longer need to survive `JSON.stringify` — the admin imports them directly. They are
+> kept plain and serializable anyway, because the CLI reads them and because a serializable registry keeps
+> the door open to a headless mode.
 
-The entire routing setup for a client site:
+### Routing
 
 ```tsx
 // app/[[...slug]]/page.tsx
-import { SunroomPage, sunroomParams, sunroomMetadata } from '@sunroom/next'
+import { SunroomPage, sunroomParams, sunroomMetadata } from 'sunroom'
 
 export const generateStaticParams = sunroomParams
 export const generateMetadata     = sunroomMetadata
@@ -166,6 +208,9 @@ export default SunroomPage
 
 `SunroomPage` resolves the page by slug, walks its ordered section list, looks each `type` up in the
 registry, and renders `<Component {...props} />`.
+
+`/admin` and `/api` are more specific routes and therefore win over the catch-all. To prevent a client
+from shadowing their own CMS, **`admin` and `api` are reserved slugs** and the CMS rejects them.
 
 ### Escape hatches
 
@@ -176,49 +221,40 @@ const page  = await getPage('about')  // pull CMS content into a hand-written ro
 
 `getPages()` is how navigation works without a nav editor.
 
-### Routes the SDK auto-mounts
-
-| Route | Caller | Purpose |
-|---|---|---|
-| `GET /api/sunroom/manifest` | CMS | Serves the serialized registry. Requires the shared secret. |
-| `POST /api/sunroom/revalidate` | CMS, on save | Verifies the secret, calls `revalidateTag`. |
-
 ### CLI
 
 | Command | Purpose |
 |---|---|
 | `sunroom check` | CI guardrail. Fails on orphaned content and destructive schema changes. See §7. |
-| `sunroom snapshot` | Prebuild step. Writes all content into the bundle as a fallback. See §7. |
+| `sunroom snapshot` | Prebuild step. Bakes content into the image. See §7. |
 | `sunroom migrate ./script.js` | One-off content codemod runner. See §7. |
+| `sunroom restore` | Rebuild a volume from the R2 backup. See §5. |
 
 ---
 
 ## 5. Storage
 
-### The content repo
-
-Each CMS instance is pointed at a **private content repo**, separate from the client's site code repo.
-The CMS is its only writer.
+### Layout on the volume
 
 ```
-content/
+/data/content/          # a local git repository — no remote, no tokens, no setup
   pages/
     index.json          # one file per page — a save is one atomic write
     about.json
     services.json
   media/index.json      # image metadata only; bytes live in R2
-  settings.json         # site url, seo defaults, redirects, cached manifest
+  settings.json         # site settings, seo defaults, redirects
 ```
 
-Keeping content out of the *site* repo is deliberate: a content commit there would trip the site's CI and
-redeploy on every copy tweak — precisely the build-on-publish model that was rejected.
+`git init` runs on first boot. There is no remote. Git is an implementation detail of the store — you never
+run a git command, and the client never learns the word.
 
 **Images never enter git.** Binaries would bloat the repo irrecoverably. Git holds text; R2 holds bytes.
 
 ### Page document shape
 
 ```jsonc
-// content/pages/about.json
+// pages/about.json
 {
   "slug": "about",
   "title": "About Us",
@@ -236,121 +272,123 @@ migration of any kind — the schema lives in code, and the store holds whatever
 
 ### Reads are served from memory
 
-At boot the CMS clones the repo and loads every JSON file into an in-memory index. The content API is
-served from RAM — no disk read, no parse, no network per request. For a dataset this size, holding it all
-in memory is not a compromise; it is the correct answer.
+At boot the store loads every JSON file into an in-memory index. Reads are RAM. For a dataset this size,
+holding it all in memory is not a compromise; it is the correct answer.
 
-### A save, end to end
+### A save
 
-1. The client edits a field and saves.
-2. The CMS takes an in-process write lock.
-3. It verifies the base commit SHA the editor was loaded against (see §7, concurrency).
-4. It updates the in-memory page, writes `content/pages/about.json`, **commits** (authored as the
-   signed-in user), and **pushes**.
-5. Only after the push succeeds does it `POST` to the site's `/api/sunroom/revalidate` with
-   `{ tags: ['page:about'] }`.
-6. The SDK verifies the secret and calls `revalidateTag('page:about')`. Next drops the cached HTML for
+1. The admin server action takes an in-process write lock.
+2. It verifies the base commit SHA the editor was loaded against (§7, concurrency).
+3. It updates the in-memory page, writes `pages/about.json`, and **commits** — authored as the signed-in
+   user.
+4. It calls `revalidateTag('page:about')` **in the same function**. Next drops the cached HTML for
    `/about` and nothing else.
+5. It queues an R2 mirror.
 
-**The ordering is the point.** Push before revalidate: if the push fails, the in-memory state is rolled
-back and the save is reported as failed — rather than showing a success toast for content that would
-vanish on the next redeploy.
+**Total: a few milliseconds. No network on the save path.** The save is durable the moment the commit
+lands on the volume.
 
 Structural changes (create, rename, delete a page) additionally revalidate a global `pages` tag, so the
 nav updates everywhere at once.
 
+### The R2 backup mirror
+
+After a commit lands, the store mirrors two objects to the media bucket:
+
+- **`content.bundle`** — a `git bundle` of the entire repository. Full history in one file. Restore is a
+  `git clone` of the bundle. A few hundred kilobytes.
+- **The plain JSON tree** — so content can be read and restored with no tooling and no git knowledge.
+
+**The mirror can never fail a save.** The save has already succeeded on the volume. The mirror retries with
+backoff, and the CMS shows a quiet "backup pending" state. Making R2 a hard requirement for *editing*
+would reintroduce exactly the external fragility this design exists to avoid.
+
+### Boot resolution order
+
+1. The volume has a repo → **use it.**
+2. Fresh volume, R2 bundle exists → **restore from the bundle** (`sunroom restore` does this manually too).
+3. No bundle, but the image has a build-time snapshot → **seed the repo from the snapshot.**
+4. Nothing at all → **`git init` an empty site.**
+
+Every path ends with the site serving.
+
+### Deployment constraint: a single instance
+
+The app holds mutable state in memory *and* on disk. **It must run as one instance.** Two containers means
+a save on one leaves the other with a stale index and a stale ISR cache.
+
+One container is amply sufficient for a small-business marketing site. But this is a real constraint, not
+a free choice, and it must be documented in the onboarding runbook — otherwise a future replica-count bump
+produces a genuinely baffling bug.
+
 ---
 
-## 6. The CMS Application
+## 6. The Admin
 
-A Next.js app with a Dockerfile, deployed once per client.
-
-### Screens
+Mounted at `/admin` in the client's own site. Four screens, no more.
 
 - **Pages** — list, create (slug + title), rename, delete, reorder. Order drives `getPages()`.
 - **Page editor** — a left rail with the ordered section list (drag to reorder; `+ Add section` opens a
-  palette built from the manifest, with thumbnails); a form on the right generated from the selected
+  palette built from the registry, with thumbnails); a form on the right generated from the selected
   section's field schema; an iframe preview of the live page that reloads after save.
 - **Media** — upload grid, alt text, and the picker that `f.image()` fields open.
-- **Settings** — site URL, SEO defaults, "Refresh components".
+- **Settings** — SEO defaults, redirects, backup status.
 
-### The manifest cache
-
-The CMS pulls the manifest on boot and on demand, and **persists the last good copy in `settings.json`**.
-If the client's site is down or mid-deploy, the client can still edit their content. They are never locked
-out of the CMS because a build is broken.
+The admin **imports the registry directly**. There is no manifest to fetch, cache, or invalidate, and no
+state in which the editor and the renderer disagree about what components exist.
 
 ### Auth
 
-Google OAuth. `SUNROOM_EDITORS` in env holds an email allowlist. A session is a signed cookie derived
-from a server-side secret. **No credentials are persisted anywhere** — which is exactly what a stateless
-container wants.
-
-An owner-bypass token in env exists for developer access.
+Google OAuth. `SUNROOM_EDITORS` in env holds an email allowlist. A session is a signed cookie derived from
+a server-side secret. **No credentials are persisted anywhere.** An owner-bypass token in env exists for
+developer access.
 
 Per-user identity is load-bearing beyond access control: every save is a git commit authored by the
 signed-in user, so the audit trail is real.
 
-### Content API (consumed by the SDK)
-
-| Route | Auth | Returns |
-|---|---|---|
-| `GET /api/content/pages` | read key | `[{ slug, title, position }]` |
-| `GET /api/content/pages/:slug` | read key | Full page, with media ids resolved to `{ url, width, height, alt }` |
-| `GET /api/content/redirects` | read key | `[{ from, to }]` |
-| `GET /api/content/snapshot` | read key | Entire content set, for the build-time snapshot |
-
-Media ids are resolved server-side so components receive everything needed to render a correctly-sized
-`next/image` with no layout shift.
+The OAuth callback is on the client's own domain (`acme.com/api/sunroom/auth/callback`). One Google OAuth
+app serves every client; each deploy adds a callback URL.
 
 ---
 
 ## 7. Failure Modes and Their Solutions
 
 Each failure is made **impossible by construction**, **caught in CI**, or **degraded but still serving**.
-None are left as "warn and hope".
+None are left as "warn and hope."
 
-The through-line, which is the standard to hold the implementation to:
+The standard to hold the implementation to:
 
-> **The CMS can be down, mid-deploy, or a version behind, and the client's site still serves correct pages.**
+> **Nothing external can stop the client's site from serving, or stop the client from editing it.**
 
-### CMS outage cannot break the site
+### The site must boot even if R2 is unreachable
 
-The site must not have a hard runtime dependency on the CMS. ISR alone is insufficient — a cold cache plus
-a down CMS is a dead site.
+Merging the CMS into the site created a new and more serious single point of failure: if content can't be
+loaded, the *website* is down, not just the CMS.
 
-**Solution: a build-time snapshot as the floor.** `sunroom snapshot` runs as a prebuild step, pulls the
-full content set, and writes it into the bundle. Resolution order at render time is **ISR cache → CMS →
-snapshot**. A CMS outage degrades the site to "content as of last deploy" instead of taking it down. The
-CMS is an enhancement layer, not a load-bearing runtime dependency.
+**Solution: content is baked into the image at build.** `sunroom snapshot` runs as a prebuild step and
+writes the content tree into the bundle. Boot resolution (§5) falls back to it. A fresh volume with R2
+unreachable still serves — content as of the last deploy — rather than failing to start.
 
-### A failed revalidate webhook cannot strand content
+### The volume can be lost
 
-A save is durable the moment it is pushed, so a webhook failure is staleness, never data loss. But a
-permanently broken webhook (rotated secret, moved site) means the client edits and nothing changes.
+**Solution: the R2 mirror**, plus the build snapshot as a second floor. Worst realistic case is losing the
+seconds between the last commit and the last successful mirror.
 
-**Solution: an ISR time floor of `revalidate: 300`.** Even with the webhook completely dead, the site
-self-heals within five minutes. This demotes the webhook from a correctness requirement to a fast path —
-it exists to make saves feel instant, not to make them work. On failure the CMS retries with backoff and
-reports honestly ("Saved, but the site hasn't refreshed yet") rather than showing a green check.
+`sunroom restore` rebuilds a volume from the bundle.
 
 ### The git working copy can never be corrupt
 
-**Solution: the remote is the only truth, and no durable local state exists.** Boot is unconditionally
-`fetch && reset --hard origin/main`, discarding any mess from a crashed save. A save is one transaction —
-write → commit → push — and any failure triggers a reset and an in-memory reload. There is no half-state
-to recover from because the working copy is never trusted across a save boundary.
+**Solution: a save is one transaction** — write → commit — and any failure resets the working tree and
+reloads the in-memory index from disk. The working copy is never trusted across a save boundary. Because
+the commit is local and atomic, there is no partially-pushed state to reconcile.
 
 ### Concurrent edits cannot silently clobber
 
-One file per page means edits to *different* pages never touch the same file; git rebases those cleanly,
-so that case is free.
+One file per page means edits to *different* pages never touch the same file.
 
 For the same page: **optimistic concurrency**. The editor loads a page along with the commit SHA it was
 based on and returns that SHA on save. If HEAD has moved for that file, the save is rejected with a real
 conflict message. A silent clobber becomes a visible, correct refusal.
-
-A rejected push (e.g. the repo was hand-edited) triggers one rebase-and-retry before surfacing an error.
 
 ### A rename or deletion cannot destroy content
 
@@ -368,9 +406,9 @@ So instead:
   *"content on 3 pages uses `hero.heading`, which your schema no longer declares."* The rename cannot be
   merged.
 - **`sunroom migrate ./rename-heading.js`** runs a one-off content codemod: load content, apply a plain
-  function, write back as one commit. A script runner, not a framework. Inspect the diff; revert if wrong.
+  function, commit. A script runner, not a framework. Inspect the diff; `revert` if wrong.
 
-This is where git-backed storage pays for itself: a bad content migration is one `revert` away, with no
+This is where git-backed storage pays for itself: a bad content migration is one revert away, with no
 backup-and-restore dance.
 
 ### Deleting a component converges instead of breaking
@@ -382,12 +420,12 @@ converges rather than an event that breaks a page.
 
 ### Renaming a page cannot break inbound links
 
-**Solution: slug changes write a redirect automatically.** The CMS records the old slug in
-`settings.json`; the SDK feeds these to Next's `redirects()`. Business cards, search rankings, and links
-in old emails keep working — and the client never had to know it was something to worry about.
+**Solution: slug changes write a redirect automatically.** The CMS records the old slug in `settings.json`;
+the SDK feeds these to Next's `redirects()`. Business cards, search rankings, and links in old emails keep
+working — and the client never had to know it was something to worry about.
 
-Deleting a page warns if a link field on another page points at it. Duplicate slugs are rejected. The
-homepage cannot be deleted.
+Deleting a page warns if a link field on another page points at it. Duplicate slugs are rejected. `admin`
+and `api` are reserved. The homepage cannot be deleted.
 
 ### Media upload failure cannot orphan a record
 
@@ -403,21 +441,22 @@ recorded) is harmless and reclaimable by a future `sunroom gc`.
 | A registered section's fields do not match its component's props | **Fail** (also caught at the type level) |
 | A component file matching an opt-in glob is registered nowhere | Warn |
 
-Requires read access to the CMS from CI — a read-only call with the read key.
+Runs entirely locally: it reads the content repo and imports the registry. No running service required.
 
 ---
 
 ## 8. Repository Layout
 
 ```
-packages/core          # field schemas + manifest types — the contract, shared by both sides
-packages/next          # @sunroom/next — defineSunroom, SunroomPage, routes, getPages, CLI
-apps/cms               # the CMS (Next.js + Dockerfile) — deployed once per client
-examples/demo-site     # a bespoke demo site: reference implementation and E2E target
+packages/sunroom       # the single package
+  src/core/            #   field schemas, types
+  src/store/           #   ContentStore + GitStore + R2 mirror
+  src/render/          #   SunroomPage, getPages, getPage
+  src/admin/           #   the editor UI
+  src/api/             #   oauth callback, upload presigning
+  src/cli/             #   check, snapshot, migrate, restore
+examples/demo-site     # a bespoke reference site + E2E target
 ```
-
-`packages/core` existing as its own package is load-bearing: it is the only code both the CMS and the
-client sites depend on, and it is what keeps "the editor" and "the renderer" from growing into each other.
 
 ---
 
@@ -427,58 +466,54 @@ Each phase ends in a state that is demonstrable and independently verifiable.
 
 ### Phase 0 — Scaffolding
 
-pnpm workspace, TypeScript project references, shared lint/format/test config (Vitest), CI running
-lint + typecheck + test.
+pnpm workspace, TypeScript, subpath exports from the package, shared lint/format/test config (Vitest), CI
+running lint + typecheck + test.
 
-**Done when:** an empty test passes in all three packages under CI.
+**Done when:** an empty test passes under CI, and `examples/demo-site` imports the package.
 
-### Phase 1 — `@sunroom/core`: the contract
+### Phase 1 — The registry
 
-Field descriptor types and the `f.*` builders. Manifest types. Serialization and validation of a registry
-into a manifest. Runtime validation of a `props` blob against a field schema.
+Field descriptor types and the `f.*` builders. `defineSunroom` / `defineSection`. Runtime validation of a
+`props` blob against a field schema.
 
-**Done when:** a registry round-trips through `JSON.stringify` → parse → validate with no loss, and
-malformed props are rejected with a useful error. Property-based tests over nested `object`/`array`.
+**Done when:** a registry type-checks, and malformed props are rejected with a useful error. Property-based
+tests over nested `object` / `array`.
 
 ### Phase 2 — `GitStore`: persistence
 
-The `ContentStore` interface (`getPage`, `listPages`, `savePage`, `deletePage`, `media`, `settings`) and
-its git-backed implementation. Boot clone + `reset --hard`. In-memory index. Write lock. Atomic
-write → commit → push with reset-on-failure. Rebase-and-retry. Commit-SHA optimistic concurrency.
+The `ContentStore` interface (`getPage`, `listPages`, `savePage`, `deletePage`, `media`, `settings`) and its
+local-git implementation. `git init` on first boot. In-memory index. Write lock. Atomic write → commit with
+reset-on-failure. Commit-SHA optimistic concurrency.
 
-Tested against a **local bare repo in a temp dir** — no network. This is the component trusted least on
-faith, so it is tested hardest: commit, push, conflicting push, rebase, crash mid-save, stale-SHA rejection.
+Boot resolution (§5) is built here **only for the two local paths** — existing repo, and `git init` on an
+empty volume. The R2-bundle and snapshot paths depend on machinery that does not exist until Phases 6 and
+7; the resolution chain is written with those as explicit gaps and filled in there.
 
-**Done when:** the crash and conflict tests pass, and a killed process at any point in a save leaves the
-store recoverable to a consistent state on next boot.
+Tested against a **temp directory**, no network. This is the component trusted least on faith, so it is
+tested hardest: commit, stale-SHA rejection, crash mid-save, and both local boot paths.
 
-### Phase 3 — CMS: auth and content API
+**Done when:** a process killed at any point during a save leaves the store recoverable to a consistent
+state on the next boot.
 
-Google OAuth with the env allowlist, signed session cookies, owner bypass. The read-key-authenticated
-content API (`pages`, `pages/:slug`, `redirects`, `snapshot`). Manifest fetch + persistence to
-`settings.json`.
+### Phase 3 — Rendering
 
-The SDK that *serves* a manifest does not exist until Phase 4, so manifest fetching is built and tested
-here against a **static fixture manifest** served by a stub. Phase 4 replaces the stub with the real
-endpoint; the fetch-and-persist logic does not change.
+`SunroomPage`, `sunroomParams`, `sunroomMetadata`. `getPages` / `getPage`. Cache tags. Reserved slugs.
 
-**Done when:** an integration test signs in, and the content API serves a fixture content repo with
-correct auth rejection on a bad key.
+**Done when:** `examples/demo-site` renders real pages from a fixture content repo, and unknown section
+types are skipped with a dev-time warning.
 
-### Phase 4 — `@sunroom/next`: the SDK
+### Phase 4 — Auth
 
-`defineSunroom` / `defineSection` / `f`. The manifest route handler. `SunroomPage`, `sunroomParams`,
-`sunroomMetadata`. `getPages` / `getPage`. The revalidate route handler with secret verification.
-Cache tags. The `revalidate: 300` floor.
+Google OAuth, the env allowlist, signed session cookies, owner bypass. Route protection for `/admin`.
 
-**Done when:** a fixture Next app renders a page from a mocked CMS; unknown section types are skipped with
-a dev warning; the revalidate route rejects a bad secret and busts the correct tag on a good one.
+**Done when:** an allowlisted user can sign in, a non-allowlisted user cannot, and `/admin` is unreachable
+while signed out.
 
-### Phase 5 — CMS: the editor
+### Phase 5 — The editor
 
 Pages list (create, rename, delete, reorder). The page editor: section rail with drag-reorder, the Add
-Section palette built from the manifest, and the field-schema-driven form renderer (all v1 field types,
-TipTap for `richText`). The iframe preview. Save → commit → revalidate, wired end to end.
+Section palette built from the registry, and the field-schema-driven form renderer (all v1 field types,
+TipTap for `richText`). The iframe preview. Save → commit → `revalidateTag`, wired end to end.
 
 **Done when:** a section can be added, edited, reordered, and saved, and the change appears on the live
 site — via a real revalidation, not a full reload.
@@ -486,33 +521,36 @@ site — via a real revalidation, not a full reload.
 ### Phase 6 — Media
 
 R2/S3 adapter. Presigned upload from the browser. Media library UI. The `f.image()` picker. Media id →
-`{ url, width, height, alt }` resolution in the content API. Commit-after-upload ordering.
+`{ url, width, height, alt }` resolution at render. Commit-after-upload ordering.
 
-**Done when:** an image is uploaded, chosen in a field, and rendered on the live site through
-`next/image` with correct dimensions and no layout shift.
+**Done when:** an image is uploaded, chosen in a field, and rendered on the live site through `next/image`
+with correct dimensions and no layout shift.
 
-### Phase 7 — Resilience
+### Phase 7 — Durability and resilience
 
-Everything in §7 that is not already implicit in earlier phases: `sunroom snapshot` and the
-cache → CMS → snapshot resolution chain; automatic slug redirects; `deprecated: true`; `sunroom check`;
-`sunroom migrate`.
+The R2 backup mirror (bundle + JSON tree) with retry and backup status in the UI. `sunroom snapshot` and
+the build-time snapshot floor. `sunroom restore`. Automatic slug redirects. `deprecated: true`.
+`sunroom check`. `sunroom migrate`.
 
-**Done when:** the site renders correctly **with the CMS process stopped and the ISR cache cold**; a slug
-rename leaves the old URL redirecting; and `sunroom check` fails a destructive rename in CI.
+**Done when:**
+- The site boots and serves **on a fresh volume with R2 unreachable** (snapshot path).
+- The site boots and serves **on a fresh volume with R2 reachable** (bundle-restore path).
+- A slug rename leaves the old URL redirecting.
+- `sunroom check` fails a destructive rename in CI.
 
-Phase 7 is where the product's central promise is actually proven. It is not polish.
+Phase 7 is where the product's central promise is proven. **It is not polish.** If schedule pressure
+appears, this is the phase that will look cuttable and is not.
 
-### Phase 8 — Demo site, E2E, and deployment
+### Phase 8 — Demo site, E2E, and onboarding
 
 `examples/demo-site`: a small bespoke site with three or four real, fully-styled sections — the reference
-implementation, and the E2E target.
+implementation and the E2E target.
 
 One Playwright E2E walking the true path: sign in → create a page → add a section → edit a field → upload
-an image → save. It asserts that **a commit landed in the test content repo and the revalidate webhook
-fired**.
+an image → save → assert the change is live and a commit landed.
 
-Dockerfile, deployment documentation, and a client-onboarding runbook (create the content repo, mint the
-tokens, register the OAuth callback, set env).
+Dockerfile, deployment documentation, and a client-onboarding runbook (provision the container and volume,
+create the R2 bucket, register the OAuth callback, set env, **pin to one instance**).
 
 **Done when:** a new client site can be stood up end to end by following the runbook alone.
 
@@ -522,9 +560,10 @@ tokens, register the OAuth callback, set env).
 
 | Feature | The door |
 |---|---|
-| **Drafts + preview** | Content is already git-backed and versioned; drafts become a branch and publish becomes a merge. All writes go through one `savePage()` service function, so the split touches one module. The SDK reserves `/api/sunroom/preview`. |
-| **Forms + submission inbox** | Submissions are content: they land in the content repo and surface as an inbox screen. Notification is the one place a transactional email key (Resend) earns its keep — and it is a *form* dependency, not an *auth* one, so a broken key never locks anyone out of the CMS. |
+| **Drafts + preview** | Content is already git-backed and versioned; drafts become a branch and publish becomes a merge. All writes go through one `savePage()` service function, so the split touches one module. |
+| **Forms + submission inbox** | Submissions are content: they land in the content repo and surface as an inbox screen. Notification is the one place a transactional email key would earn its keep — and it would be a *form* dependency, not an *auth* one, so a broken key could never lock anyone out. |
 | **Global content (nav, footer)** | Falls out of the existing field-schema machinery applied to a `globals.json`. |
 | **Inline click-to-edit** | An iframe postMessage bridge over the existing editor. |
-| **Postgres / other stores** | The `ContentStore` interface is the seam. |
+| **A headless HTTP API / other frameworks** | The `ContentStore` interface is the seam. A thin route layer over it would be about a week's work — but nothing is built for it now. |
+| **Horizontal scaling** | Would require moving the index out of process. Not designed for; a single container is sufficient. |
 | **Nested layout containers** | Would require reworking the flat section list into a tree. Deliberately not designed for; revisit only if a real client need appears. |
