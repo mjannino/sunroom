@@ -1,8 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { VERSION } from "./index.js";
+import * as sunroom from "./index.js";
 
-describe("package", () => {
+describe("public exports", () => {
+  it("exports the authoring API", () => {
+    expect(typeof sunroom.createSunroom).toBe("function");
+    expect(typeof sunroom.defineSection).toBe("function");
+    expect(typeof sunroom.f.text).toBe("function");
+  });
+
+  it("exports the store and its errors for advanced use", () => {
+    expect(typeof sunroom.GitStore).toBe("function");
+    expect(typeof sunroom.validateProps).toBe("function");
+    expect(sunroom.ConflictError.prototype).toBeInstanceOf(Error);
+    expect(sunroom.NotFoundError.prototype).toBeInstanceOf(Error);
+    expect(sunroom.ValidationError.prototype).toBeInstanceOf(Error);
+  });
+
   it("exports a version string", () => {
-    expect(typeof VERSION).toBe("string");
+    expect(typeof sunroom.VERSION).toBe("string");
   });
 });
