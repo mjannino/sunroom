@@ -4,7 +4,7 @@ import { dirname, join, posix, relative, sep } from "node:path";
 import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
 import { commitArgs, git, hasCommits } from "./git.js";
 import { contentVersion } from "./hash.js";
-import { HOME_SLUG, pathToSlug, slugToPath } from "./paths.js";
+import { HOME_SLUG, pathToSlug, slugToPath, validateSlug } from "./paths.js";
 import type {
   Author,
   ContentStore,
@@ -219,6 +219,9 @@ export class GitStore implements ContentStore {
           { path: "slug", message: "The home page cannot be deleted" },
         ]);
       }
+
+      const issues = validateSlug(slug);
+      if (issues.length > 0) throw new ValidationError(issues);
 
       const existing = this.pages.get(slug);
       if (!existing) throw new NotFoundError(slug);

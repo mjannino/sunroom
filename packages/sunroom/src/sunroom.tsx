@@ -8,15 +8,15 @@ import { getStore } from "./store/singleton.js";
 import type { Page, PageSummary } from "./store/types.js";
 
 /** Next 15 passes `params` as a Promise. */
-export interface RouteProps {
+export interface SunroomRouteProps {
   params: Promise<{ slug?: string[] }>;
 }
 
 export interface Sunroom {
   config: SunroomConfig;
-  Page(props: RouteProps): Promise<ReactElement>;
+  Page(props: SunroomRouteProps): Promise<ReactElement>;
   generateStaticParams(): Promise<{ slug: string[] }[]>;
-  generateMetadata(props: RouteProps): Promise<Metadata>;
+  generateMetadata(props: SunroomRouteProps): Promise<Metadata>;
   getPages(): Promise<PageSummary[]>;
   getPage(slug: string): Promise<Page | null>;
 }
@@ -44,7 +44,9 @@ export function createSunroom(input: SunroomInput): Sunroom {
     return store.listPages().map((page) => ({ slug: slugToParams(page.slug) }));
   }
 
-  async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
+  async function generateMetadata({
+    params,
+  }: SunroomRouteProps): Promise<Metadata> {
     const { slug } = await params;
     const store = await getStore(config);
     const entry = store.getPage(paramsToSlug(slug));
@@ -57,7 +59,7 @@ export function createSunroom(input: SunroomInput): Sunroom {
     };
   }
 
-  async function Page({ params }: RouteProps): Promise<ReactElement> {
+  async function Page({ params }: SunroomRouteProps): Promise<ReactElement> {
     const { slug } = await params;
     const store = await getStore(config);
     const entry = store.getPage(paramsToSlug(slug));

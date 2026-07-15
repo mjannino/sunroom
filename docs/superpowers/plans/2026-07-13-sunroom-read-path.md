@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - **Zero runtime dependencies in `packages/sunroom`.** Everything is Node builtins, React, or Next (the latter two as peers). Any new runtime dependency needs an explicit decision.
-- **Node 20+.** Development is on Node 24; CI pins Node 22.
+- **Node 20.12+** (`Dirent.parentPath`, used in `listJsonFiles`, requires it). Development is on Node 24; CI pins Node 22.
 - **Next.js App Router only.** No Pages Router, no framework abstraction layer.
 - **`params` is a Promise** in Next 15 route handlers and must be awaited.
 - **Reserved slugs:** `admin` and `api` may never be the first segment of a page slug.

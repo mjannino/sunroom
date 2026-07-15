@@ -337,6 +337,13 @@ describe("deletePage", () => {
     ).rejects.toThrow(NotFoundError);
   });
 
+  it("rejects an invalid slug before touching the filesystem", async () => {
+    const store = await freshStore();
+    await expect(
+      store.deletePage("../evil", { baseVersion: "x", author: AUTHOR }),
+    ).rejects.toThrow(ValidationError);
+  });
+
   it("rejects a stale version", async () => {
     const store = await freshStore();
     const created = await store.savePage(page(), {

@@ -2,7 +2,7 @@ export const VERSION = "0.0.0";
 
 // Authoring
 export { createSunroom } from "./sunroom.js";
-export type { RouteProps, Sunroom } from "./sunroom.js";
+export type { Sunroom, SunroomRouteProps } from "./sunroom.js";
 export {
   defineSection,
   resolveConfig,
