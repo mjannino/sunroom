@@ -1,9 +1,12 @@
+import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { ConflictError, ValidationError } from "../errors.js";
 import { git } from "./git.js";
 import { GitStore } from "./git-store.js";
+import type { Page } from "./types.js";
 
 let dir: string;
 
@@ -85,16 +88,12 @@ describe("init on an existing repo", () => {
     });
   });
 
-  // TODO(Task 8): un-skip once GitStore#savePage exists (remove the
-  // ts-expect-error suppressions below when it does).
-  it.skip("sorts pages by position, then slug", async () => {
+  it("sorts pages by position, then slug", async () => {
     const store = await freshStore();
-    // @ts-expect-error savePage doesn't exist until Task 8.
     await store.savePage(
       { slug: "zebra", title: "Z", position: 1, seo: {}, sections: [] },
       { baseVersion: null, author: { name: "T", email: "t@e.com" } },
     );
-    // @ts-expect-error savePage doesn't exist until Task 8.
     await store.savePage(
       { slug: "apple", title: "A", position: 1, seo: {}, sections: [] },
       { baseVersion: null, author: { name: "T", email: "t@e.com" } },
@@ -131,5 +130,174 @@ describe("getPage", () => {
   it("returns null for an unknown slug", async () => {
     const store = await freshStore();
     expect(store.getPage("nope")).toBeNull();
+  });
+});
+
+const AUTHOR = { name: "Jane Doe", email: "jane@acme.com" };
+
+function page(overrides: Partial<Page> = {}): Page {
+  return {
+    slug: "about",
+    title: "About Us",
+    position: 1,
+    seo: {},
+    sections: [{ id: "sec_1", type: "hero", props: { heading: "Hello" } }],
+    ...overrides,
+  };
+}
+
+describe("savePage", () => {
+  it("creates a page, commits it, and returns a version", async () => {
+    const store = await freshStore();
+    const saved = await store.savePage(page(), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+
+    expect(saved.version).toHaveLength(16);
+    expect(store.getPage("about")?.page.title).toBe("About Us");
+    expect(await git(dir, ["status", "--porcelain"])).toBe("");
+    expect(await git(dir, ["log", "-1", "--format=%s"])).toBe("Create about");
+    expect(await git(dir, ["log", "-1", "--format=%an <%ae>"])).toBe(
+      "Jane Doe <jane@acme.com>",
+    );
+  });
+
+  it("writes the page to its slug-derived path", async () => {
+    const store = await freshStore();
+    await store.savePage(page({ slug: "services/pricing" }), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+    const raw = await readFile(
+      join(dir, "pages", "services", "pricing.json"),
+      "utf8",
+    );
+    expect(JSON.parse(raw).title).toBe("About Us");
+  });
+
+  it("updates an existing page when given its current version", async () => {
+    const store = await freshStore();
+    const first = await store.savePage(page(), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+
+    const second = await store.savePage(page({ title: "Renamed" }), {
+      baseVersion: first.version,
+      author: AUTHOR,
+    });
+
+    expect(second.version).not.toBe(first.version);
+    expect(store.getPage("about")?.page.title).toBe("Renamed");
+    expect(await git(dir, ["log", "-1", "--format=%s"])).toBe("Update about");
+  });
+
+  it("rejects a stale version instead of clobbering", async () => {
+    const store = await freshStore();
+    const first = await store.savePage(page(), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+    await store.savePage(page({ title: "Renamed by someone else" }), {
+      baseVersion: first.version,
+      author: AUTHOR,
+    });
+
+    await expect(
+      store.savePage(page({ title: "My edit" }), {
+        baseVersion: first.version,
+        author: AUTHOR,
+      }),
+    ).rejects.toThrow(ConflictError);
+
+    expect(store.getPage("about")?.page.title).toBe("Renamed by someone else");
+  });
+
+  it("rejects creating a page that already exists", async () => {
+    const store = await freshStore();
+    await store.savePage(page(), { baseVersion: null, author: AUTHOR });
+    await expect(
+      store.savePage(page(), { baseVersion: null, author: AUTHOR }),
+    ).rejects.toThrow(ConflictError);
+  });
+
+  it("rejects a reserved slug", async () => {
+    const store = await freshStore();
+    await expect(
+      store.savePage(page({ slug: "admin" }), {
+        baseVersion: null,
+        author: AUTHOR,
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(existsSync(join(dir, "pages", "admin.json"))).toBe(false);
+  });
+
+  it("rejects a slug that would escape the content directory", async () => {
+    const store = await freshStore();
+    await expect(
+      store.savePage(page({ slug: "../../etc/passwd" }), {
+        baseVersion: null,
+        author: AUTHOR,
+      }),
+    ).rejects.toThrow(ValidationError);
+  });
+
+  it("rejects duplicate section ids", async () => {
+    const store = await freshStore();
+    const bad = page({
+      sections: [
+        { id: "dup", type: "hero", props: {} },
+        { id: "dup", type: "hero", props: {} },
+      ],
+    });
+    await expect(
+      store.savePage(bad, { baseVersion: null, author: AUTHOR }),
+    ).rejects.toThrow(ValidationError);
+  });
+
+  it("serialises concurrent saves instead of interleaving them", async () => {
+    const store = await freshStore();
+    const created = await store.savePage(page(), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+
+    // Both start from the same base version. One must win; the other must conflict.
+    const results = await Promise.allSettled([
+      store.savePage(page({ title: "A" }), {
+        baseVersion: created.version,
+        author: AUTHOR,
+      }),
+      store.savePage(page({ title: "B" }), {
+        baseVersion: created.version,
+        author: AUTHOR,
+      }),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    const rejected = results.filter((r) => r.status === "rejected");
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(
+      ConflictError,
+    );
+    expect(await git(dir, ["status", "--porcelain"])).toBe("");
+  });
+
+  it("leaves no partial state when the commit fails", async () => {
+    const store = await freshStore();
+    const before = store.getPage("");
+
+    // Break the repo so `git commit` cannot succeed.
+    await rm(join(dir, ".git"), { recursive: true, force: true });
+
+    await expect(
+      store.savePage(page(), { baseVersion: null, author: AUTHOR }),
+    ).rejects.toThrow();
+
+    // The in-memory index must not have absorbed the failed write.
+    expect(store.getPage("about")).toBeNull();
+    expect(store.getPage("")?.version).toBe(before?.version);
   });
 });

@@ -145,5 +145,72 @@ export class GitStore {
     return this.settings;
   }
 
-  // savePage / deletePage / saveSettings — Tasks 8 and 9.
+  /**
+   * Serialises all writes through a promise chain. Two concurrent saves to the
+   * same page cannot interleave; the second one sees the first one's version
+   * and conflicts, which is the correct answer.
+   */
+  private withLock<T>(fn: () => Promise<T>): Promise<T> {
+    const result = this.chain.then(fn, fn);
+    this.chain = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+
+  /**
+   * Rolls the working copy back to HEAD and reloads the index from disk.
+   *
+   * Called when a save fails partway. If the rollback itself fails (a truly
+   * broken repo), we swallow that error so the ORIGINAL failure is what the
+   * caller sees — a "could not reset" message would hide the real cause.
+   */
+  private async rollback(): Promise<void> {
+    try {
+      await this.recover();
+      await this.load();
+    } catch {
+      // Deliberately ignored. See above.
+    }
+  }
+
+  async savePage(
+    page: Page,
+    { baseVersion, author }: SaveOptions,
+  ): Promise<PageEntry> {
+    return this.withLock(async () => {
+      const issues = validatePageShape(page);
+      if (issues.length > 0) throw new ValidationError(issues);
+
+      const existing = this.pages.get(page.slug) ?? null;
+      if ((existing?.version ?? null) !== baseVersion) {
+        throw new ConflictError(page.slug);
+      }
+
+      const rel = slugToPath(page.slug);
+      const json = serialize(page);
+
+      try {
+        await writeAtomic(join(this.dir, rel), json);
+        await git(this.dir, ["add", "--", rel]);
+        await git(
+          this.dir,
+          commitArgs(
+            author,
+            `${existing ? "Update" : "Create"} ${page.slug || "home"}`,
+          ),
+        );
+      } catch (error) {
+        await this.rollback();
+        throw error;
+      }
+
+      const entry: PageEntry = { page, version: contentVersion(json) };
+      this.pages.set(page.slug, entry);
+      return entry;
+    });
+  }
+
+  // deletePage / saveSettings — Task 9.
 }
