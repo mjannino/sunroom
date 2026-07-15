@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import type { ReactElement } from "react";
 import type { SunroomConfig, SunroomInput } from "./core/registry.js";
 import { resolveConfig } from "./core/registry.js";
@@ -9,7 +8,7 @@ import { getStore } from "./store/singleton.js";
 import type { Page, PageSummary } from "./store/types.js";
 
 /** Next 15 passes `params` as a Promise. */
-interface RouteProps {
+export interface RouteProps {
   params: Promise<{ slug?: string[] }>;
 }
 
@@ -62,7 +61,15 @@ export function createSunroom(input: SunroomInput): Sunroom {
     const { slug } = await params;
     const store = await getStore(config);
     const entry = store.getPage(paramsToSlug(slug));
-    if (!entry) notFound();
+    if (!entry) {
+      // Imported lazily: "next/navigation" has no package.json "exports" map,
+      // so a static top-level import breaks plain-Node ESM consumers of this
+      // module (e.g. Node scripts that only need `GitStore`) even though it
+      // resolves fine inside Next's own bundler. Deferring the import means
+      // only the Next request-handling path ever touches it.
+      const { notFound } = await import("next/navigation");
+      return notFound();
+    }
 
     return <Sections config={config} sections={entry.page.sections} />;
   }
