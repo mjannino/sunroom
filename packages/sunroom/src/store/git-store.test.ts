@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ConflictError, ValidationError } from "../errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
 import { git } from "./git.js";
 import { GitStore } from "./git-store.js";
 import type { Page } from "./types.js";
@@ -299,5 +299,83 @@ describe("savePage", () => {
     // The in-memory index must not have absorbed the failed write.
     expect(store.getPage("about")).toBeNull();
     expect(store.getPage("")?.version).toBe(before?.version);
+  });
+});
+
+describe("deletePage", () => {
+  it("removes the file, commits, and drops it from the index", async () => {
+    const store = await freshStore();
+    const created = await store.savePage(page(), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+
+    await store.deletePage("about", {
+      baseVersion: created.version,
+      author: AUTHOR,
+    });
+
+    expect(store.getPage("about")).toBeNull();
+    expect(existsSync(join(dir, "pages", "about.json"))).toBe(false);
+    expect(await git(dir, ["status", "--porcelain"])).toBe("");
+    expect(await git(dir, ["log", "-1", "--format=%s"])).toBe("Delete about");
+  });
+
+  it("refuses to delete the home page", async () => {
+    const store = await freshStore();
+    const home = store.getPage("");
+    await expect(
+      store.deletePage("", { baseVersion: home!.version, author: AUTHOR }),
+    ).rejects.toThrow(ValidationError);
+    expect(store.getPage("")).not.toBeNull();
+  });
+
+  it("throws NotFoundError for an unknown slug", async () => {
+    const store = await freshStore();
+    await expect(
+      store.deletePage("ghost", { baseVersion: "whatever", author: AUTHOR }),
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it("rejects a stale version", async () => {
+    const store = await freshStore();
+    const created = await store.savePage(page(), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+    await store.savePage(page({ title: "Changed" }), {
+      baseVersion: created.version,
+      author: AUTHOR,
+    });
+
+    await expect(
+      store.deletePage("about", {
+        baseVersion: created.version,
+        author: AUTHOR,
+      }),
+    ).rejects.toThrow(ConflictError);
+    expect(store.getPage("about")).not.toBeNull();
+  });
+});
+
+describe("saveSettings", () => {
+  it("persists and commits settings", async () => {
+    const store = await freshStore();
+    await store.saveSettings(
+      { seoDefaults: { description: "A lovely business" }, redirects: [] },
+      { author: AUTHOR },
+    );
+
+    expect(store.getSettings().seoDefaults.description).toBe(
+      "A lovely business",
+    );
+    expect(await git(dir, ["log", "-1", "--format=%s"])).toBe(
+      "Update settings",
+    );
+
+    const reloaded = await freshStore();
+    expect(reloaded.getSettings().seoDefaults.description).toBe(
+      "A lovely business",
+    );
   });
 });

@@ -42,10 +42,7 @@ async function listJsonFiles(root: string): Promise<string[]> {
     .map((e) => join(e.parentPath, e.name));
 }
 
-// NOTE: `implements ContentStore` is temporarily dropped for this task.
-// savePage/deletePage/saveSettings arrive in Tasks 8 and 9; until they exist,
-// the class does not satisfy the interface. Restored in Task 9.
-export class GitStore {
+export class GitStore implements ContentStore {
   private readonly dir: string;
   private pages = new Map<string, PageEntry>();
   private settings: Settings = DEFAULT_SETTINGS;
@@ -212,5 +209,52 @@ export class GitStore {
     });
   }
 
-  // deletePage / saveSettings — Task 9.
+  async deletePage(
+    slug: string,
+    { baseVersion, author }: { baseVersion: string; author: Author },
+  ): Promise<void> {
+    return this.withLock(async () => {
+      if (slug === HOME_SLUG) {
+        throw new ValidationError([
+          { path: "slug", message: "The home page cannot be deleted" },
+        ]);
+      }
+
+      const existing = this.pages.get(slug);
+      if (!existing) throw new NotFoundError(slug);
+      if (existing.version !== baseVersion) throw new ConflictError(slug);
+
+      const rel = slugToPath(slug);
+
+      try {
+        await git(this.dir, ["rm", "--quiet", "--", rel]);
+        await git(this.dir, commitArgs(author, `Delete ${slug}`));
+      } catch (error) {
+        await this.rollback();
+        throw error;
+      }
+
+      this.pages.delete(slug);
+    });
+  }
+
+  async saveSettings(
+    settings: Settings,
+    { author }: { author: Author },
+  ): Promise<void> {
+    return this.withLock(async () => {
+      const json = serialize(settings);
+
+      try {
+        await writeAtomic(join(this.dir, "settings.json"), json);
+        await git(this.dir, ["add", "--", "settings.json"]);
+        await git(this.dir, commitArgs(author, "Update settings"));
+      } catch (error) {
+        await this.rollback();
+        throw error;
+      }
+
+      this.settings = settings;
+    });
+  }
 }
