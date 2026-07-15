@@ -21,7 +21,7 @@ The product line is deliberate and load-bearing:
   transitions, its behaviour. Sunroom never touches this.
 
 Sunroom is not a page builder, a design tool, or a component library. It is a typed content layer that
-knows how to render *your* components with *their* content.
+knows how to render _your_ components with _their_ content.
 
 **Sunroom is site-agnostic, not framework-agnostic.** One codebase serves every client; it targets Next.js
 App Router exclusively, and that coupling is where the simplicity comes from. See §3.
@@ -41,7 +41,7 @@ App Router exclusively, and that coupling is where the simplicity comes from. Se
 ## 2. Architecture
 
 **There is no CMS deployment.** Sunroom is a single npm package that mounts into the client's Next app.
-The client's site *is* the deployment: `acme.com` serves the site, `acme.com/admin` serves the CMS, and
+The client's site _is_ the deployment: `acme.com` serves the site, `acme.com/admin` serves the CMS, and
 both are one Next process in one container.
 
 ### The integration surface
@@ -100,26 +100,26 @@ the failure modes were telling you the architecture was wrong.
 
 ## 3. Technology Decisions
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| Framework | **Next.js App Router, exclusively** | A catch-all route makes CMS-defined routing natural; server actions + `revalidateTag` make the in-process design possible. The coupling *is* the simplification. |
-| Packaging | **One npm package, mounted into the site** | No second deployment, no protocol between two halves, no keys, no webhooks. |
-| Hosting | **Long-lived Node container** (Fly, Railway, Render, VPS) | The store needs a persistent process and a writable disk. |
-| Delivery | **In-process reads + `revalidateTag` on save** | Live edits in milliseconds. Visitors are still served cached static HTML. |
-| Composition | **Flat ordered list of sections** | Matches the product line. Clients want to move testimonials above pricing, not operate a layout engine. |
-| Schema source | **The registry in your code, imported directly** | Code is the single source of truth. Nothing to sync, no build step to forget. |
-| Storage | **Local git repo on the volume** | Full history, per-file point-in-time restore, an audit trail, and safe revertible migrations — with **zero external dependencies and zero setup**. Git is a local binary, not a vendor. |
-| Durability | **Mirror to R2 after each commit** | R2 is already in the stack for media, so this adds no new vendor, account, or token. Never on the save path. |
-| Media | **S3-compatible (R2 default), presigned uploads** | The app never proxies bytes. Portable across R2/S3/MinIO. `next/image` handles optimization. |
-| Auth | **Google OAuth + env allowlist** | No email infrastructure, no passwords, no reset burden. Real per-user identity, so git commits carry a genuine audit trail. |
+| Decision      | Choice                                                    | Rationale                                                                                                                                                                               |
+| ------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework     | **Next.js App Router, exclusively**                       | A catch-all route makes CMS-defined routing natural; server actions + `revalidateTag` make the in-process design possible. The coupling _is_ the simplification.                        |
+| Packaging     | **One npm package, mounted into the site**                | No second deployment, no protocol between two halves, no keys, no webhooks.                                                                                                             |
+| Hosting       | **Long-lived Node container** (Fly, Railway, Render, VPS) | The store needs a persistent process and a writable disk.                                                                                                                               |
+| Delivery      | **In-process reads + `revalidateTag` on save**            | Live edits in milliseconds. Visitors are still served cached static HTML.                                                                                                               |
+| Composition   | **Flat ordered list of sections**                         | Matches the product line. Clients want to move testimonials above pricing, not operate a layout engine.                                                                                 |
+| Schema source | **The registry in your code, imported directly**          | Code is the single source of truth. Nothing to sync, no build step to forget.                                                                                                           |
+| Storage       | **Local git repo on the volume**                          | Full history, per-file point-in-time restore, an audit trail, and safe revertible migrations — with **zero external dependencies and zero setup**. Git is a local binary, not a vendor. |
+| Durability    | **Mirror to R2 after each commit**                        | R2 is already in the stack for media, so this adds no new vendor, account, or token. Never on the save path.                                                                            |
+| Media         | **S3-compatible (R2 default), presigned uploads**         | The app never proxies bytes. Portable across R2/S3/MinIO. `next/image` handles optimization.                                                                                            |
+| Auth          | **Google OAuth + env allowlist**                          | No email infrastructure, no passwords, no reset burden. Real per-user identity, so git commits carry a genuine audit trail.                                                             |
 
 ### The dependency ledger
 
-| Service | Used for | If it's down |
-|---|---|---|
-| Google | Sign-in only | The client can't log in. **The site serves normally.** |
-| R2 | Media storage + backup mirror | **Saves still work** (durable locally). Backups queue and retry. Existing images still serve. |
-| *(nothing else)* | | |
+| Service          | Used for                      | If it's down                                                                                  |
+| ---------------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
+| Google           | Sign-in only                  | The client can't log in. **The site serves normally.**                                        |
+| R2               | Media storage + backup mirror | **Saves still work** (durable locally). Backups queue and retry. Existing images still serve. |
+| _(nothing else)_ |                               |                                                                                               |
 
 **Nothing external is required for the client's website to serve, or for the client to edit content.**
 
@@ -138,7 +138,7 @@ the failure modes were telling you the architecture was wrong.
   every client — to serve a site that may never exist. The `ContentStore` interface remains the seam if
   this is ever wrong.
 - **`mailto:` forms.** Deferred with the rest of forms, but noted as a dead end: it depends on the
-  *visitor's* mail client, drops leads silently, and leaks the client's address to scrapers.
+  _visitor's_ mail client, drops leads silently, and leaks the client's address to scrapers.
 
 ---
 
@@ -148,32 +148,32 @@ the failure modes were telling you the architecture was wrong.
 
 ```ts
 // sunroom.config.ts
-import { defineSunroom, defineSection, f } from 'sunroom'
-import Hero from '@/components/Hero'
-import Testimonials from '@/components/Testimonials'
+import { defineSunroom, defineSection, f } from "sunroom";
+import Hero from "@/components/Hero";
+import Testimonials from "@/components/Testimonials";
 
 export default defineSunroom({
   sections: {
     hero: defineSection({
-      label: 'Hero',
+      label: "Hero",
       component: Hero,
-      thumbnail: '/sunroom/hero.png',   // optional; shown in the client's Add Section palette
+      thumbnail: "/sunroom/hero.png", // optional; shown in the client's Add Section palette
       fields: {
-        heading: f.text({ label: 'Heading', required: true }),
-        body:    f.richText(),
-        image:   f.image(),
-        cta:     f.object({ label: f.text(), href: f.link() }),
+        heading: f.text({ label: "Heading", required: true }),
+        body: f.richText(),
+        image: f.image(),
+        cta: f.object({ label: f.text(), href: f.link() }),
       },
     }),
     testimonials: defineSection({
-      label: 'Testimonials',
+      label: "Testimonials",
       component: Testimonials,
       fields: {
         quotes: f.array(f.object({ quote: f.text(), author: f.text() })),
       },
     }),
   },
-})
+});
 ```
 
 `Hero` remains an ordinary React component with ordinary props. The `fields` block is the only addition,
@@ -199,11 +199,11 @@ Rich text is edited with TipTap and stored as an HTML string, so a component ren
 
 ```tsx
 // app/[[...slug]]/page.tsx
-import { SunroomPage, sunroomParams, sunroomMetadata } from 'sunroom'
+import { SunroomPage, sunroomParams, sunroomMetadata } from "sunroom";
 
-export const generateStaticParams = sunroomParams
-export const generateMetadata     = sunroomMetadata
-export default SunroomPage
+export const generateStaticParams = sunroomParams;
+export const generateMetadata = sunroomMetadata;
+export default SunroomPage;
 ```
 
 `SunroomPage` resolves the page by slug, walks its ordered section list, looks each `type` up in the
@@ -215,20 +215,20 @@ from shadowing their own CMS, **`admin` and `api` are reserved slugs** and the C
 ### Escape hatches
 
 ```ts
-const pages = await getPages()        // [{ slug, title, position }] — feed a bespoke <Nav />
-const page  = await getPage('about')  // pull CMS content into a hand-written route
+const pages = await getPages(); // [{ slug, title, position }] — feed a bespoke <Nav />
+const page = await getPage("about"); // pull CMS content into a hand-written route
 ```
 
 `getPages()` is how navigation works without a nav editor.
 
 ### CLI
 
-| Command | Purpose |
-|---|---|
-| `sunroom check` | CI guardrail. Fails on orphaned content and destructive schema changes. See §7. |
-| `sunroom snapshot` | Prebuild step. Bakes content into the image. See §7. |
-| `sunroom migrate ./script.js` | One-off content codemod runner. See §7. |
-| `sunroom restore` | Rebuild a volume from the R2 backup. See §5. |
+| Command                       | Purpose                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| `sunroom check`               | CI guardrail. Fails on orphaned content and destructive schema changes. See §7. |
+| `sunroom snapshot`            | Prebuild step. Bakes content into the image. See §7.                            |
+| `sunroom migrate ./script.js` | One-off content codemod runner. See §7.                                         |
+| `sunroom restore`             | Rebuild a volume from the R2 backup. See §5.                                    |
 
 ---
 
@@ -300,7 +300,7 @@ After a commit lands, the store mirrors two objects to the media bucket:
 - **The plain JSON tree** — so content can be read and restored with no tooling and no git knowledge.
 
 **The mirror can never fail a save.** The save has already succeeded on the volume. The mirror retries with
-backoff, and the CMS shows a quiet "backup pending" state. Making R2 a hard requirement for *editing*
+backoff, and the CMS shows a quiet "backup pending" state. Making R2 a hard requirement for _editing_
 would reintroduce exactly the external fragility this design exists to avoid.
 
 ### Boot resolution order
@@ -314,7 +314,7 @@ Every path ends with the site serving.
 
 ### Deployment constraint: a single instance
 
-The app holds mutable state in memory *and* on disk. **It must run as one instance.** Two containers means
+The app holds mutable state in memory _and_ on disk. **It must run as one instance.** Two containers means
 a save on one leaves the other with a stale index and a stale ISR cache.
 
 One container is amply sufficient for a small-business marketing site. But this is a real constraint, not
@@ -363,7 +363,7 @@ The standard to hold the implementation to:
 ### The site must boot even if R2 is unreachable
 
 Merging the CMS into the site created a new and more serious single point of failure: if content can't be
-loaded, the *website* is down, not just the CMS.
+loaded, the _website_ is down, not just the CMS.
 
 **Solution: content is baked into the image at build.** `sunroom snapshot` runs as a prebuild step and
 writes the content tree into the bundle. Boot resolution (§5) falls back to it. A fresh volume with R2
@@ -384,7 +384,7 @@ the commit is local and atomic, there is no partially-pushed state to reconcile.
 
 ### Concurrent edits cannot silently clobber
 
-One file per page means edits to *different* pages never touch the same file.
+One file per page means edits to _different_ pages never touch the same file.
 
 For the same page: **optimistic concurrency**. The editor loads a page along with the commit SHA it was
 based on and returns that SHA on save. If HEAD has moved for that file, the save is rejected with a real
@@ -403,7 +403,7 @@ So instead:
 
 - **No schema versions in content. No migrate-on-read. No migration chain.**
 - **`sunroom check` catches the destructive case in CI**, reporting exactly which pages are affected:
-  *"content on 3 pages uses `hero.heading`, which your schema no longer declares."* The rename cannot be
+  _"content on 3 pages uses `hero.heading`, which your schema no longer declares."_ The rename cannot be
   merged.
 - **`sunroom migrate ./rename-heading.js`** runs a one-off content codemod: load content, apply a plain
   function, commit. A script runner, not a framework. Inspect the diff; `revert` if wrong.
@@ -429,17 +429,17 @@ and `api` are reserved. The homepage cannot be deleted.
 
 ### Media upload failure cannot orphan a record
 
-Metadata is committed only *after* the presigned R2 upload succeeds. An orphaned *blob* (uploaded, never
+Metadata is committed only _after_ the presigned R2 upload succeeds. An orphaned _blob_ (uploaded, never
 recorded) is harmless and reclaimable by a future `sunroom gc`.
 
 ### `sunroom check` — the CI guardrail
 
-| Check | Severity |
-|---|---|
-| Content uses a section type with no `defineSection` in code | **Fail** |
-| Content has props the schema no longer declares (destructive rename) | **Fail** |
-| A registered section's fields do not match its component's props | **Fail** (also caught at the type level) |
-| A component file matching an opt-in glob is registered nowhere | Warn |
+| Check                                                                | Severity                                 |
+| -------------------------------------------------------------------- | ---------------------------------------- |
+| Content uses a section type with no `defineSection` in code          | **Fail**                                 |
+| Content has props the schema no longer declares (destructive rename) | **Fail**                                 |
+| A registered section's fields do not match its component's props     | **Fail** (also caught at the type level) |
+| A component file matching an opt-in glob is registered nowhere       | Warn                                     |
 
 Runs entirely locally: it reads the content repo and imports the registry. No running service required.
 
@@ -533,6 +533,7 @@ the build-time snapshot floor. `sunroom restore`. Automatic slug redirects. `dep
 `sunroom check`. `sunroom migrate`.
 
 **Done when:**
+
 - The site boots and serves **on a fresh volume with R2 unreachable** (snapshot path).
 - The site boots and serves **on a fresh volume with R2 reachable** (bundle-restore path).
 - A slug rename leaves the old URL redirecting.
@@ -558,12 +559,12 @@ create the R2 bucket, register the OAuth callback, set env, **pin to one instanc
 
 ## 10. Deferred, With the Door Left Open
 
-| Feature | The door |
-|---|---|
-| **Drafts + preview** | Content is already git-backed and versioned; drafts become a branch and publish becomes a merge. All writes go through one `savePage()` service function, so the split touches one module. |
-| **Forms + submission inbox** | Submissions are content: they land in the content repo and surface as an inbox screen. Notification is the one place a transactional email key would earn its keep — and it would be a *form* dependency, not an *auth* one, so a broken key could never lock anyone out. |
-| **Global content (nav, footer)** | Falls out of the existing field-schema machinery applied to a `globals.json`. |
-| **Inline click-to-edit** | An iframe postMessage bridge over the existing editor. |
-| **A headless HTTP API / other frameworks** | The `ContentStore` interface is the seam. A thin route layer over it would be about a week's work — but nothing is built for it now. |
-| **Horizontal scaling** | Would require moving the index out of process. Not designed for; a single container is sufficient. |
-| **Nested layout containers** | Would require reworking the flat section list into a tree. Deliberately not designed for; revisit only if a real client need appears. |
+| Feature                                    | The door                                                                                                                                                                                                                                                                  |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Drafts + preview**                       | Content is already git-backed and versioned; drafts become a branch and publish becomes a merge. All writes go through one `savePage()` service function, so the split touches one module.                                                                                |
+| **Forms + submission inbox**               | Submissions are content: they land in the content repo and surface as an inbox screen. Notification is the one place a transactional email key would earn its keep — and it would be a _form_ dependency, not an _auth_ one, so a broken key could never lock anyone out. |
+| **Global content (nav, footer)**           | Falls out of the existing field-schema machinery applied to a `globals.json`.                                                                                                                                                                                             |
+| **Inline click-to-edit**                   | An iframe postMessage bridge over the existing editor.                                                                                                                                                                                                                    |
+| **A headless HTTP API / other frameworks** | The `ContentStore` interface is the seam. A thin route layer over it would be about a week's work — but nothing is built for it now.                                                                                                                                      |
+| **Horizontal scaling**                     | Would require moving the index out of process. Not designed for; a single container is sufficient.                                                                                                                                                                        |
+| **Nested layout containers**               | Would require reworking the flat section list into a tree. Deliberately not designed for; revisit only if a real client need appears.                                                                                                                                     |
