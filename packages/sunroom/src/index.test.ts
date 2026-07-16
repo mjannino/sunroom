@@ -19,4 +19,16 @@ describe("public exports", () => {
   it("exports a version string", () => {
     expect(typeof sunroom.VERSION).toBe("string");
   });
+
+  it("exposes the admin surface", async () => {
+    const sunroom = await import("./index.js");
+    const instance = sunroom.createSunroom({
+      contentDir: "/tmp/unused-admin",
+      sections: {},
+    });
+    expect(typeof instance.handlers.GET).toBe("function");
+    expect(typeof instance.handlers.POST).toBe("function");
+    expect(typeof instance.AdminLayout).toBe("function");
+    expect(typeof instance.AdminPage).toBe("function");
+  });
 });

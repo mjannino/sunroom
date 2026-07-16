@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
+import { createHandlers, type SunroomHandlers } from "./admin/handlers.js";
+import { AdminLayout, AdminPage } from "./admin/components.js";
 import type { SunroomConfig, SunroomInput } from "./core/registry.js";
 import { resolveConfig } from "./core/registry.js";
 import { Sections } from "./render/sections.js";
@@ -19,6 +21,9 @@ export interface Sunroom {
   generateMetadata(props: SunroomRouteProps): Promise<Metadata>;
   getPages(): Promise<PageSummary[]>;
   getPage(slug: string): Promise<Page | null>;
+  handlers: SunroomHandlers;
+  AdminLayout: typeof AdminLayout;
+  AdminPage: typeof AdminPage;
 }
 
 /**
@@ -93,5 +98,8 @@ export function createSunroom(input: SunroomInput): Sunroom {
     generateMetadata,
     getPages,
     getPage,
+    handlers: createHandlers(),
+    AdminLayout,
+    AdminPage,
   };
 }
