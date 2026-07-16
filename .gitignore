@@ -3,3 +3,5 @@ dist/
 .next/
 .sunroom-content/
 *.tsbuildinfo
+docs/
+.superpowers/
