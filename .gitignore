@@ -5,3 +5,4 @@ dist/
 *.tsbuildinfo
 docs/
 .superpowers/
+.env.local
