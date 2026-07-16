@@ -45,14 +45,10 @@ export function verifySession(
   const sigB64 = token.slice(dot + 1);
 
   const expected = hmac(payloadB64, secret);
-  let provided: Buffer;
-  try {
-    provided = Buffer.from(sigB64, "base64url");
-  } catch {
-    return null;
-  }
+  const provided = Buffer.from(sigB64, "base64url");
   // timingSafeEqual throws on length mismatch; guard first. HMAC-SHA256 is
-  // always 32 bytes, so a length mismatch means a malformed signature.
+  // always 32 bytes, so a length mismatch (including a malformed signature
+  // that decodes to the wrong number of bytes) is rejected here.
   if (provided.length !== expected.length) return null;
   if (!timingSafeEqual(provided, expected)) return null;
 

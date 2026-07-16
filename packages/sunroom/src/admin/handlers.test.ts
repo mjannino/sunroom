@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
-import { getAuthConfig } from "./config.js";
-import { createHandlers } from "./handlers.js";
+import { AuthConfigError, getAuthConfig } from "./config.js";
+import { createHandlers, errorPage } from "./handlers.js";
 import {
   SESSION_COOKIE,
   STATE_COOKIE,
@@ -42,6 +42,8 @@ describe("GET login", () => {
     expect(setCookie).toContain(`${STATE_COOKIE}=st`);
     expect(setCookie).toContain(`${VERIFIER_COOKIE}=ver`);
     expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).toContain("Secure");
+    expect(setCookie).toMatch(/SameSite=Lax/i);
   });
 });
 
@@ -138,6 +140,11 @@ describe("GET callback", () => {
       }),
     );
     expect(res.status).toBe(403);
+    expect(
+      res.headers
+        .getSetCookie()
+        .some((c) => c.startsWith(`${SESSION_COOKIE}=`)),
+    ).toBe(false);
   });
 });
 
@@ -187,5 +194,56 @@ describe("POST logout", () => {
       .getSetCookie()
       .find((c) => c.startsWith(`${SESSION_COOKIE}=`));
     expect(cleared).toMatch(/Max-Age=0|Expires=Thu, 01 Jan 1970/i);
+  });
+});
+
+describe("config errors", () => {
+  it("GET returns a clear 500 instead of throwing when getConfig fails", async () => {
+    const h = createHandlers({
+      getConfig: () => {
+        throw new AuthConfigError(["GOOGLE_CLIENT_ID"]);
+      },
+    });
+    const res = await h.GET(
+      new NextRequest("https://acme.com/api/sunroom/auth/login"),
+    );
+    expect(res.status).toBe(500);
+    const text = await res.text();
+    expect(text).toContain("GOOGLE_CLIENT_ID");
+    expect(
+      res.headers
+        .getSetCookie()
+        .some((c) => c.startsWith(`${SESSION_COOKIE}=`)),
+    ).toBe(false);
+  });
+
+  it("POST returns a clear 500 instead of throwing when getConfig fails", async () => {
+    const h = createHandlers({
+      getConfig: () => {
+        throw new AuthConfigError(["GOOGLE_CLIENT_ID"]);
+      },
+    });
+    const res = await h.POST(
+      new NextRequest("https://acme.com/api/sunroom/auth/logout", {
+        method: "POST",
+      }),
+    );
+    expect(res.status).toBe(500);
+    const text = await res.text();
+    expect(text).toContain("GOOGLE_CLIENT_ID");
+    expect(
+      res.headers
+        .getSetCookie()
+        .some((c) => c.startsWith(`${SESSION_COOKIE}=`)),
+    ).toBe(false);
+  });
+});
+
+describe("errorPage", () => {
+  it("escapes HTML in the message so it cannot inject markup", async () => {
+    const res = errorPage("<script>alert(1)</script>", 400);
+    const text = await res.text();
+    expect(text).not.toContain("<script>alert(1)</script>");
+    expect(text).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
   });
 });

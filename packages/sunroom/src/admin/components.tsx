@@ -1,5 +1,6 @@
 import "server-only";
 import type { ReactElement, ReactNode } from "react";
+import { AuthConfigError } from "./config.js";
 import { getSession } from "./session-server.js";
 
 export function SignInScreen(): ReactElement {
@@ -31,6 +32,29 @@ export function SignInScreen(): ReactElement {
   );
 }
 
+export function ConfigErrorScreen({
+  message,
+}: {
+  message: string;
+}): ReactElement {
+  return (
+    <main
+      style={{
+        fontFamily: "system-ui",
+        maxWidth: 560,
+        margin: "10vh auto",
+        padding: "2rem",
+        border: "1px solid #e5b8b8",
+        borderRadius: 8,
+        background: "#fff5f5",
+      }}
+    >
+      <h1>Sunroom is misconfigured</h1>
+      <p>{message}</p>
+    </main>
+  );
+}
+
 export function AdminPage(): ReactElement {
   return (
     <section>
@@ -44,7 +68,15 @@ export async function AdminLayout({
 }: {
   children: ReactNode;
 }): Promise<ReactElement> {
-  const session = await getSession();
+  let session;
+  try {
+    session = await getSession();
+  } catch (err) {
+    if (err instanceof AuthConfigError) {
+      return <ConfigErrorScreen message={err.message} />;
+    }
+    throw err;
+  }
   if (!session) return <SignInScreen />;
 
   return (

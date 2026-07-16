@@ -1,7 +1,7 @@
 import "server-only";
 import { NextResponse, type NextRequest } from "next/server";
 import type { AuthConfig } from "./config.js";
-import { callbackUrl, getAuthConfig } from "./config.js";
+import { AuthConfigError, callbackUrl, getAuthConfig } from "./config.js";
 import { authorizeIdentity, checkOwnerToken, checkState } from "./flow.js";
 import { buildAuthorization, exchangeCode } from "./google.js";
 import {
@@ -64,10 +64,26 @@ function setSession(
   );
 }
 
-function errorPage(message: string, status: 400 | 403): NextResponse {
+export function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export function errorPage(message: string, status: 400 | 403): NextResponse {
   return new NextResponse(
-    `<!doctype html><meta charset="utf-8"><title>Sign-in error</title><body style="font-family:system-ui;padding:2rem"><h1>Cannot sign you in</h1><p>${message}</p><p><a href="/admin">Back</a></p></body>`,
+    `<!doctype html><meta charset="utf-8"><title>Sign-in error</title><body style="font-family:system-ui;padding:2rem"><h1>Cannot sign you in</h1><p>${escapeHtml(message)}</p><p><a href="/admin">Back</a></p></body>`,
     { status, headers: { "content-type": "text/html; charset=utf-8" } },
+  );
+}
+
+function configErrorResponse(err: AuthConfigError): NextResponse {
+  return new NextResponse(
+    `<!doctype html><meta charset="utf-8"><title>Sunroom misconfigured</title><body style="font-family:system-ui;padding:2rem"><h1>Sunroom is misconfigured</h1><p>${escapeHtml(err.message)}</p></body>`,
+    { status: 500, headers: { "content-type": "text/html; charset=utf-8" } },
   );
 }
 
@@ -79,7 +95,13 @@ export function createHandlers(
   const exchange = deps.exchangeCode ?? exchangeCode;
 
   async function GET(req: NextRequest): Promise<Response> {
-    const config = getConfig();
+    let config: AuthConfig;
+    try {
+      config = getConfig();
+    } catch (err) {
+      if (err instanceof AuthConfigError) return configErrorResponse(err);
+      throw err;
+    }
 
     if (action(req) === "login") {
       const redirectUri = callbackUrl(config, origin(req));
@@ -138,7 +160,13 @@ export function createHandlers(
   }
 
   async function POST(req: NextRequest): Promise<Response> {
-    const config = getConfig();
+    let config: AuthConfig;
+    try {
+      config = getConfig();
+    } catch (err) {
+      if (err instanceof AuthConfigError) return configErrorResponse(err);
+      throw err;
+    }
 
     if (action(req) === "owner") {
       const form = await req.formData();

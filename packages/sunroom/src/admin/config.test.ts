@@ -81,7 +81,9 @@ describe("callbackUrl", () => {
       "https://acme.com/api/sunroom/auth/callback",
     );
   });
-  it("does not produce a double slash", () => {
-    expect(callbackUrl(c, "https://x/")).not.toContain("com//api");
+  it("does not produce a double slash when falling back to a trailing-slash request origin", () => {
+    const { SUNROOM_URL, ...rest } = FULL_ENV;
+    const noBaseUrl = getAuthConfig(rest);
+    expect(callbackUrl(noBaseUrl, "https://x.com/")).not.toContain("//api");
   });
 });
