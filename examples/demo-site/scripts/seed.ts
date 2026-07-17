@@ -9,6 +9,21 @@ await store.init();
 const home = store.getPage("");
 if (!home) throw new Error("Expected init() to create a home page");
 
+await store.addMedia(
+  {
+    id: "hero-1",
+    storageKey: "seed/hero.jpg",
+    filename: "hero.jpg",
+    mime: "image/jpeg",
+    width: 1200,
+    height: 800,
+    size: 1,
+    alt: "Sunlit garden",
+    createdAt: "2026-01-01T00:00:00Z",
+  },
+  { author: AUTHOR },
+);
+
 await store.savePage(
   {
     slug: "",
@@ -22,6 +37,7 @@ await store.savePage(
         props: {
           heading: "Sunlight Landscaping",
           body: "<p>Gardens that look after themselves. Mostly.</p>",
+          image: "hero-1",
         },
       },
       {

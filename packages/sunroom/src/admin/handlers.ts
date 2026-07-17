@@ -1,5 +1,7 @@
-import "server-only";
-import { NextResponse, type NextRequest } from "next/server";
+import type {
+  NextRequest,
+  NextResponse as NextResponseType,
+} from "next/server";
 import type { AuthConfig } from "./config.js";
 import { AuthConfigError, callbackUrl, getAuthConfig } from "./config.js";
 import { authorizeIdentity, checkOwnerToken, checkState } from "./flow.js";
@@ -42,6 +44,21 @@ const sessionCookie = {
   maxAge: SESSION_TTL_MS / 1000,
 } as const;
 
+// Both imported lazily: `server-only` throws unconditionally at
+// module-eval time outside an RSC bundler (by design, to catch accidental
+// client-component imports at build time), and `next`'s package.json has
+// no ESM "exports" map so a static deep import breaks plain-Node ESM
+// resolution. Either as a static top-level import breaks plain-Node
+// consumers of this module (e.g. Node scripts that only need `GitStore`)
+// even though both resolve fine inside Next's own bundler. See the
+// identical fix for "next/headers" in session-server.ts. Memoized so
+// repeated calls within one request don't re-trigger the dynamic import.
+let nextServerPromise: Promise<typeof import("next/server")> | undefined;
+async function nextServer(): Promise<typeof import("next/server")> {
+  await import("server-only");
+  return (nextServerPromise ??= import("next/server"));
+}
+
 function action(req: NextRequest): string {
   const segments = req.nextUrl.pathname.split("/").filter(Boolean);
   return segments[segments.length - 1] ?? "";
@@ -52,7 +69,7 @@ function origin(req: NextRequest): string {
 }
 
 function setSession(
-  res: NextResponse,
+  res: NextResponseType,
   config: AuthConfig,
   email: string,
   name: string,
@@ -73,14 +90,21 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export function errorPage(message: string, status: 400 | 403): NextResponse {
+export async function errorPage(
+  message: string,
+  status: 400 | 403,
+): Promise<NextResponseType> {
+  const { NextResponse } = await nextServer();
   return new NextResponse(
     `<!doctype html><meta charset="utf-8"><title>Sign-in error</title><body style="font-family:system-ui;padding:2rem"><h1>Cannot sign you in</h1><p>${escapeHtml(message)}</p><p><a href="/admin">Back</a></p></body>`,
     { status, headers: { "content-type": "text/html; charset=utf-8" } },
   );
 }
 
-function configErrorResponse(err: AuthConfigError): NextResponse {
+async function configErrorResponse(
+  err: AuthConfigError,
+): Promise<NextResponseType> {
+  const { NextResponse } = await nextServer();
   return new NextResponse(
     `<!doctype html><meta charset="utf-8"><title>Sunroom misconfigured</title><body style="font-family:system-ui;padding:2rem"><h1>Sunroom is misconfigured</h1><p>${escapeHtml(err.message)}</p></body>`,
     { status: 500, headers: { "content-type": "text/html; charset=utf-8" } },
@@ -95,6 +119,8 @@ export function createHandlers(
   const exchange = deps.exchangeCode ?? exchangeCode;
 
   async function GET(req: NextRequest): Promise<Response> {
+    const { NextResponse } = await nextServer();
+
     let config: AuthConfig;
     try {
       config = getConfig();
@@ -118,7 +144,7 @@ export function createHandlers(
       const storedState = req.cookies.get(STATE_COOKIE)?.value;
       const verifier = req.cookies.get(VERIFIER_COOKIE)?.value;
 
-      const clearTxn = (res: NextResponse): NextResponse => {
+      const clearTxn = (res: NextResponseType): NextResponseType => {
         res.cookies.delete(STATE_COOKIE);
         res.cookies.delete(VERIFIER_COOKIE);
         return res;
@@ -126,7 +152,7 @@ export function createHandlers(
 
       if (!checkState(returnedState, storedState) || !code || !verifier) {
         return clearTxn(
-          errorPage(
+          await errorPage(
             "Your sign-in link expired or was tampered with. Please try again.",
             400,
           ),
@@ -143,13 +169,13 @@ export function createHandlers(
         );
       } catch {
         return clearTxn(
-          errorPage("Google sign-in failed. Please try again.", 400),
+          await errorPage("Google sign-in failed. Please try again.", 400),
         );
       }
 
       const decision = authorizeIdentity(config, identity);
       if (!decision.ok)
-        return clearTxn(errorPage(decision.reason, decision.status));
+        return clearTxn(await errorPage(decision.reason, decision.status));
 
       const res = NextResponse.redirect(new URL("/admin", origin(req)), 302);
       setSession(res, config, identity.email, identity.name);
@@ -160,6 +186,8 @@ export function createHandlers(
   }
 
   async function POST(req: NextRequest): Promise<Response> {
+    const { NextResponse } = await nextServer();
+
     let config: AuthConfig;
     try {
       config = getConfig();

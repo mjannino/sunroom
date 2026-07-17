@@ -241,7 +241,7 @@ describe("config errors", () => {
 
 describe("errorPage", () => {
   it("escapes HTML in the message so it cannot inject markup", async () => {
-    const res = errorPage("<script>alert(1)</script>", 400);
+    const res = await errorPage("<script>alert(1)</script>", 400);
     const text = await res.text();
     expect(text).not.toContain("<script>alert(1)</script>");
     expect(text).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");

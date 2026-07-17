@@ -1,4 +1,10 @@
-import "server-only";
+// No `import "server-only"` here: this module is only reached through
+// `handlers.ts`'s `GET`/`POST`, which already assert the server-only
+// context (via a lazy `import("server-only")`) before calling into it.
+// A static top-level `import "server-only"` here would throw immediately
+// at module-eval time outside an RSC bundler — breaking plain-Node ESM
+// consumers of the `sunroom` barrel (e.g. Node scripts that only need
+// `GitStore`) even though this module is never reached during their run.
 import * as arctic from "arctic";
 import type { AuthConfig } from "./config.js";
 

@@ -10,6 +10,7 @@ export default createSunroom({
       fields: {
         heading: f.text({ label: "Heading", required: true }),
         body: f.richText({ label: "Body" }),
+        image: f.image({ label: "Image" }),
       },
     }),
     testimonials: defineSection({
