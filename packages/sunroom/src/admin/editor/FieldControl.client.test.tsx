@@ -142,11 +142,17 @@ describe("array control", () => {
 });
 
 describe("placeholders + validation + depth", () => {
-  it("renders a disabled placeholder for richText and image", () => {
-    renderControl(f.richText(), "x");
+  it("renders a disabled placeholder for image", () => {
+    renderControl(f.image(), "x");
     expect((screen.getByLabelText("fld") as HTMLInputElement).disabled).toBe(
       true,
     );
+  });
+
+  it("renders a live TipTap editor for richText (not the disabled placeholder)", () => {
+    renderControl(f.richText(), "<p>x</p>");
+    expect(document.querySelector('[contenteditable="true"]')).not.toBeNull();
+    expect(screen.queryByRole("textbox", { name: "fld" })).not.toBeNull();
   });
 
   it("shows the issue whose path matches this control", () => {

@@ -12,7 +12,11 @@ import type {
 const registry: SerializedRegistry = {
   hero: {
     label: "Hero",
-    fields: { heading: { type: "text" }, body: { type: "richText" } },
+    fields: {
+      heading: { type: "text" },
+      body: { type: "richText" },
+      img: { type: "image" },
+    },
   },
 };
 const page: Page = {
@@ -64,7 +68,7 @@ describe("PageEditor", () => {
       />,
     );
     fireEvent.click(screen.getByText(/Hero/)); // select the section
-    fireEvent.change(screen.getByLabelText("heading"), {
+    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
       target: { value: "Hello" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
@@ -89,8 +93,8 @@ describe("PageEditor", () => {
       />,
     );
     fireEvent.click(screen.getByText(/Hero/));
-    const body = screen.getByLabelText("body") as HTMLInputElement;
-    expect(body.disabled).toBe(true);
+    const img = screen.getByLabelText("img") as HTMLInputElement;
+    expect(img.disabled).toBe(true);
   });
 
   it("refreshes baseVersion after a successful save so a second save uses it", async () => {
@@ -112,14 +116,14 @@ describe("PageEditor", () => {
     );
     fireEvent.click(screen.getByText(/Hero/));
 
-    fireEvent.change(screen.getByLabelText("heading"), {
+    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
       target: { value: "First edit" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
     await waitFor(() => expect(savePage).toHaveBeenCalledTimes(1));
     expect(savePage.mock.calls[0]![1]).toBe("v1");
 
-    fireEvent.change(screen.getByLabelText("heading"), {
+    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
       target: { value: "Second edit" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
@@ -144,7 +148,7 @@ describe("PageEditor", () => {
       />,
     );
     fireEvent.click(screen.getByText(/Hero/));
-    fireEvent.change(screen.getByLabelText("heading"), {
+    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
       target: { value: "x" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
@@ -190,7 +194,7 @@ describe("validation gating", () => {
     // Emptying the required field both dirties the page AND makes it invalid.
     // If Save were still disabled only, this assertion proves anyInvalid is doing the work,
     // since dirty is now true.
-    fireEvent.change(screen.getByLabelText("heading"), {
+    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
       target: { value: "" },
     });
     expect(
@@ -200,7 +204,7 @@ describe("validation gating", () => {
     expect(screen.getAllByText("is required").length).toBeGreaterThan(0);
 
     // Fixing the field keeps the page dirty but clears the invalidity -> Save enables.
-    fireEvent.change(screen.getByLabelText("heading"), {
+    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
       target: { value: "Hi again" },
     });
     expect(

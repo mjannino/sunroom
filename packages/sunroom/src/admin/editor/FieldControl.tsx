@@ -2,6 +2,7 @@
 import type { FieldDescriptor } from "../../core/fields.js";
 import type { ValidationIssue } from "../../errors.js";
 import { defaultForField, MAX_FIELD_DEPTH } from "../editor-core.js";
+import { RichTextControl } from "./RichTextControl.js";
 
 interface Props {
   name: string;
@@ -214,7 +215,21 @@ export function FieldControl({
     );
   }
 
-  // richText, image → placeholder (Slice 3 / Phase 6)
+  if (field.type === "richText") {
+    return (
+      <label>
+        {label}
+        {err}
+        <RichTextControl
+          value={value}
+          onChange={(html) => onChange(html)}
+          ariaLabel={name}
+        />
+      </label>
+    );
+  }
+
+  // image → placeholder (Phase 6)
   return (
     <label>
       {label}
