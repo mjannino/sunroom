@@ -153,3 +153,33 @@ describe("PageEditor", () => {
     );
   });
 });
+
+describe('validation gating', () => {
+  const registryReq: SerializedRegistry = {
+    hero: { label: 'Hero', fields: { heading: { type: 'text', required: true } } },
+  }
+  function pageWith(headingValue: string): Page {
+    return { slug: 'p', title: 'P', position: 1, seo: {}, sections: [{ id: 's1', type: 'hero', props: { heading: headingValue } }] }
+  }
+
+  it('disables Save when a required field is empty and enables it once filled', () => {
+    render(<PageEditor page={pageWith('')} version="v1" registry={registryReq} actions={actionsMock()} />)
+    fireEvent.click(screen.getByText(/Hero/))
+    expect((screen.getByRole('button', { name: /save/i }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getAllByText('is required').length).toBeGreaterThan(0)
+
+    fireEvent.change(screen.getByLabelText('heading'), { target: { value: 'Hi' } })
+    expect((screen.getByRole('button', { name: /save/i }) as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('disables Save when the page title is empty', () => {
+    const page = { ...pageWith('Hi'), title: '' }
+    render(<PageEditor page={page} version="v1" registry={registryReq} actions={actionsMock()} />)
+    expect((screen.getByRole('button', { name: /save/i }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('marks an invalid section in the rail', () => {
+    render(<PageEditor page={pageWith('')} version="v1" registry={registryReq} actions={actionsMock()} />)
+    expect(screen.getByLabelText(/has errors/i)).toBeTruthy()
+  })
+})

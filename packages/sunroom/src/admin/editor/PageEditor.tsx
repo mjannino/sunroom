@@ -1,7 +1,12 @@
 "use client";
 import { useState } from "react";
-import type { Page } from "../../store/types.js";
-import { defaultProps, editReducer, type EditAction } from "../editor-core.js";
+import type { Page, SectionInstance } from "../../store/types.js";
+import {
+  defaultProps,
+  editorValidate,
+  editReducer,
+  type EditAction,
+} from "../editor-core.js";
 import { FieldControl } from "./FieldControl.js";
 import type { EditorActions, SerializedRegistry } from "./types.js";
 
@@ -33,6 +38,15 @@ export function PageEditor({
   const section = page.sections.find((s) => s.id === selected) ?? null;
   const schema = section ? registry[section.type] : undefined;
 
+  const sectionIssues = (s: SectionInstance) => {
+    const fieldSchema = registry[s.type];
+    return fieldSchema ? editorValidate(fieldSchema.fields, s.props) : [];
+  };
+  const anyInvalid = page.sections.some((s) => sectionIssues(s).length > 0);
+  const titleEmpty = page.title.trim() === "";
+  const canSave = dirty && !busy && !anyInvalid && !titleEmpty;
+  const selectedIssues = section ? sectionIssues(section) : [];
+
   async function save() {
     setBusy(true);
     const res = await actions.savePage(page, baseVersion);
@@ -59,6 +73,11 @@ export function PageEditor({
               >
                 {registry[s.type]?.label ?? s.type}
               </button>
+              {sectionIssues(s).length > 0 ? (
+                <span aria-label="has errors" title="has errors">
+                  ⚠
+                </span>
+              ) : null}
               <button
                 disabled={i === 0}
                 onClick={() =>
@@ -182,7 +201,7 @@ export function PageEditor({
                   })
                 }
                 path={key}
-                issues={[]}
+                issues={selectedIssues}
                 depth={0}
               />
             ))}
@@ -191,7 +210,7 @@ export function PageEditor({
           <p>Select or add a section to edit it.</p>
         )}
 
-        <button onClick={save} disabled={!dirty || busy}>
+        <button onClick={save} disabled={!canSave}>
           Save
         </button>
         {status ? <span role="status">{status}</span> : null}
