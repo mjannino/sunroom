@@ -8,6 +8,7 @@ import {
   type EditAction,
 } from "../editor-core.js";
 import { FieldControl } from "./FieldControl.js";
+import { SortableList, SortableRow } from "./Sortable.js";
 import type { EditorActions, SerializedRegistry } from "./types.js";
 
 export function PageEditor({
@@ -64,51 +65,64 @@ export function PageEditor({
     <div data-screen="editor" style={{ display: "flex", gap: "2rem" }}>
       <aside style={{ minWidth: 220 }}>
         <h2>{page.title}</h2>
-        <ol>
-          {page.sections.map((s, i) => (
-            <li key={s.id}>
-              <button
-                onClick={() => setSelected(s.id)}
-                style={{ fontWeight: s.id === selected ? 700 : 400 }}
-              >
-                {registry[s.type]?.label ?? s.type}
-              </button>
-              {sectionIssues(s).length > 0 ? (
-                <span aria-label="has errors" title="has errors">
-                  ⚠
-                </span>
-              ) : null}
-              <button
-                disabled={i === 0}
-                onClick={() =>
-                  dispatch({ type: "moveSection", sectionId: s.id, dir: "up" })
-                }
-              >
-                ↑
-              </button>
-              <button
-                disabled={i === page.sections.length - 1}
-                onClick={() =>
-                  dispatch({
-                    type: "moveSection",
-                    sectionId: s.id,
-                    dir: "down",
-                  })
-                }
-              >
-                ↓
-              </button>
-              <button
-                onClick={() => {
-                  if (confirm("Remove this section?"))
-                    dispatch({ type: "removeSection", sectionId: s.id });
-                }}
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ol>
+        <SortableList
+          ids={page.sections.map((s) => s.id)}
+          onReorder={(orderedIds) =>
+            dispatch({ type: "reorderSections", orderedIds })
+          }
+        >
+          <ol>
+            {page.sections.map((s, i) => (
+              <li key={s.id}>
+                <SortableRow id={s.id}>
+                  <button
+                    onClick={() => setSelected(s.id)}
+                    style={{ fontWeight: s.id === selected ? 700 : 400 }}
+                  >
+                    {registry[s.type]?.label ?? s.type}
+                  </button>
+                  {sectionIssues(s).length > 0 ? (
+                    <span aria-label="has errors" title="has errors">
+                      ⚠
+                    </span>
+                  ) : null}
+                  <button
+                    disabled={i === 0}
+                    onClick={() =>
+                      dispatch({
+                        type: "moveSection",
+                        sectionId: s.id,
+                        dir: "up",
+                      })
+                    }
+                  >
+                    ↑
+                  </button>
+                  <button
+                    disabled={i === page.sections.length - 1}
+                    onClick={() =>
+                      dispatch({
+                        type: "moveSection",
+                        sectionId: s.id,
+                        dir: "down",
+                      })
+                    }
+                  >
+                    ↓
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm("Remove this section?"))
+                        dispatch({ type: "removeSection", sectionId: s.id });
+                    }}
+                  >
+                    ✕
+                  </button>
+                </SortableRow>
+              </li>
+            ))}
+          </ol>
+        </SortableList>
         <details
           open={paletteOpen}
           onToggle={(e) => setPaletteOpen(e.currentTarget.open)}

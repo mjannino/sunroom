@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Page } from "../../store/types.js";
 import { PageEditor } from "./PageEditor.js";
@@ -246,5 +252,59 @@ describe("validation gating", () => {
       />,
     );
     expect(screen.getByLabelText(/has errors/i)).toBeTruthy();
+  });
+});
+
+describe("section reorder rail", () => {
+  const registryTwo: SerializedRegistry = {
+    hero: { label: "Hero", fields: { heading: { type: "text" } } },
+    testimonial: {
+      label: "Testimonial",
+      fields: { heading: { type: "text" } },
+    },
+  };
+  const twoSectionPage: Page = {
+    slug: "about",
+    title: "About",
+    position: 1,
+    seo: {},
+    sections: [
+      { id: "s1", type: "hero", props: { heading: "H" } },
+      { id: "s2", type: "testimonial", props: { heading: "T" } },
+    ],
+  };
+
+  it("renders the rail inside a sortable container", () => {
+    const { container } = render(
+      <PageEditor
+        page={twoSectionPage}
+        version="v1"
+        registry={registryTwo}
+        actions={actionsMock()}
+      />,
+    );
+    expect(container.querySelector("[data-sortable-list]")).toBeTruthy();
+  });
+
+  it("still reorders sections via the up/down buttons", () => {
+    render(
+      <PageEditor
+        page={twoSectionPage}
+        version="v1"
+        registry={registryTwo}
+        actions={actionsMock()}
+      />,
+    );
+    const rows = screen.getAllByRole("listitem");
+    expect(rows.map((r) => r.textContent)).toEqual([
+      expect.stringContaining("Hero"),
+      expect.stringContaining("Testimonial"),
+    ]);
+
+    fireEvent.click(within(rows[0]!).getByRole("button", { name: "↓" }));
+
+    const reordered = screen.getAllByRole("listitem");
+    expect(reordered[0]!.textContent).toContain("Testimonial");
+    expect(reordered[1]!.textContent).toContain("Hero");
   });
 });
