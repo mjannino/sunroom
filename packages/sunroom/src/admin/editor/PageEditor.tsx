@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import type { FieldDescriptor } from "../../core/fields.js";
 import type { Page } from "../../store/types.js";
 import { defaultProps, editReducer, type EditAction } from "../editor-core.js";
+import { FieldControl } from "./FieldControl.js";
 import type { EditorActions, SerializedRegistry } from "./types.js";
 
 export function PageEditor({
@@ -181,6 +181,9 @@ export function PageEditor({
                     value,
                   })
                 }
+                path={key}
+                issues={[]}
+                depth={0}
               />
             ))}
           </fieldset>
@@ -194,55 +197,5 @@ export function PageEditor({
         {status ? <span role="status">{status}</span> : null}
       </main>
     </div>
-  );
-}
-
-function FieldControl({
-  name,
-  field,
-  value,
-  onChange,
-}: {
-  name: string;
-  field: FieldDescriptor;
-  value: unknown;
-  onChange: (v: string) => void;
-}): React.ReactElement {
-  const label = field.label ?? name;
-  if (field.type === "textarea") {
-    return (
-      <label>
-        {label}{" "}
-        <textarea
-          aria-label={name}
-          value={String(value ?? "")}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </label>
-    );
-  }
-  if (field.type === "text") {
-    return (
-      <label>
-        {label}{" "}
-        <input
-          aria-label={name}
-          value={String(value ?? "")}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </label>
-    );
-  }
-  // Slice 1: other field types are visible but not yet editable.
-  return (
-    <label>
-      {label}{" "}
-      <input
-        aria-label={name}
-        disabled
-        value={typeof value === "string" ? value : ""}
-        placeholder={`${field.type} — editable in a later slice`}
-      />
-    </label>
   );
 }
