@@ -1,3 +1,4 @@
+import "server-only";
 import type { ReactElement, ReactNode } from "react";
 import { AuthConfigError } from "./config.js";
 import { getSession } from "./session-server.js";
@@ -59,15 +60,6 @@ export async function AdminLayout({
 }: {
   children: ReactNode;
 }): Promise<ReactElement> {
-  // Imported lazily: `server-only` throws unconditionally at module-eval
-  // time outside an RSC bundler (by design, to catch accidental
-  // client-component imports at build time). A static top-level import
-  // would break plain-Node ESM consumers of the `sunroom` barrel (e.g.
-  // Node scripts that only need `GitStore`) even though it resolves fine
-  // inside Next's own bundler. `SignInScreen`/`ConfigErrorScreen` are pure
-  // presentational and don't need the guard. See the identical fix in
-  // session-server.ts / handlers.ts.
-  await import("server-only");
   let session;
   try {
     session = await getSession();
