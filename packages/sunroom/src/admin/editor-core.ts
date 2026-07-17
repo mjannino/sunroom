@@ -3,8 +3,17 @@ import type { SunroomConfig } from "../core/registry.js";
 import { paramsToSlug } from "../store/paths.js";
 import type { Page } from "../store/types.js";
 import type { SerializedRegistry } from "./editor/types.js";
+import type { ValidationIssue } from "../errors.js";
+import { validateProps } from "../core/validate.js";
 
-function defaultForField(field: FieldDescriptor): unknown {
+export const MAX_FIELD_DEPTH = 5;
+
+export function defaultForField(field: FieldDescriptor, depth = 0): unknown {
+  if (depth > MAX_FIELD_DEPTH) {
+    throw new Error(
+      `field nesting exceeds max depth (${MAX_FIELD_DEPTH}) — check for a circular field descriptor`,
+    );
+  }
   if ("default" in field && field.default !== undefined) return field.default;
   switch (field.type) {
     case "text":
@@ -21,16 +30,24 @@ function defaultForField(field: FieldDescriptor): unknown {
     case "image":
       return undefined;
     case "object":
-      return defaultProps(field.fields);
+      return defaultProps(field.fields, depth + 1);
     case "array":
       return [];
   }
 }
 
-export function defaultProps(fields: FieldMap): Record<string, unknown> {
+export function defaultProps(
+  fields: FieldMap,
+  depth = 0,
+): Record<string, unknown> {
+  if (depth > MAX_FIELD_DEPTH) {
+    throw new Error(
+      `field nesting exceeds max depth (${MAX_FIELD_DEPTH}) — check for a circular field descriptor`,
+    );
+  }
   const out: Record<string, unknown> = {};
   for (const [key, field] of Object.entries(fields))
-    out[key] = defaultForField(field);
+    out[key] = defaultForField(field, depth);
   return out;
 }
 
@@ -112,4 +129,68 @@ export function editReducer(page: Page, action: EditAction): Page {
       return { ...page, sections };
     }
   }
+}
+
+const STRING_TYPES = new Set([
+  "text",
+  "textarea",
+  "richText",
+  "link",
+  "image",
+]);
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function isEmptyForRequired(
+  field: FieldDescriptor,
+  value: unknown,
+): boolean {
+  if (value === undefined || value === null) return true;
+  if (STRING_TYPES.has(field.type)) return value === "";
+  if (field.type === "array")
+    return Array.isArray(value) && value.length === 0;
+  return false; // 0, false, a select value, an object are all "present"
+}
+
+function walkRequired(
+  fields: FieldMap,
+  props: Record<string, unknown>,
+  prefix: string,
+  issues: ValidationIssue[],
+): void {
+  for (const [key, field] of Object.entries(fields)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    const value = props[key];
+    if (field.required && isEmptyForRequired(field, value)) {
+      issues.push({ path, message: "is required" });
+      continue;
+    }
+    if (field.type === "object" && isPlainObject(value)) {
+      walkRequired(field.fields, value, path, issues);
+    } else if (field.type === "array" && Array.isArray(value)) {
+      const of = field.of;
+      value.forEach((item, i) => {
+        const itemPath = `${path}[${i}]`;
+        if (of.type === "object" && isPlainObject(item)) {
+          walkRequired(of.fields, item, itemPath, issues);
+        } else if (of.required && isEmptyForRequired(of, item)) {
+          issues.push({ path: itemPath, message: "is required" });
+        }
+      });
+    }
+  }
+}
+
+/** validateProps + required-empty strictness (editor UX layer; does NOT modify validateProps). */
+export function editorValidate(
+  fields: FieldMap,
+  props: unknown,
+): ValidationIssue[] {
+  const base = validateProps(fields, props);
+  const required: ValidationIssue[] = [];
+  walkRequired(fields, isPlainObject(props) ? props : {}, "", required);
+  const seen = new Set(base.map((i) => i.path));
+  return [...base, ...required.filter((i) => !seen.has(i.path))];
 }

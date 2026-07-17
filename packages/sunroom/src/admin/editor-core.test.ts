@@ -6,6 +6,9 @@ import {
   editReducer,
   screenFromSegments,
   serializeRegistry,
+  editorValidate,
+  defaultForField,
+  MAX_FIELD_DEPTH,
 } from "./editor-core.js";
 
 describe("defaultProps", () => {
@@ -28,6 +31,80 @@ describe("defaultProps", () => {
       cta: { label: "" },
       quotes: [],
     });
+  });
+});
+
+describe("defaultForField (exported) + depth cap", () => {
+  it("is exported and returns type defaults", () => {
+    expect(defaultForField(f.text())).toBe("");
+    expect(defaultForField(f.number())).toBe(0);
+    expect(defaultForField(f.array(f.text()))).toEqual([]);
+  });
+
+  it("MAX_FIELD_DEPTH is 5", () => {
+    expect(MAX_FIELD_DEPTH).toBe(5);
+  });
+
+  it("throws on a too-deep / circular descriptor instead of infinite-looping", () => {
+    // Build a 7-level-deep nested object schema (exceeds the cap).
+    let deep: any = f.object({ leaf: f.text() });
+    for (let i = 0; i < 7; i++) deep = f.object({ child: deep });
+    expect(() => defaultProps({ root: deep })).toThrow(/depth/i);
+  });
+});
+
+describe("editorValidate", () => {
+  it("flags a required text left empty (which validateProps alone would pass)", () => {
+    const fields = { heading: f.text({ required: true }) };
+    expect(editorValidate(fields, { heading: "" })).toEqual([
+      { path: "heading", message: "is required" },
+    ]);
+    expect(editorValidate(fields, { heading: "Hi" })).toEqual([]);
+  });
+
+  it("flags a required array left empty", () => {
+    const fields = { quotes: f.array(f.text(), { required: true }) };
+    expect(editorValidate(fields, { quotes: [] })).toEqual([
+      { path: "quotes", message: "is required" },
+    ]);
+    expect(editorValidate(fields, { quotes: ["a"] })).toEqual([]);
+  });
+
+  it("still surfaces validateProps type errors", () => {
+    const fields = { count: f.number() };
+    expect(editorValidate(fields, { count: "nope" })).toEqual([
+      { path: "count", message: "expected a number" },
+    ]);
+  });
+
+  it("flags a required field empty inside a nested object", () => {
+    const fields = { cta: f.object({ href: f.link({ required: true }) }) };
+    expect(editorValidate(fields, { cta: { href: "" } })).toEqual([
+      { path: "cta.href", message: "is required" },
+    ]);
+  });
+
+  it("flags a required field empty inside an array item", () => {
+    const fields = {
+      quotes: f.array(f.object({ author: f.text({ required: true }) })),
+    };
+    expect(editorValidate(fields, { quotes: [{ author: "" }] })).toEqual([
+      { path: "quotes[0].author", message: "is required" },
+    ]);
+  });
+
+  it("does not double-report a missing key (validateProps wins)", () => {
+    const fields = { heading: f.text({ required: true }) };
+    const issues = editorValidate(fields, {});
+    expect(issues.filter((i) => i.path === "heading")).toHaveLength(1);
+  });
+
+  it("treats 0 and false as present (not empty)", () => {
+    const fields = {
+      count: f.number({ required: true }),
+      flag: f.boolean({ required: true }),
+    };
+    expect(editorValidate(fields, { count: 0, flag: false })).toEqual([]);
   });
 });
 
