@@ -131,26 +131,16 @@ export function editReducer(page: Page, action: EditAction): Page {
   }
 }
 
-const STRING_TYPES = new Set([
-  "text",
-  "textarea",
-  "richText",
-  "link",
-  "image",
-]);
+const STRING_TYPES = new Set(["text", "textarea", "richText", "link", "image"]);
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-function isEmptyForRequired(
-  field: FieldDescriptor,
-  value: unknown,
-): boolean {
+function isEmptyForRequired(field: FieldDescriptor, value: unknown): boolean {
   if (value === undefined || value === null) return true;
   if (STRING_TYPES.has(field.type)) return value === "";
-  if (field.type === "array")
-    return Array.isArray(value) && value.length === 0;
+  if (field.type === "array") return Array.isArray(value) && value.length === 0;
   return false; // 0, false, a select value, an object are all "present"
 }
 
