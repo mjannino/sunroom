@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Page, SectionInstance } from "../../store/types.js";
+import type { ValidationIssue } from "../../errors.js";
 import {
   defaultProps,
   editorValidate,
@@ -29,6 +30,8 @@ export function PageEditor({
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
 
   const dispatch = (action: EditAction) => {
     setPage((p) => editReducer(p, action));
@@ -39,14 +42,24 @@ export function PageEditor({
   const section = page.sections.find((s) => s.id === selected) ?? null;
   const schema = section ? registry[section.type] : undefined;
 
-  const sectionIssues = (s: SectionInstance) => {
-    const fieldSchema = registry[s.type];
-    return fieldSchema ? editorValidate(fieldSchema.fields, s.props) : [];
-  };
+  const sectionIssuesFor = useMemo(() => {
+    const map = new Map<string, ValidationIssue[]>();
+    for (const s of page.sections)
+      map.set(
+        s.id,
+        registry[s.type]
+          ? editorValidate(registry[s.type]!.fields, s.props)
+          : [],
+      );
+    return map;
+  }, [page, registry]);
+  const sectionIssues = (s: SectionInstance) =>
+    sectionIssuesFor.get(s.id) ?? [];
   const anyInvalid = page.sections.some((s) => sectionIssues(s).length > 0);
   const titleEmpty = page.title.trim() === "";
   const canSave = dirty && !busy && !anyInvalid && !titleEmpty;
   const selectedIssues = section ? sectionIssues(section) : [];
+  const previewSrc = page.slug === "" ? "/" : `/${page.slug}`;
 
   async function save() {
     setBusy(true);
@@ -56,6 +69,7 @@ export function PageEditor({
       if (res.version) setBaseVersion(res.version);
       setDirty(false);
       setStatus("Saved.");
+      setPreviewKey((k) => k + 1);
     } else {
       setStatus(res.message);
     }
@@ -169,6 +183,11 @@ export function PageEditor({
               }
             />
           </label>
+          {page.title.trim() === "" ? (
+            <span role="alert" style={{ color: "crimson" }}>
+              Title is required
+            </span>
+          ) : null}
           <label>
             SEO title{" "}
             <input
@@ -228,6 +247,18 @@ export function PageEditor({
           Save
         </button>
         {status ? <span role="status">{status}</span> : null}
+
+        <button type="button" onClick={() => setShowPreview((v) => !v)}>
+          {showPreview ? "Hide" : "Show"} preview
+        </button>
+        {showPreview ? (
+          <iframe
+            key={previewKey}
+            src={previewSrc}
+            title="Preview"
+            style={{ width: "100%", height: 480, border: "1px solid #ddd" }}
+          />
+        ) : null}
       </main>
     </div>
   );

@@ -47,6 +47,22 @@ function actionsMock(over: Partial<EditorActions> = {}): EditorActions {
   };
 }
 
+const registryReq: SerializedRegistry = {
+  hero: {
+    label: "Hero",
+    fields: { heading: { type: "text", required: true } },
+  },
+};
+function pageWith(headingValue: string): Page {
+  return {
+    slug: "p",
+    title: "P",
+    position: 1,
+    seo: {},
+    sections: [{ id: "s1", type: "hero", props: { heading: headingValue } }],
+  };
+}
+
 describe("PageEditor", () => {
   it("Save is disabled until an edit is made", () => {
     render(
@@ -165,22 +181,6 @@ describe("PageEditor", () => {
 });
 
 describe("validation gating", () => {
-  const registryReq: SerializedRegistry = {
-    hero: {
-      label: "Hero",
-      fields: { heading: { type: "text", required: true } },
-    },
-  };
-  function pageWith(headingValue: string): Page {
-    return {
-      slug: "p",
-      title: "P",
-      position: 1,
-      seo: {},
-      sections: [{ id: "s1", type: "hero", props: { heading: headingValue } }],
-    };
-  }
-
   it("disables Save while dirty and invalid, and re-enables it once the required field is filled", () => {
     // Start VALID so the page is not dirty and Save is disabled by !dirty alone.
     render(
@@ -306,5 +306,34 @@ describe("section reorder rail", () => {
     const reordered = screen.getAllByRole("listitem");
     expect(reordered[0]!.textContent).toContain("Testimonial");
     expect(reordered[1]!.textContent).toContain("Hero");
+  });
+});
+
+describe("preview + cleanups", () => {
+  it("toggles a preview iframe pointing at the page route", () => {
+    render(
+      <PageEditor
+        page={pageWith("Hi")}
+        version="v1"
+        registry={registryReq}
+        actions={actionsMock()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
+    const iframe = document.querySelector("iframe") as HTMLIFrameElement;
+    expect(iframe).not.toBeNull();
+    expect(iframe.getAttribute("src")).toContain("/p"); // slug 'p'
+  });
+
+  it('shows a "Title is required" cue when the title is empty', () => {
+    render(
+      <PageEditor
+        page={{ ...pageWith("Hi"), title: "" }}
+        version="v1"
+        registry={registryReq}
+        actions={actionsMock()}
+      />,
+    );
+    expect(screen.getByText(/title is required/i)).toBeTruthy();
   });
 });
