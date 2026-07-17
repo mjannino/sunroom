@@ -17,12 +17,13 @@ export function PagesScreen({
 
   async function run(
     fn: () => Promise<{ ok: boolean; message?: string; reason?: string }>,
-  ) {
+  ): Promise<{ ok: boolean; message?: string; reason?: string }> {
     setBusy(true);
     setError(null);
     const res = await fn();
     setBusy(false);
     if (!res.ok) setError(res.message ?? "Something went wrong.");
+    return res;
   }
 
   return (
@@ -65,9 +66,11 @@ export function PagesScreen({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          run(() => actions.createPage({ slug, title })).then(() => {
-            setSlug("");
-            setTitle("");
+          run(() => actions.createPage({ slug, title })).then((res) => {
+            if (res.ok) {
+              setSlug("");
+              setTitle("");
+            }
           });
         }}
       >

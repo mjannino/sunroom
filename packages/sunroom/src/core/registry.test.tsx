@@ -53,4 +53,17 @@ describe("resolveConfig", () => {
       else process.env.SUNROOM_CONTENT_DIR = prev;
     }
   });
+
+  it("prefers SUNROOM_CONTENT_DIR over an explicit config contentDir (env wins)", () => {
+    const prev = process.env.SUNROOM_CONTENT_DIR;
+    process.env.SUNROOM_CONTENT_DIR = "/env/content";
+    try {
+      expect(
+        resolveConfig({ contentDir: "/other", sections: {} }).contentDir,
+      ).toBe("/env/content");
+    } finally {
+      if (prev === undefined) delete process.env.SUNROOM_CONTENT_DIR;
+      else process.env.SUNROOM_CONTENT_DIR = prev;
+    }
+  });
 });

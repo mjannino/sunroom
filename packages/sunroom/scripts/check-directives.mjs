@@ -14,16 +14,19 @@
 //      .superpowers/sdd/task-1-report.md).
 //   2. A chunk contains a directive string that isn't actually in directive
 //      position — neither the first statement of the file (line 1, after
-//      trimming) nor the first statement of a function body (the classic
-//      per-function inline `'use server'` form used for Server Actions,
-//      e.g. `async function save(x) { 'use server'; ... }`). A directive
-//      in neither position is inert/misplaced — a sign it was hoisted to
-//      the wrong place or otherwise mangled. Based on the actual emitted
-//      shape (see the build spike report and Task 4), the plugin/tsup
-//      emits the directive either as the literal first line of the chunk
-//      (module-level directive) or as the first line inside a function's
-//      `{ ... }` block (inline per-function directive) — both count as
-//      valid placement.
+//      trimming) nor, for `'use server'` only, the first statement of a
+//      function body (the classic per-function inline form used for Server
+//      Actions, e.g. `async function save(x) { 'use server'; ... }`). A
+//      directive in neither position is inert/misplaced — a sign it was
+//      hoisted to the wrong place or otherwise mangled. Based on the actual
+//      emitted shape (see the build spike report and Task 4), the
+//      plugin/tsup emits a directive either as the literal first line of the
+//      chunk (module-level directive, valid for either directive) or, for
+//      `'use server'`, as the first line inside a function's `{ ... }` block
+//      (inline per-function directive). `'use client'` has no valid inline
+//      form — it is only ever a module-level directive — so a `'use client'`
+//      found as the first statement of a function body is still flagged as
+//      misplaced.
 //
 // Only Node builtins are used so this can run standalone in CI with no
 // dependency install beyond the workspace build.
@@ -84,7 +87,10 @@ for (const f of files) {
       let prev = i - 1;
       while (prev >= 0 && lines[prev].trim() === "") prev--;
       const prevTrimmed = prev >= 0 ? lines[prev].trim() : "";
-      if (prevTrimmed.endsWith("{")) continue; // inline per-function directive
+      // Only 'use server' has a valid inline (per-function) form. A
+      // 'use client' directive found as the first statement of a function
+      // body is not a real directive position and must still be flagged.
+      if (directive === "use server" && prevTrimmed.endsWith("{")) continue;
 
       console.error(
         `FAIL: ${f} contains a "${directive}" directive string at line ${i + 1} ` +

@@ -93,6 +93,40 @@ describe("PageEditor", () => {
     expect(body.disabled).toBe(true);
   });
 
+  it("refreshes baseVersion after a successful save so a second save uses it", async () => {
+    const savePage = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, version: "v2" } satisfies ActionResult)
+      .mockResolvedValueOnce({
+        ok: true,
+        version: "v3",
+      } satisfies ActionResult);
+    const actions = actionsMock({ savePage });
+    render(
+      <PageEditor
+        page={page}
+        version="v1"
+        registry={registry}
+        actions={actions}
+      />,
+    );
+    fireEvent.click(screen.getByText(/Hero/));
+
+    fireEvent.change(screen.getByLabelText("heading"), {
+      target: { value: "First edit" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(savePage).toHaveBeenCalledTimes(1));
+    expect(savePage.mock.calls[0]![1]).toBe("v1");
+
+    fireEvent.change(screen.getByLabelText("heading"), {
+      target: { value: "Second edit" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(savePage).toHaveBeenCalledTimes(2));
+    expect(savePage.mock.calls[1]![1]).toBe("v2");
+  });
+
   it("shows a conflict message when save returns a conflict", async () => {
     const actions = actionsMock({
       savePage: vi.fn(async (): Promise<ActionResult> => ({

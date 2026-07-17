@@ -30,7 +30,19 @@ export function defineSection<const M extends FieldMap>(def: {
 }
 
 export interface SunroomInput {
-  /** Defaults to $SUNROOM_CONTENT_DIR, then './.sunroom-content'. */
+  /**
+   * Defaults to $SUNROOM_CONTENT_DIR, then './.sunroom-content'.
+   *
+   * When the editor is enabled, `SUNROOM_CONTENT_DIR` is authoritative and
+   * takes precedence over this option — the write-path server actions
+   * (`admin/actions.ts`) cannot receive the live config object (it holds
+   * React components and won't serialize across the server-action boundary),
+   * so they resolve the store from the environment variable alone. This
+   * option is a fallback used only when the env var is unset, e.g. for
+   * read-only/testing embeddings that never write through the editor. A
+   * deployment that enables the editor MUST set `SUNROOM_CONTENT_DIR` so the
+   * render path and the actions agree on the same directory.
+   */
   contentDir?: string;
   sections: Record<string, SectionDefinition<FieldMap>>;
 }
@@ -44,9 +56,13 @@ export const DEFAULT_CONTENT_DIR = "./.sunroom-content";
 
 export function resolveConfig(input: SunroomInput): SunroomConfig {
   return {
+    // Env wins: this keeps the render path (resolveConfig(config)) and the
+    // write-path server actions (resolveConfig({ sections: {} })) resolving
+    // to the same store whenever SUNROOM_CONTENT_DIR is set — see the
+    // SunroomInput.contentDir doc comment above.
     contentDir:
-      input.contentDir ??
       process.env.SUNROOM_CONTENT_DIR ??
+      input.contentDir ??
       DEFAULT_CONTENT_DIR,
     sections: input.sections,
   };

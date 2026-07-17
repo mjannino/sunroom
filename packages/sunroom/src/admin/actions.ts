@@ -8,6 +8,11 @@ import { HOME_SLUG, validateSlug } from "../store/paths.js";
 import { getSession } from "./session-server.js";
 import type { ActionResult } from "./editor/types.js";
 
+// Resolved from env (SUNROOM_CONTENT_DIR), not the live config: server
+// actions run in their own module graph and cannot receive the config
+// object passed to createSunroom() — it holds React components (section
+// definitions) and won't serialize across the server-action boundary. See
+// the SunroomInput.contentDir doc comment in core/registry.ts.
 async function store(): Promise<ContentStore> {
   return getStore(resolveConfig({ sections: {} }));
 }

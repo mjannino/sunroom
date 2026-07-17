@@ -5,11 +5,9 @@ import type { Page } from "../../store/types.js";
 import { defaultProps, editReducer, type EditAction } from "../editor-core.js";
 import type { EditorActions, SerializedRegistry } from "./types.js";
 
-const TEXT_TYPES = new Set(["text", "textarea"]);
-
 export function PageEditor({
   page: initial,
-  version: baseVersion,
+  version,
   registry,
   actions,
 }: {
@@ -19,6 +17,7 @@ export function PageEditor({
   actions: EditorActions;
 }): React.ReactElement {
   const [page, setPage] = useState(initial);
+  const [baseVersion, setBaseVersion] = useState(version);
   const [selected, setSelected] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -39,6 +38,7 @@ export function PageEditor({
     const res = await actions.savePage(page, baseVersion);
     setBusy(false);
     if (res.ok) {
+      if (res.version) setBaseVersion(res.version);
       setDirty(false);
       setStatus("Saved.");
     } else {

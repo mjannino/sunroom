@@ -60,6 +60,14 @@ describe("PagesScreen", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /create/i }));
     await waitFor(() => expect(screen.getByText("bad slug")).toBeTruthy());
+    // The user's input must be retained (not silently cleared) when the
+    // create action fails, so they can see and correct what they typed.
+    expect((screen.getByLabelText(/slug/i) as HTMLInputElement).value).toBe(
+      "Bad",
+    );
+    expect((screen.getByLabelText(/title/i) as HTMLInputElement).value).toBe(
+      "B",
+    );
   });
 
   it("disables delete for the home page", () => {
