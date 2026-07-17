@@ -9,6 +9,9 @@
 // Verified in the Phase 5 Slice 1 build spike (see
 // .superpowers/sdd/task-1-report.md).
 //
-// Populated by later tasks as real server actions are added, e.g.:
-//   export { savePage, publishPage } from "./admin/editor/actions.js";
-export {};
+export {
+  savePageAction,
+  createPageAction,
+  deletePageAction,
+  reorderPagesAction,
+} from "./admin/actions.js";
