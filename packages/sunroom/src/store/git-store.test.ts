@@ -386,3 +386,55 @@ describe("saveSettings", () => {
     );
   });
 });
+
+const MEDIA_AUTHOR = { name: "Jane", email: "jane@acme.com" };
+
+function media(overrides: Partial<import("./types.js").MediaRecord> = {}) {
+  return {
+    id: "m1",
+    storageKey: "uploads/m1.jpg",
+    filename: "m1.jpg",
+    mime: "image/jpeg",
+    width: 800,
+    height: 600,
+    size: 1234,
+    alt: "A photo",
+    createdAt: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+describe("media", () => {
+  it("starts empty and creates media/index.json on init", async () => {
+    const store = await freshStore();
+    expect(store.listMedia()).toEqual([]);
+    // the file exists (a subsequent boot loads it)
+    const reloaded = await freshStore();
+    expect(reloaded.listMedia()).toEqual([]);
+  });
+
+  it("adds a media record, commits, and persists across reload", async () => {
+    const store = await freshStore();
+    await store.addMedia(media(), { author: MEDIA_AUTHOR });
+    expect(store.getMedia("m1")?.alt).toBe("A photo");
+    expect(store.listMedia().map((m) => m.id)).toEqual(["m1"]);
+    expect(await git(dir, ["log", "-1", "--format=%s"])).toBe("Add media m1");
+
+    const reloaded = await freshStore();
+    expect(reloaded.getMedia("m1")?.storageKey).toBe("uploads/m1.jpg");
+  });
+
+  it("returns null for an unknown media id", async () => {
+    const store = await freshStore();
+    expect(store.getMedia("nope")).toBeNull();
+  });
+
+  it("deletes a media record and commits", async () => {
+    const store = await freshStore();
+    await store.addMedia(media(), { author: MEDIA_AUTHOR });
+    await store.deleteMedia("m1", { author: MEDIA_AUTHOR });
+    expect(store.getMedia("m1")).toBeNull();
+    expect(store.listMedia()).toEqual([]);
+    expect(await git(dir, ["status", "--porcelain"])).toBe("");
+  });
+});

@@ -44,6 +44,7 @@ export { DEFAULT_SETTINGS } from "./store/types.js";
 export type {
   Author,
   ContentStore,
+  MediaRecord,
   Page,
   PageEntry,
   PageSeo,

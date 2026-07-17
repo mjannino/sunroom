@@ -55,6 +55,18 @@ export interface SaveOptions {
   author: Author;
 }
 
+export interface MediaRecord {
+  id: string;
+  storageKey: string;
+  filename: string;
+  mime: string;
+  width: number;
+  height: number;
+  size: number;
+  alt: string;
+  createdAt: string;
+}
+
 export interface ContentStore {
   /** Idempotent. Creates the repo if absent, discards any crashed-save debris, loads the index. */
   init(): Promise<void>;
@@ -67,6 +79,10 @@ export interface ContentStore {
   ): Promise<void>;
   getSettings(): Settings;
   saveSettings(settings: Settings, options: { author: Author }): Promise<void>;
+  listMedia(): MediaRecord[];
+  getMedia(id: string): MediaRecord | null;
+  addMedia(record: MediaRecord, options: { author: Author }): Promise<void>;
+  deleteMedia(id: string, options: { author: Author }): Promise<void>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {

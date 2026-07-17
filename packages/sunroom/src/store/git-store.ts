@@ -8,6 +8,7 @@ import { HOME_SLUG, pathToSlug, slugToPath, validateSlug } from "./paths.js";
 import type {
   Author,
   ContentStore,
+  MediaRecord,
   Page,
   PageEntry,
   PageSummary,
@@ -46,6 +47,7 @@ export class GitStore implements ContentStore {
   private readonly dir: string;
   private pages = new Map<string, PageEntry>();
   private settings: Settings = DEFAULT_SETTINGS;
+  private media = new Map<string, MediaRecord>();
   /** Serialises writes. Concurrent saves queue instead of clobbering. */
   private chain: Promise<unknown> = Promise.resolve();
 
@@ -75,6 +77,7 @@ export class GitStore implements ContentStore {
         seo: {},
         sections: [],
       };
+      await mkdir(join(this.dir, "media"), { recursive: true });
       await writeFile(
         join(this.dir, "settings.json"),
         serialize(DEFAULT_SETTINGS),
@@ -83,6 +86,11 @@ export class GitStore implements ContentStore {
       await writeFile(
         join(this.dir, "pages", "index.json"),
         serialize(home),
+        "utf8",
+      );
+      await writeFile(
+        join(this.dir, "media", "index.json"),
+        serialize([]),
         "utf8",
       );
       await git(this.dir, ["add", "-A"]);
@@ -122,6 +130,12 @@ export class GitStore implements ContentStore {
     this.settings = JSON.parse(
       await readFile(join(this.dir, "settings.json"), "utf8"),
     ) as Settings;
+
+    const mediaIndexPath = join(this.dir, "media", "index.json");
+    const records = existsSync(mediaIndexPath)
+      ? (JSON.parse(await readFile(mediaIndexPath, "utf8")) as MediaRecord[])
+      : [];
+    this.media = new Map(records.map((m) => [m.id, m]));
   }
 
   listPages(): PageSummary[] {
@@ -259,5 +273,50 @@ export class GitStore implements ContentStore {
 
       this.settings = settings;
     });
+  }
+
+  listMedia(): MediaRecord[] {
+    return [...this.media.values()];
+  }
+
+  getMedia(id: string): MediaRecord | null {
+    return this.media.get(id) ?? null;
+  }
+
+  async addMedia(
+    record: MediaRecord,
+    { author }: { author: Author },
+  ): Promise<void> {
+    return this.withLock(async () => {
+      const next = new Map(this.media);
+      next.set(record.id, record);
+      await this.writeMedia(next, author, `Add media ${record.id}`);
+      this.media = next;
+    });
+  }
+
+  async deleteMedia(id: string, { author }: { author: Author }): Promise<void> {
+    return this.withLock(async () => {
+      const next = new Map(this.media);
+      next.delete(id);
+      await this.writeMedia(next, author, `Delete media ${id}`);
+      this.media = next;
+    });
+  }
+
+  private async writeMedia(
+    next: Map<string, MediaRecord>,
+    author: Author,
+    message: string,
+  ): Promise<void> {
+    const rel = "media/index.json";
+    try {
+      await writeAtomic(join(this.dir, rel), serialize([...next.values()]));
+      await git(this.dir, ["add", "--", rel]);
+      await git(this.dir, commitArgs(author, message));
+    } catch (error) {
+      await this.rollback();
+      throw error;
+    }
   }
 }
