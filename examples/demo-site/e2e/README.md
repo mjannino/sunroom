@@ -4,6 +4,15 @@ This proves the real Slice 1 loop end-to-end against a running
 `pnpm --filter demo-site start`, without a reimplementation of any
 action/store logic.
 
+`action-loop.mjs` also proves the Slice 2 nested/array-field save: after the
+plain hero-heading save, it saves a second edit that adds a Testimonials
+section whose `quotes` field is an ARRAY of OBJECTS
+(`quotes: [{ quote, author }]`), through the exact same `savePageAction`.
+It then reads the saved page straight back off disk (the same file
+`GitStore.savePage` just wrote) and asserts the nested `quotes[0].author`
+value is present — proving a nested/array field edit round-trips through
+the real save, not just a flat scalar prop.
+
 **Playwright was tried first** (per the Phase 5 Slice 1 plan's preference)
 and rejected: this environment has no passwordless `sudo`, and Playwright's
 Chromium needs system libraries (`libnspr4` etc.) that can only be installed
@@ -73,4 +82,7 @@ pnpm --filter demo-site build
 pnpm --filter demo-site start &
 curl -s localhost:3000/menu | grep -o '<h1>[^<]*</h1>'
 curl -s localhost:3000/ | grep -o 'href="/menu"'
+# the nested/array field (Testimonials' `quotes: [{ quote, author }]`),
+# rendered from the SAME saved page, over real HTTP:
+curl -s localhost:3000/menu | grep -o '<cite>[^<]*</cite>'
 ```
