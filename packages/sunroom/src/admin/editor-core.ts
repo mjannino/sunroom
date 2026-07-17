@@ -1,7 +1,7 @@
 import type { FieldDescriptor, FieldMap } from "../core/fields.js";
 import type { SunroomConfig } from "../core/registry.js";
 import { paramsToSlug } from "../store/paths.js";
-import type { Page } from "../store/types.js";
+import type { Page, SectionInstance } from "../store/types.js";
 import type { SerializedRegistry } from "./editor/types.js";
 import type { ValidationIssue } from "../errors.js";
 import { validateProps } from "../core/validate.js";
@@ -88,7 +88,8 @@ export type EditAction =
       props: Record<string, unknown>;
     }
   | { type: "removeSection"; sectionId: string }
-  | { type: "moveSection"; sectionId: string; dir: "up" | "down" };
+  | { type: "moveSection"; sectionId: string; dir: "up" | "down" }
+  | { type: "reorderSections"; orderedIds: string[] };
 
 export function editReducer(page: Page, action: EditAction): Page {
   switch (action.type) {
@@ -127,6 +128,16 @@ export function editReducer(page: Page, action: EditAction): Page {
       const sections = [...page.sections];
       [sections[i], sections[j]] = [sections[j]!, sections[i]!];
       return { ...page, sections };
+    }
+    case "reorderSections": {
+      const byId = new Map(page.sections.map((s) => [s.id, s]));
+      const ordered = action.orderedIds
+        .map((id) => byId.get(id))
+        .filter((s): s is SectionInstance => !!s);
+      const rest = page.sections.filter(
+        (s) => !action.orderedIds.includes(s.id),
+      );
+      return { ...page, sections: [...ordered, ...rest] };
     }
   }
 }

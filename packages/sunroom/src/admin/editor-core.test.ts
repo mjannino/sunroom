@@ -244,3 +244,32 @@ describe("editReducer", () => {
     ).toEqual(["s1", "s2"]); // no-op at bottom
   });
 });
+
+describe("editReducer reorderSections", () => {
+  const base = {
+    slug: "p",
+    title: "P",
+    position: 1,
+    seo: {},
+    sections: [
+      { id: "s1", type: "hero", props: {} },
+      { id: "s2", type: "quote", props: {} },
+      { id: "s3", type: "cta", props: {} },
+    ],
+  };
+  it("reorders sections to match orderedIds", () => {
+    const next = editReducer(base, {
+      type: "reorderSections",
+      orderedIds: ["s3", "s1", "s2"],
+    });
+    expect(next.sections.map((s) => s.id)).toEqual(["s3", "s1", "s2"]);
+    expect(base.sections.map((s) => s.id)).toEqual(["s1", "s2", "s3"]); // input not mutated
+  });
+  it("ignores unknown ids and keeps unlisted sections at the end", () => {
+    const next = editReducer(base, {
+      type: "reorderSections",
+      orderedIds: ["s2", "nope"],
+    });
+    expect(next.sections.map((s) => s.id)).toEqual(["s2", "s1", "s3"]);
+  });
+});
