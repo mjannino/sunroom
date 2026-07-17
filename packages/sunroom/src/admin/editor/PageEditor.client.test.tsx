@@ -154,32 +154,93 @@ describe("PageEditor", () => {
   });
 });
 
-describe('validation gating', () => {
+describe("validation gating", () => {
   const registryReq: SerializedRegistry = {
-    hero: { label: 'Hero', fields: { heading: { type: 'text', required: true } } },
-  }
+    hero: {
+      label: "Hero",
+      fields: { heading: { type: "text", required: true } },
+    },
+  };
   function pageWith(headingValue: string): Page {
-    return { slug: 'p', title: 'P', position: 1, seo: {}, sections: [{ id: 's1', type: 'hero', props: { heading: headingValue } }] }
+    return {
+      slug: "p",
+      title: "P",
+      position: 1,
+      seo: {},
+      sections: [{ id: "s1", type: "hero", props: { heading: headingValue } }],
+    };
   }
 
-  it('disables Save when a required field is empty and enables it once filled', () => {
-    render(<PageEditor page={pageWith('')} version="v1" registry={registryReq} actions={actionsMock()} />)
-    fireEvent.click(screen.getByText(/Hero/))
-    expect((screen.getByRole('button', { name: /save/i }) as HTMLButtonElement).disabled).toBe(true)
-    expect(screen.getAllByText('is required').length).toBeGreaterThan(0)
+  it("disables Save while dirty and invalid, and re-enables it once the required field is filled", () => {
+    // Start VALID so the page is not dirty and Save is disabled by !dirty alone.
+    render(
+      <PageEditor
+        page={pageWith("Hi")}
+        version="v1"
+        registry={registryReq}
+        actions={actionsMock()}
+      />,
+    );
+    fireEvent.click(screen.getByText(/Hero/));
+    expect(
+      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
 
-    fireEvent.change(screen.getByLabelText('heading'), { target: { value: 'Hi' } })
-    expect((screen.getByRole('button', { name: /save/i }) as HTMLButtonElement).disabled).toBe(false)
-  })
+    // Emptying the required field both dirties the page AND makes it invalid.
+    // If Save were still disabled only, this assertion proves anyInvalid is doing the work,
+    // since dirty is now true.
+    fireEvent.change(screen.getByLabelText("heading"), {
+      target: { value: "" },
+    });
+    expect(
+      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(screen.getAllByText("is required").length).toBeGreaterThan(0);
 
-  it('disables Save when the page title is empty', () => {
-    const page = { ...pageWith('Hi'), title: '' }
-    render(<PageEditor page={page} version="v1" registry={registryReq} actions={actionsMock()} />)
-    expect((screen.getByRole('button', { name: /save/i }) as HTMLButtonElement).disabled).toBe(true)
-  })
+    // Fixing the field keeps the page dirty but clears the invalidity -> Save enables.
+    fireEvent.change(screen.getByLabelText("heading"), {
+      target: { value: "Hi again" },
+    });
+    expect(
+      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(false);
+  });
 
-  it('marks an invalid section in the rail', () => {
-    render(<PageEditor page={pageWith('')} version="v1" registry={registryReq} actions={actionsMock()} />)
-    expect(screen.getByLabelText(/has errors/i)).toBeTruthy()
-  })
-})
+  it("disables Save while dirty when the page title is emptied", () => {
+    // Start with a fully valid page so Save is disabled only by !dirty initially.
+    render(
+      <PageEditor
+        page={pageWith("Hi")}
+        version="v1"
+        registry={registryReq}
+        actions={actionsMock()}
+      />,
+    );
+    expect(
+      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+
+    // Emptying the title both dirties the page AND makes titleEmpty true.
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "" } });
+    expect(
+      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("marks an invalid section in the rail", () => {
+    render(
+      <PageEditor
+        page={pageWith("")}
+        version="v1"
+        registry={registryReq}
+        actions={actionsMock()}
+      />,
+    );
+    expect(screen.getByLabelText(/has errors/i)).toBeTruthy();
+  });
+});
