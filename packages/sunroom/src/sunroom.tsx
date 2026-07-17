@@ -5,6 +5,7 @@ import { createHandlers, type SunroomHandlers } from "./admin/handlers.js";
 import { AdminLayout } from "./admin/components.js";
 import type { SunroomConfig, SunroomInput } from "./core/registry.js";
 import { resolveConfig } from "./core/registry.js";
+import { makeResolveMedia } from "./render/media.js";
 import { Sections } from "./render/sections.js";
 import { paramsToSlug, slugToParams } from "./store/paths.js";
 import { getStore } from "./store/singleton.js";
@@ -64,9 +65,15 @@ export function createSunroom(input: SunroomInput): Sunroom {
     if (!entry) return {};
 
     const { seoDefaults } = store.getSettings();
+    const ogImage = entry.page.seo.ogImage;
+    const ogUrl = ogImage
+      ? makeResolveMedia(store.listMedia(), process.env.R2_PUBLIC_BASE)(ogImage)
+          ?.url
+      : undefined;
     return {
       title: entry.page.seo.title ?? entry.page.title,
       description: entry.page.seo.description ?? seoDefaults.description,
+      ...(ogUrl ? { openGraph: { images: [ogUrl] } } : {}),
     };
   }
 
@@ -84,7 +91,18 @@ export function createSunroom(input: SunroomInput): Sunroom {
       return notFound();
     }
 
-    return <Sections config={config} sections={entry.page.sections} />;
+    const resolveMedia = makeResolveMedia(
+      store.listMedia(),
+      process.env.R2_PUBLIC_BASE,
+    );
+
+    return (
+      <Sections
+        config={config}
+        sections={entry.page.sections}
+        resolveMedia={resolveMedia}
+      />
+    );
   }
 
   async function getPages(): Promise<PageSummary[]> {

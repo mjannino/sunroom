@@ -121,6 +121,40 @@ describe("generateMetadata", () => {
       }),
     ).toEqual({});
   });
+
+  it("resolves seo.ogImage to a public URL in metadata", async () => {
+    process.env.R2_PUBLIC_BASE = "https://cdn.example.com";
+    const store = new GitStore(dir);
+    await store.init();
+    await store.addMedia(
+      {
+        id: "og1",
+        storageKey: "og/og1.png",
+        filename: "og1.png",
+        mime: "image/png",
+        width: 1200,
+        height: 630,
+        size: 1,
+        alt: "OG",
+        createdAt: "x",
+      },
+      { author: AUTHOR },
+    );
+    const home = store.getPage("")!;
+    await store.savePage(
+      { ...home.page, seo: { ...home.page.seo, ogImage: "og1" } },
+      { baseVersion: home.version, author: AUTHOR },
+    );
+    resetStores();
+
+    const meta = await sunroom().generateMetadata({
+      params: Promise.resolve({}),
+    });
+    expect(JSON.stringify(meta)).toContain(
+      "https://cdn.example.com/og/og1.png",
+    );
+    delete process.env.R2_PUBLIC_BASE;
+  });
 });
 
 describe("escape hatches", () => {

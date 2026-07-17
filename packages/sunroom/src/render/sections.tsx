@@ -1,10 +1,12 @@
 import type { ReactElement } from "react";
 import type { SunroomConfig } from "../core/registry.js";
 import type { SectionInstance } from "../store/types.js";
+import { resolveMediaInProps, type ResolveMedia } from "./media.js";
 
 export interface SectionsProps {
   config: SunroomConfig;
   sections: SectionInstance[];
+  resolveMedia?: ResolveMedia;
 }
 
 /**
@@ -15,7 +17,11 @@ export interface SectionsProps {
  * in `sunroom check` (Phase 7), so it cannot reach production unnoticed —
  * this path exists for the moments in between.
  */
-export function Sections({ config, sections }: SectionsProps): ReactElement {
+export function Sections({
+  config,
+  sections,
+  resolveMedia,
+}: SectionsProps): ReactElement {
   return (
     <>
       {sections.map((section) => {
@@ -32,7 +38,12 @@ export function Sections({ config, sections }: SectionsProps): ReactElement {
         }
 
         const Component = definition.component;
-        return <Component key={section.id} {...section.props} />;
+        const props = resolveMediaInProps(
+          definition.fields,
+          section.props,
+          resolveMedia ?? (() => undefined),
+        );
+        return <Component key={section.id} {...props} />;
       })}
     </>
   );

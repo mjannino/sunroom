@@ -67,4 +67,61 @@ describe("Sections", () => {
     expect(warn.mock.calls[0]?.[0]).toContain("deleted-component");
     expect(warn.mock.calls[0]?.[0]).toContain("sunroom check");
   });
+
+  it("resolves an image field to ImageValue before rendering the component", () => {
+    function Banner({ photo }: { photo?: { url: string; alt?: string } }) {
+      return photo ? (
+        <img src={photo.url} alt={photo.alt} />
+      ) : (
+        <span>no image</span>
+      );
+    }
+    const cfg = resolveConfig({
+      contentDir: "/unused",
+      sections: {
+        banner: defineSection({
+          label: "Banner",
+          component: Banner,
+          fields: { photo: f.image() },
+        }),
+      },
+    });
+    const resolveMedia = (id: string) =>
+      id === "m1"
+        ? { url: "https://cdn/x.jpg", width: 1, height: 1, alt: "A" }
+        : undefined;
+    const html = renderToStaticMarkup(
+      <Sections
+        config={cfg}
+        sections={[{ id: "s", type: "banner", props: { photo: "m1" } }]}
+        resolveMedia={resolveMedia}
+      />,
+    );
+    expect(html).toContain('src="https://cdn/x.jpg"');
+    expect(html).toContain('alt="A"');
+  });
+
+  it("renders no image for a dangling id", () => {
+    function Banner({ photo }: { photo?: { url: string } }) {
+      return photo ? <img src={photo.url} /> : <span>no image</span>;
+    }
+    const cfg = resolveConfig({
+      contentDir: "/unused",
+      sections: {
+        banner: defineSection({
+          label: "B",
+          component: Banner,
+          fields: { photo: f.image() },
+        }),
+      },
+    });
+    const html = renderToStaticMarkup(
+      <Sections
+        config={cfg}
+        sections={[{ id: "s", type: "banner", props: { photo: "gone" } }]}
+        resolveMedia={() => undefined}
+      />,
+    );
+    expect(html).toContain("no image");
+  });
 });
