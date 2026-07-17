@@ -55,14 +55,6 @@ export function ConfigErrorScreen({
   );
 }
 
-export function AdminPage(): ReactElement {
-  return (
-    <section>
-      <p>Your content will appear here.</p>
-    </section>
-  );
-}
-
 export async function AdminLayout({
   children,
 }: {

@@ -8,6 +8,5 @@
 // directives in the same file"). Verified in the Phase 5 Slice 1 build
 // spike (see .superpowers/sdd/task-1-report.md).
 //
-// Populated by later tasks as editor client components are added, e.g.:
-//   export { Editor } from "./admin/editor/editor.js";
-export {};
+export { PagesScreen } from "./admin/editor/PagesScreen.js";
+export { PageEditor } from "./admin/editor/PageEditor.js";

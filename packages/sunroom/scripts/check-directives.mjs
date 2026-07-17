@@ -12,13 +12,18 @@
 //      directives in the same file") — this is exactly what the Phase 5
 //      Slice 1 build spike hit with a single tsup entry (see
 //      .superpowers/sdd/task-1-report.md).
-//   2. A chunk contains a directive string but it is not the first
-//      statement (line 1, after trimming). A directive that isn't first is
-//      inert/misplaced — a sign it was hoisted to the wrong place or
-//      otherwise mangled. Based on the actual emitted shape (see the build
-//      spike report), the plugin emits the directive as the literal first
-//      line of the chunk, e.g. `"use client";` or `'use client';`, with no
-//      leading comment or shebang — so line 1 is checked as-is.
+//   2. A chunk contains a directive string that isn't actually in directive
+//      position — neither the first statement of the file (line 1, after
+//      trimming) nor the first statement of a function body (the classic
+//      per-function inline `'use server'` form used for Server Actions,
+//      e.g. `async function save(x) { 'use server'; ... }`). A directive
+//      in neither position is inert/misplaced — a sign it was hoisted to
+//      the wrong place or otherwise mangled. Based on the actual emitted
+//      shape (see the build spike report and Task 4), the plugin/tsup
+//      emits the directive either as the literal first line of the chunk
+//      (module-level directive) or as the first line inside a function's
+//      `{ ... }` block (inline per-function directive) — both count as
+//      valid placement.
 //
 // Only Node builtins are used so this can run standalone in CI with no
 // dependency install beyond the workspace build.
@@ -49,7 +54,8 @@ let failed = false;
 
 for (const f of files) {
   const body = readFileSync(join(dist, f), "utf8");
-  const firstLine = body.split("\n", 1)[0] ?? "";
+  const lines = body.split("\n");
+  const firstLine = lines[0] ?? "";
   const present = Object.fromEntries(
     DIRECTIVES.map((d) => [d, containsDirective(body, d)]),
   );
@@ -64,11 +70,27 @@ for (const f of files) {
   }
 
   for (const directive of DIRECTIVES) {
-    if (present[directive] && !isDirectiveLine(firstLine, directive)) {
+    if (!present[directive]) continue;
+
+    // Find every line that is exactly the directive statement, and confirm
+    // each one is in valid directive position: line 1 of the file, or the
+    // first statement inside a function body (previous non-blank line ends
+    // with `{`).
+    for (let i = 0; i < lines.length; i++) {
+      if (!isDirectiveLine(lines[i], directive)) continue;
+
+      if (i === 0) continue; // module-level directive
+
+      let prev = i - 1;
+      while (prev >= 0 && lines[prev].trim() === "") prev--;
+      const prevTrimmed = prev >= 0 ? lines[prev].trim() : "";
+      if (prevTrimmed.endsWith("{")) continue; // inline per-function directive
+
       console.error(
-        `FAIL: ${f} contains a "${directive}" directive string but it is not ` +
-          `on line 1 (found: ${JSON.stringify(firstLine)}) — the directive is ` +
-          `misplaced/inert and will not be honored.`,
+        `FAIL: ${f} contains a "${directive}" directive string at line ${i + 1} ` +
+          `that is neither on line 1 nor the first statement of a function ` +
+          `body (preceding line: ${JSON.stringify(lines[prev] ?? "")}) — the ` +
+          `directive is misplaced/inert and will not be honored.`,
       );
       failed = true;
     }

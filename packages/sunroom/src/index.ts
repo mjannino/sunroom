@@ -2,7 +2,7 @@ export const VERSION = "0.0.0";
 
 // Authoring
 export { createSunroom } from "./sunroom.js";
-export type { Sunroom, SunroomRouteProps } from "./sunroom.js";
+export type { AdminRouteProps, Sunroom, SunroomRouteProps } from "./sunroom.js";
 export {
   defineSection,
   resolveConfig,
@@ -60,7 +60,7 @@ export type { SectionsProps } from "./render/sections.js";
 // Admin / auth
 export { createHandlers } from "./admin/handlers.js";
 export type { SunroomHandlers } from "./admin/handlers.js";
-export { AdminLayout, AdminPage, SignInScreen } from "./admin/components.js";
+export { AdminLayout, SignInScreen } from "./admin/components.js";
 export { getSession } from "./admin/session-server.js";
 export { getAuthConfig, AuthConfigError } from "./admin/config.js";
 export type { AuthConfig } from "./admin/config.js";

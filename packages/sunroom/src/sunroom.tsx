@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
+import { EditorRoot } from "./admin/editor/EditorRoot.js";
 import { createHandlers, type SunroomHandlers } from "./admin/handlers.js";
-import { AdminLayout, AdminPage } from "./admin/components.js";
+import { AdminLayout } from "./admin/components.js";
 import type { SunroomConfig, SunroomInput } from "./core/registry.js";
 import { resolveConfig } from "./core/registry.js";
 import { Sections } from "./render/sections.js";
@@ -14,6 +15,11 @@ export interface SunroomRouteProps {
   params: Promise<{ slug?: string[] }>;
 }
 
+/** Next 15 passes the admin catch-all's `params` as a Promise, too. */
+export interface AdminRouteProps {
+  params: Promise<{ segments?: string[] }>;
+}
+
 export interface Sunroom {
   config: SunroomConfig;
   Page(props: SunroomRouteProps): Promise<ReactElement>;
@@ -23,7 +29,7 @@ export interface Sunroom {
   getPage(slug: string): Promise<Page | null>;
   handlers: SunroomHandlers;
   AdminLayout: typeof AdminLayout;
-  AdminPage: typeof AdminPage;
+  AdminPage(props: AdminRouteProps): Promise<ReactElement>;
 }
 
 /**
@@ -100,6 +106,6 @@ export function createSunroom(input: SunroomInput): Sunroom {
     getPage,
     handlers: createHandlers(),
     AdminLayout,
-    AdminPage,
+    AdminPage: (props: AdminRouteProps) => EditorRoot({ config, ...props }),
   };
 }

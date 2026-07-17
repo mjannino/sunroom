@@ -1,4 +1,3 @@
-'use server'
 import { revalidatePath } from 'next/cache'
 import { resolveConfig } from '../core/registry.js'
 import { ConflictError, NotFoundError, ValidationError } from '../errors.js'
@@ -32,6 +31,7 @@ function routeOf(slug: string): string {
 }
 
 export async function savePageAction(page: Page, baseVersion: string | null): Promise<ActionResult> {
+  'use server'
   const author = await authOr()
   if (!author) return UNAUTHORIZED
   try {
@@ -48,6 +48,7 @@ export async function savePageAction(page: Page, baseVersion: string | null): Pr
 }
 
 export async function createPageAction(input: { slug: string; title: string }): Promise<ActionResult> {
+  'use server'
   const author = await authOr()
   if (!author) return UNAUTHORIZED
 
@@ -68,6 +69,7 @@ export async function createPageAction(input: { slug: string; title: string }): 
 }
 
 export async function deletePageAction(slug: string): Promise<ActionResult> {
+  'use server'
   const author = await authOr()
   if (!author) return UNAUTHORIZED
   try {
@@ -86,6 +88,7 @@ export async function deletePageAction(slug: string): Promise<ActionResult> {
 }
 
 export async function reorderPagesAction(orderedSlugs: string[]): Promise<ActionResult> {
+  'use server'
   const author = await authOr()
   if (!author) return UNAUTHORIZED
   try {
