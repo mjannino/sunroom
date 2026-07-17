@@ -11,6 +11,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Client-component tests (Task 2+) render with react-dom into jsdom;
+    // everything else keeps the default "node" environment.
+    environmentMatchGlobs: [["src/admin/editor/**/*.test.tsx", "jsdom"]],
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
 });

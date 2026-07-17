@@ -10,6 +10,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./actions": {
+      "types": "./dist/actions.d.ts",
+      "import": "./dist/actions.js"
     }
   },
   "files": [
@@ -26,9 +34,11 @@
     "react": ">=19"
   },
   "devDependencies": {
+    "@hyperse/esbuild-plugin-preserve-directives": "^1.0.2",
     "@types/node": "^22.7.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.2.3",
+    "jsdom": "^29.1.1",
     "next": "^15.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
