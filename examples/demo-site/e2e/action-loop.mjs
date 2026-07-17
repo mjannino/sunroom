@@ -30,6 +30,8 @@ const SLUG = process.env.E2E_SLUG ?? "menu";
 const TITLE = process.env.E2E_TITLE ?? "Menu";
 const HEADING = process.env.E2E_HEADING ?? "Fresh from the loop";
 const QUOTE_AUTHOR = process.env.E2E_QUOTE_AUTHOR ?? "Jane";
+const RICH_TEXT_BODY =
+  process.env.E2E_RICH_TEXT_BODY ?? "<p>Hello <strong>world</strong></p>";
 
 function must(cond, message) {
   if (!cond) {
@@ -130,6 +132,63 @@ must(
 );
 console.log(
   `OK: nested array/object field round-tripped through the real save — quotes[0] = ${JSON.stringify(testimonialsSection.props.quotes[0])}`,
+);
+
+console.log(
+  "--- action-loop: edit the Hero's richText `body` field (TipTap-authored HTML) and save ---",
+);
+// This is the Slice 3 proof: a `richText` field (Hero's `body`, edited via
+// TipTap in the real admin UI — see FieldControl.tsx / RichTextControl.tsx)
+// saved as an HTML STRING through the SAME real savePageAction used above.
+// TipTap's own editing/typing surface can't be driven in jsdom (no real
+// contenteditable input events), so this harness proves the part that
+// *can* be proven for real outside a browser: the HTML string TipTap's
+// `editor.getHTML()` would hand to `onChange` round-trips through
+// savePageAction -> GitStore -> disk, and then (after rebuild + restart,
+// exactly like the nested-field proof above) renders unescaped on the
+// public route via Hero's `dangerouslySetInnerHTML`
+// (examples/demo-site/components/Hero.tsx). The actual keystrokes-in-a-
+// real-editor gesture is out of jsdom's reach — see the manual checklist
+// in README.md.
+const pageWithRichText = {
+  ...pageWithNestedField,
+  sections: [
+    {
+      ...pageWithNestedField.sections[0],
+      props: { ...pageWithNestedField.sections[0].props, body: RICH_TEXT_BODY },
+    },
+    ...pageWithNestedField.sections.slice(1),
+  ],
+};
+const savedRichText = await savePageAction(
+  pageWithRichText,
+  savedNested.version ?? null,
+);
+console.log(JSON.stringify(savedRichText));
+must(savedRichText.ok, "savePageAction (richText field) was not ok");
+
+console.log(
+  "--- action-loop: read the richText field back from the real on-disk content store ---",
+);
+const onDiskAfterRichText = JSON.parse(await readFile(pageFile, "utf8"));
+const heroSection = onDiskAfterRichText.sections.find((s) => s.type === "hero");
+must(
+  !!heroSection,
+  `hero section missing from on-disk ${pageFile} after richText save`,
+);
+must(
+  heroSection.props?.body === RICH_TEXT_BODY,
+  `on-disk hero.body was not the richText HTML we saved (expected ${JSON.stringify(RICH_TEXT_BODY)}, got ${JSON.stringify(heroSection.props?.body)})`,
+);
+must(
+  heroSection.props.body.includes("<strong>world</strong>"),
+  `on-disk hero.body did not contain "<strong>world</strong>" (got ${JSON.stringify(heroSection.props.body)})`,
+);
+console.log(
+  `OK: richText field round-tripped through the real save — hero.body = ${JSON.stringify(heroSection.props.body)}`,
+);
+console.log(
+  `NEXT: after a rebuild + restart of the demo server, 'curl -s localhost:3000/${SLUG} | grep -o "<strong>world</strong>"' must render this HTML unescaped (see README.md step 3).`,
 );
 
 console.log("--- action-loop: OK ---");

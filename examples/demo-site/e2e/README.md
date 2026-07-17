@@ -13,6 +13,20 @@ It then reads the saved page straight back off disk (the same file
 value is present — proving a nested/array field edit round-trips through
 the real save, not just a flat scalar prop.
 
+`action-loop.mjs` also proves the Slice 3 `richText` save: a third edit sets
+the Hero's `body` (a `richText` field, edited via TipTap in the real admin
+UI — see `packages/sunroom/src/admin/editor/FieldControl.tsx`) to the HTML
+string `<p>Hello <strong>world</strong></p>`, through the exact same
+`savePageAction`. It reads the saved page back off disk and asserts
+`hero.body` contains `<strong>world</strong>` verbatim (not escaped) —
+proving the richText HTML string round-trips through the real save. Step 3
+below then rebuilds + restarts the server and `curl`s the public route to
+confirm that same HTML renders unescaped (Hero renders `body` via
+`dangerouslySetInnerHTML`, deliberately unsanitized — see
+`.superpowers/sdd/task-6-brief.md`'s "What this slice does NOT build").
+TipTap's own typing/formatting gesture can't be driven in jsdom — see the
+**Manual gesture checklist** below for that part.
+
 **Playwright was tried first** (per the Phase 5 Slice 1 plan's preference)
 and rejected: this environment has no passwordless `sudo`, and Playwright's
 Chromium needs system libraries (`libnspr4` etc.) that can only be installed
@@ -85,4 +99,40 @@ curl -s localhost:3000/ | grep -o 'href="/menu"'
 # the nested/array field (Testimonials' `quotes: [{ quote, author }]`),
 # rendered from the SAME saved page, over real HTTP:
 curl -s localhost:3000/menu | grep -o '<cite>[^<]*</cite>'
+# the richText field (Hero's `body`), rendered unescaped from the SAME
+# saved page, over real HTTP:
+curl -s localhost:3000/menu | grep -o '<strong>world</strong>'
 ```
+
+## Manual gesture checklist (documented, not automated)
+
+Per the testing boundary recorded throughout Phase 5 Slice 3: TipTap typing
+and dnd-kit pointer-drag can't be driven in jsdom (no real contenteditable
+input events or pointer-event sequences), and Playwright isn't available in
+this environment (see above). `action-loop.mjs` proves everything on the
+data side of these gestures — the HTML string / reordered array a real
+gesture would produce round-trips through the real save and renders on the
+public route. The gestures themselves — same status as the OAuth
+handshake — must be checked by hand, once, in a real browser against
+`pnpm --filter demo-site dev` (or `build && start`) at `/admin`:
+
+- [ ] **richText formatting**: open a page with a Hero section, click into
+      the Body field, type some text, select part of it and click **Bold**
+      (and/or **Italic**, **H2**, **Bullet list**, **Link**), click **Save**.
+      Reload the public route for that page — the formatting (`<strong>`,
+      `<em>`, `<h2>`, `<ul><li>`, `<a href>`) renders correctly, not as
+      literal tags or stripped.
+- [ ] **Section drag-reorder**: with 2+ sections on a page, drag a section
+      in the rail to a new position (pointer down on the drag handle, move,
+      release). Click **Save**, then reload the editor (or the public
+      route) — the new section order persists. Repeat with the **up/down**
+      buttons as a fallback and confirm they still work.
+- [ ] **Array-item drag-reorder**: on a field with an array control (e.g.
+      Testimonials' `quotes`), drag one item above another, click **Save**,
+      reload — the new item order persists (and each item's own field
+      values stayed attached to the item, not left behind at the old
+      index).
+- [ ] **Preview reflects a save**: click **Show preview**, confirm the
+      iframe shows the page's current public content; make an edit and
+      click **Save**; confirm the preview iframe updates to show the new
+      content (it reloads automatically on a successful save).
