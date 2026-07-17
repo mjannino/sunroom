@@ -254,7 +254,7 @@ function ArrayControl({
         }
       >
         {items.map((entry, i) => (
-          <SortableRow key={entry.id} id={entry.id}>
+          <SortableRow key={entry.id} id={entry.id} label={`item ${i + 1}`}>
             <div
               data-testid={`array-item-${entry.id}`}
               style={{
@@ -304,12 +304,13 @@ function ArrayControl({
       <button
         type="button"
         disabled={atMaxDepth}
-        onClick={() =>
+        onClick={() => {
+          if (atMaxDepth) return;
           emit([
             ...items,
             { id: newId(), value: defaultForField(field.of, depth + 1) },
-          ])
-        }
+          ]);
+        }}
       >
         Add
       </button>

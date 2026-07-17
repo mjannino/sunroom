@@ -90,7 +90,7 @@ describe("PageEditor", () => {
       />,
     );
     fireEvent.click(screen.getByText(/Hero/)); // select the section
-    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
+    fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "Hello" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
@@ -138,14 +138,14 @@ describe("PageEditor", () => {
     );
     fireEvent.click(screen.getByText(/Hero/));
 
-    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
+    fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "First edit" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
     await waitFor(() => expect(savePage).toHaveBeenCalledTimes(1));
     expect(savePage.mock.calls[0]![1]).toBe("v1");
 
-    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
+    fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "Second edit" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
@@ -170,7 +170,7 @@ describe("PageEditor", () => {
       />,
     );
     fireEvent.click(screen.getByText(/Hero/));
-    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
+    fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "x" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
@@ -200,7 +200,7 @@ describe("validation gating", () => {
     // Emptying the required field both dirties the page AND makes it invalid.
     // If Save were still disabled only, this assertion proves anyInvalid is doing the work,
     // since dirty is now true.
-    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
+    fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "" },
     });
     expect(
@@ -210,7 +210,7 @@ describe("validation gating", () => {
     expect(screen.getAllByText("is required").length).toBeGreaterThan(0);
 
     // Fixing the field keeps the page dirty but clears the invalidity -> Save enables.
-    fireEvent.change(screen.getByLabelText("heading", { selector: "input" }), {
+    fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "Hi again" },
     });
     expect(
@@ -252,6 +252,43 @@ describe("validation gating", () => {
       />,
     );
     expect(screen.getByLabelText(/has errors/i)).toBeTruthy();
+  });
+});
+
+describe("section switching (content-corruption regression)", () => {
+  const registryRichText: SerializedRegistry = {
+    hero: { label: "Hero", fields: { body: { type: "richText" } } },
+  };
+  const twoRichTextSectionsPage: Page = {
+    slug: "about",
+    title: "About",
+    position: 1,
+    seo: {},
+    sections: [
+      { id: "s1", type: "hero", props: { body: "<p>Alpha</p>" } },
+      { id: "s2", type: "hero", props: { body: "<p>Bravo</p>" } },
+    ],
+  };
+
+  it("shows each section's own richText content when switching selection, not the previously selected section's", async () => {
+    render(
+      <PageEditor
+        page={twoRichTextSectionsPage}
+        version="v1"
+        registry={registryRichText}
+        actions={actionsMock()}
+      />,
+    );
+    const rows = screen.getAllByRole("listitem");
+
+    fireEvent.click(within(rows[0]!).getByRole("button", { name: "Hero" }));
+    await waitFor(() => expect(document.body.textContent).toContain("Alpha"));
+
+    fireEvent.click(within(rows[1]!).getByRole("button", { name: "Hero" }));
+    await waitFor(() => {
+      expect(document.body.textContent).toContain("Bravo");
+      expect(document.body.textContent).not.toContain("Alpha");
+    });
   });
 });
 

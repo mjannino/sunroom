@@ -88,7 +88,10 @@ export function PageEditor({
           <ol>
             {page.sections.map((s, i) => (
               <li key={s.id}>
-                <SortableRow id={s.id}>
+                <SortableRow
+                  id={s.id}
+                  label={registry[s.type]?.label ?? s.type}
+                >
                   <button
                     onClick={() => setSelected(s.id)}
                     style={{ fontWeight: s.id === selected ? 700 : 400 }}
@@ -217,7 +220,7 @@ export function PageEditor({
         </fieldset>
 
         {section && schema ? (
-          <fieldset>
+          <fieldset key={section.id}>
             <legend>{schema.label}</legend>
             {Object.entries(schema.fields).map(([key, field]) => (
               <FieldControl

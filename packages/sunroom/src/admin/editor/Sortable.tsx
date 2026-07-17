@@ -56,9 +56,11 @@ export function SortableList({
 
 export function SortableRow({
   id,
+  label,
   children,
 }: {
   id: string;
+  label?: string;
   children: ReactNode;
 }): React.ReactElement {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -68,7 +70,7 @@ export function SortableRow({
     <div ref={setNodeRef} style={style}>
       <button
         type="button"
-        aria-label={`drag ${id}`}
+        aria-label={`drag ${label ?? id}`}
         {...attributes}
         {...listeners}
         style={{ cursor: "grab" }}
