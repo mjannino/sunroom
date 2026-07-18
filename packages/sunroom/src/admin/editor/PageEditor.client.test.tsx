@@ -8,12 +8,50 @@ import {
 } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Page } from "../../store/types.js";
+import { MediaProvider } from "./MediaContext.js";
 import { PageEditor } from "./PageEditor.js";
 import type {
   ActionResult,
   EditorActions,
+  MediaActions,
+  MediaResult,
   SerializedRegistry,
 } from "./types.js";
+
+// The "hero" registry below includes an `image` field, so the fields tree
+// renders an <ImagePicker>, which requires a MediaProvider ancestor. This
+// helper stands in for the real media actions (wired end-to-end in a later
+// task) so these tests can render the fields tree.
+function mediaActions(over: Partial<MediaActions> = {}): MediaActions {
+  return {
+    // `as const` keeps `ok` a literal `true` (not widened to `boolean`) so
+    // these structurally satisfy `MediaResult<T>`, which requires `ok: true`.
+    requestUpload: vi.fn(
+      async () =>
+        ({
+          ok: true,
+          uploadUrl: "https://put",
+          storageKey: "uploads/x.jpg",
+        }) as const,
+    ),
+    commitMedia: vi.fn(
+      async () =>
+        ({
+          ok: true,
+          id: "new",
+          url: "https://cdn/new.png",
+        }) as const,
+    ),
+    // `{ ok: true }` alone doesn't structurally satisfy `{ ok: true } &
+    // Record<string, never>` (the `ok` property gets checked against the
+    // index signature too); the cast is safe since there is no payload here
+    // (see actions.ts's deleteMediaAction for the same pattern).
+    deleteMedia: vi.fn(
+      async () => ({ ok: true }) as MediaResult<Record<string, never>>,
+    ),
+    ...over,
+  };
+}
 
 const registry: SerializedRegistry = {
   hero: {
@@ -66,12 +104,14 @@ function pageWith(headingValue: string): Page {
 describe("PageEditor", () => {
   it("Save is disabled until an edit is made", () => {
     render(
-      <PageEditor
-        page={page}
-        version="v1"
-        registry={registry}
-        actions={actionsMock()}
-      />,
+      <MediaProvider items={[]} actions={mediaActions()}>
+        <PageEditor
+          page={page}
+          version="v1"
+          registry={registry}
+          actions={actionsMock()}
+        />
+      </MediaProvider>,
     );
     expect(
       (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
@@ -82,12 +122,14 @@ describe("PageEditor", () => {
   it("edits a text field and saves the whole page with the base version", async () => {
     const actions = actionsMock();
     render(
-      <PageEditor
-        page={page}
-        version="v1"
-        registry={registry}
-        actions={actions}
-      />,
+      <MediaProvider items={[]} actions={mediaActions()}>
+        <PageEditor
+          page={page}
+          version="v1"
+          registry={registry}
+          actions={actions}
+        />
+      </MediaProvider>,
     );
     fireEvent.click(screen.getByText(/Hero/)); // select the section
     fireEvent.change(screen.getByLabelText("heading"), {
@@ -105,18 +147,19 @@ describe("PageEditor", () => {
     });
   });
 
-  it("renders a disabled placeholder for non-text fields", () => {
+  it("renders an image picker for image fields (Choose image when unset)", () => {
     render(
-      <PageEditor
-        page={page}
-        version="v1"
-        registry={registry}
-        actions={actionsMock()}
-      />,
+      <MediaProvider items={[]} actions={mediaActions()}>
+        <PageEditor
+          page={page}
+          version="v1"
+          registry={registry}
+          actions={actionsMock()}
+        />
+      </MediaProvider>,
     );
     fireEvent.click(screen.getByText(/Hero/));
-    const img = screen.getByLabelText("img") as HTMLInputElement;
-    expect(img.disabled).toBe(true);
+    expect(screen.getByRole("button", { name: /choose image/i })).toBeTruthy();
   });
 
   it("refreshes baseVersion after a successful save so a second save uses it", async () => {
@@ -129,12 +172,14 @@ describe("PageEditor", () => {
       } satisfies ActionResult);
     const actions = actionsMock({ savePage });
     render(
-      <PageEditor
-        page={page}
-        version="v1"
-        registry={registry}
-        actions={actions}
-      />,
+      <MediaProvider items={[]} actions={mediaActions()}>
+        <PageEditor
+          page={page}
+          version="v1"
+          registry={registry}
+          actions={actions}
+        />
+      </MediaProvider>,
     );
     fireEvent.click(screen.getByText(/Hero/));
 
@@ -162,12 +207,14 @@ describe("PageEditor", () => {
       })),
     });
     render(
-      <PageEditor
-        page={page}
-        version="v1"
-        registry={registry}
-        actions={actions}
-      />,
+      <MediaProvider items={[]} actions={mediaActions()}>
+        <PageEditor
+          page={page}
+          version="v1"
+          registry={registry}
+          actions={actions}
+        />
+      </MediaProvider>,
     );
     fireEvent.click(screen.getByText(/Hero/));
     fireEvent.change(screen.getByLabelText("heading"), {
