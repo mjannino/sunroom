@@ -8,7 +8,6 @@ import {
 } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Page } from "../../store/types.js";
-import { MediaProvider } from "./MediaContext.js";
 import { PageEditor } from "./PageEditor.js";
 import type {
   ActionResult,
@@ -19,9 +18,9 @@ import type {
 } from "./types.js";
 
 // The "hero" registry below includes an `image` field, so the fields tree
-// renders an <ImagePicker>, which requires a MediaProvider ancestor. This
-// helper stands in for the real media actions (wired end-to-end in a later
-// task) so these tests can render the fields tree.
+// renders an <ImagePicker>, backed by the <MediaProvider> that PageEditor
+// wraps its tree in. This helper stands in for the real media actions
+// (server actions in production) so these tests can render the fields tree.
 function mediaActions(over: Partial<MediaActions> = {}): MediaActions {
   return {
     // `as const` keeps `ok` a literal `true` (not widened to `boolean`) so
@@ -104,14 +103,14 @@ function pageWith(headingValue: string): Page {
 describe("PageEditor", () => {
   it("Save is disabled until an edit is made", () => {
     render(
-      <MediaProvider items={[]} actions={mediaActions()}>
-        <PageEditor
-          page={page}
-          version="v1"
-          registry={registry}
-          actions={actionsMock()}
-        />
-      </MediaProvider>,
+      <PageEditor
+        page={page}
+        version="v1"
+        registry={registry}
+        actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
+      />,
     );
     expect(
       (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
@@ -122,14 +121,14 @@ describe("PageEditor", () => {
   it("edits a text field and saves the whole page with the base version", async () => {
     const actions = actionsMock();
     render(
-      <MediaProvider items={[]} actions={mediaActions()}>
-        <PageEditor
-          page={page}
-          version="v1"
-          registry={registry}
-          actions={actions}
-        />
-      </MediaProvider>,
+      <PageEditor
+        page={page}
+        version="v1"
+        registry={registry}
+        actions={actions}
+        media={[]}
+        mediaActions={mediaActions()}
+      />,
     );
     fireEvent.click(screen.getByText(/Hero/)); // select the section
     fireEvent.change(screen.getByLabelText("heading"), {
@@ -149,14 +148,14 @@ describe("PageEditor", () => {
 
   it("renders an image picker for image fields (Choose image when unset)", () => {
     render(
-      <MediaProvider items={[]} actions={mediaActions()}>
-        <PageEditor
-          page={page}
-          version="v1"
-          registry={registry}
-          actions={actionsMock()}
-        />
-      </MediaProvider>,
+      <PageEditor
+        page={page}
+        version="v1"
+        registry={registry}
+        actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
+      />,
     );
     fireEvent.click(screen.getByText(/Hero/));
     expect(screen.getByRole("button", { name: /choose image/i })).toBeTruthy();
@@ -172,14 +171,14 @@ describe("PageEditor", () => {
       } satisfies ActionResult);
     const actions = actionsMock({ savePage });
     render(
-      <MediaProvider items={[]} actions={mediaActions()}>
-        <PageEditor
-          page={page}
-          version="v1"
-          registry={registry}
-          actions={actions}
-        />
-      </MediaProvider>,
+      <PageEditor
+        page={page}
+        version="v1"
+        registry={registry}
+        actions={actions}
+        media={[]}
+        mediaActions={mediaActions()}
+      />,
     );
     fireEvent.click(screen.getByText(/Hero/));
 
@@ -207,14 +206,14 @@ describe("PageEditor", () => {
       })),
     });
     render(
-      <MediaProvider items={[]} actions={mediaActions()}>
-        <PageEditor
-          page={page}
-          version="v1"
-          registry={registry}
-          actions={actions}
-        />
-      </MediaProvider>,
+      <PageEditor
+        page={page}
+        version="v1"
+        registry={registry}
+        actions={actions}
+        media={[]}
+        mediaActions={mediaActions()}
+      />,
     );
     fireEvent.click(screen.getByText(/Hero/));
     fireEvent.change(screen.getByLabelText("heading"), {
@@ -236,6 +235,8 @@ describe("validation gating", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     fireEvent.click(screen.getByText(/Hero/));
@@ -274,6 +275,8 @@ describe("validation gating", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(
@@ -296,6 +299,8 @@ describe("validation gating", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(screen.getByLabelText(/has errors/i)).toBeTruthy();
@@ -324,6 +329,8 @@ describe("section switching (content-corruption regression)", () => {
         version="v1"
         registry={registryRichText}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     const rows = screen.getAllByRole("listitem");
@@ -365,6 +372,8 @@ describe("section reorder rail", () => {
         version="v1"
         registry={registryTwo}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(container.querySelector("[data-sortable-list]")).toBeTruthy();
@@ -377,6 +386,8 @@ describe("section reorder rail", () => {
         version="v1"
         registry={registryTwo}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     const rows = screen.getAllByRole("listitem");
@@ -401,6 +412,8 @@ describe("preview + cleanups", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: /preview/i }));
@@ -416,6 +429,8 @@ describe("preview + cleanups", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(screen.getByText(/title is required/i)).toBeTruthy();
