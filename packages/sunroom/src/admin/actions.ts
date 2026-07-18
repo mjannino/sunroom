@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { resolveConfig } from "../core/registry.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
@@ -6,7 +7,17 @@ import type { ContentStore } from "../store/types.js";
 import type { Author, Page } from "../store/types.js";
 import { HOME_SLUG, validateSlug } from "../store/paths.js";
 import { getSession } from "./session-server.js";
-import type { ActionResult } from "./editor/types.js";
+import {
+  createPresignedUpload,
+  deleteObject,
+  R2ConfigError,
+} from "./media/r2.js";
+import { makeResolveMedia } from "../render/media.js";
+import type {
+  ActionResult,
+  CommitMediaInput,
+  MediaResult,
+} from "./editor/types.js";
 
 // Resolved from env (SUNROOM_CONTENT_DIR), not the live config: server
 // actions run in their own module graph and cannot receive the config
@@ -27,6 +38,24 @@ const UNAUTHORIZED = {
   reason: "unauthorized",
   message: "You must be signed in.",
 } as const;
+
+const UNAUTH_MEDIA = {
+  ok: false,
+  reason: "unauthorized",
+  message: "You must be signed in.",
+} as const;
+
+// Raster image types only: `accept="image/*"` on the client file input is
+// just a hint, not a guarantee, so a presigned "image" PUT must be re-checked
+// server-side. SVG is deliberately excluded — it can carry <script>, and is a
+// stored-XSS sink if R2_PUBLIC_BASE is ever same-origin.
+const ALLOWED_IMAGE_MIMES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
 
 function fail(e: unknown): ActionResult {
   if (e instanceof ConflictError)
@@ -146,5 +175,81 @@ export async function reorderPagesAction(
     return { ok: true };
   } catch (e) {
     return fail(e);
+  }
+}
+
+export async function requestUploadAction(
+  filename: string,
+  mime: string,
+): Promise<MediaResult<{ uploadUrl: string; storageKey: string }>> {
+  "use server";
+  const author = await authOr();
+  if (!author) return UNAUTH_MEDIA;
+  if (!ALLOWED_IMAGE_MIMES.has(mime)) {
+    return {
+      ok: false,
+      reason: "validation",
+      message: "Unsupported image type.",
+    };
+  }
+  try {
+    const { uploadUrl, storageKey } = await createPresignedUpload(
+      filename,
+      mime,
+    );
+    return { ok: true, uploadUrl, storageKey };
+  } catch (e) {
+    if (e instanceof R2ConfigError)
+      return { ok: false, reason: "config", message: e.message };
+    return {
+      ok: false,
+      reason: "error",
+      message: "Could not start the upload.",
+    };
+  }
+}
+
+export async function commitMediaAction(
+  input: CommitMediaInput,
+): Promise<MediaResult<{ id: string; url: string }>> {
+  "use server";
+  const author = await authOr();
+  if (!author) return UNAUTH_MEDIA;
+  try {
+    const s = await store();
+    const id = randomUUID();
+    const record = { id, createdAt: new Date().toISOString(), ...input };
+    await s.addMedia(record, { author });
+    // Return the resolved public URL so the client can show the new thumbnail
+    // WITHOUT ever seeing R2 credentials (only the public base).
+    const url =
+      makeResolveMedia([record], process.env.R2_PUBLIC_BASE)(id)?.url ?? "";
+    return { ok: true, id, url };
+  } catch {
+    return { ok: false, reason: "error", message: "Could not save the media." };
+  }
+}
+
+export async function deleteMediaAction(
+  id: string,
+): Promise<MediaResult<Record<string, never>>> {
+  "use server";
+  const author = await authOr();
+  if (!author) return UNAUTH_MEDIA;
+  try {
+    const s = await store();
+    const rec = s.getMedia(id);
+    await s.deleteMedia(id, { author });
+    if (rec) await deleteObject(rec.storageKey).catch(() => {}); // best-effort blob delete
+    // `{ ok: true }` alone doesn't structurally satisfy `{ ok: true } &
+    // Record<string, never>` (TS checks the `ok` property against the index
+    // signature too); the cast is safe since there is no `T` payload here.
+    return { ok: true } as MediaResult<Record<string, never>>;
+  } catch {
+    return {
+      ok: false,
+      reason: "error",
+      message: "Could not delete the media.",
+    };
   }
 }

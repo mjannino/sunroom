@@ -12,8 +12,45 @@ import { PageEditor } from "./PageEditor.js";
 import type {
   ActionResult,
   EditorActions,
+  MediaActions,
+  MediaResult,
   SerializedRegistry,
 } from "./types.js";
+
+// The "hero" registry below includes an `image` field, so the fields tree
+// renders an <ImagePicker>, backed by the <MediaProvider> that PageEditor
+// wraps its tree in. This helper stands in for the real media actions
+// (server actions in production) so these tests can render the fields tree.
+function mediaActions(over: Partial<MediaActions> = {}): MediaActions {
+  return {
+    // `as const` keeps `ok` a literal `true` (not widened to `boolean`) so
+    // these structurally satisfy `MediaResult<T>`, which requires `ok: true`.
+    requestUpload: vi.fn(
+      async () =>
+        ({
+          ok: true,
+          uploadUrl: "https://put",
+          storageKey: "uploads/x.jpg",
+        }) as const,
+    ),
+    commitMedia: vi.fn(
+      async () =>
+        ({
+          ok: true,
+          id: "new",
+          url: "https://cdn/new.png",
+        }) as const,
+    ),
+    // `{ ok: true }` alone doesn't structurally satisfy `{ ok: true } &
+    // Record<string, never>` (the `ok` property gets checked against the
+    // index signature too); the cast is safe since there is no payload here
+    // (see actions.ts's deleteMediaAction for the same pattern).
+    deleteMedia: vi.fn(
+      async () => ({ ok: true }) as MediaResult<Record<string, never>>,
+    ),
+    ...over,
+  };
+}
 
 const registry: SerializedRegistry = {
   hero: {
@@ -71,6 +108,8 @@ describe("PageEditor", () => {
         version="v1"
         registry={registry}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(
@@ -87,6 +126,8 @@ describe("PageEditor", () => {
         version="v1"
         registry={registry}
         actions={actions}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     fireEvent.click(screen.getByText(/Hero/)); // select the section
@@ -105,18 +146,19 @@ describe("PageEditor", () => {
     });
   });
 
-  it("renders a disabled placeholder for non-text fields", () => {
+  it("renders an image picker for image fields (Choose image when unset)", () => {
     render(
       <PageEditor
         page={page}
         version="v1"
         registry={registry}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     fireEvent.click(screen.getByText(/Hero/));
-    const img = screen.getByLabelText("img") as HTMLInputElement;
-    expect(img.disabled).toBe(true);
+    expect(screen.getByRole("button", { name: /choose image/i })).toBeTruthy();
   });
 
   it("refreshes baseVersion after a successful save so a second save uses it", async () => {
@@ -134,6 +176,8 @@ describe("PageEditor", () => {
         version="v1"
         registry={registry}
         actions={actions}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     fireEvent.click(screen.getByText(/Hero/));
@@ -167,6 +211,8 @@ describe("PageEditor", () => {
         version="v1"
         registry={registry}
         actions={actions}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     fireEvent.click(screen.getByText(/Hero/));
@@ -189,6 +235,8 @@ describe("validation gating", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     fireEvent.click(screen.getByText(/Hero/));
@@ -227,6 +275,8 @@ describe("validation gating", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(
@@ -249,6 +299,8 @@ describe("validation gating", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(screen.getByLabelText(/has errors/i)).toBeTruthy();
@@ -277,6 +329,8 @@ describe("section switching (content-corruption regression)", () => {
         version="v1"
         registry={registryRichText}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     const rows = screen.getAllByRole("listitem");
@@ -318,6 +372,8 @@ describe("section reorder rail", () => {
         version="v1"
         registry={registryTwo}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(container.querySelector("[data-sortable-list]")).toBeTruthy();
@@ -330,6 +386,8 @@ describe("section reorder rail", () => {
         version="v1"
         registry={registryTwo}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     const rows = screen.getAllByRole("listitem");
@@ -354,6 +412,8 @@ describe("preview + cleanups", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: /preview/i }));
@@ -369,6 +429,8 @@ describe("preview + cleanups", () => {
         version="v1"
         registry={registryReq}
         actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
       />,
     );
     expect(screen.getByText(/title is required/i)).toBeTruthy();

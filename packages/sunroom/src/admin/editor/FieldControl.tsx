@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FieldDescriptor } from "../../core/fields.js";
 import type { ValidationIssue } from "../../errors.js";
 import { defaultForField, MAX_FIELD_DEPTH } from "../editor-core.js";
+import { ImagePicker } from "./ImagePicker.js";
 import { RichTextControl } from "./RichTextControl.js";
 import { SortableList, SortableRow } from "./Sortable.js";
 
@@ -172,19 +173,25 @@ export function FieldControl({
     );
   }
 
-  // image → placeholder (Phase 6)
-  return (
-    <label>
-      {label}
-      {err}{" "}
-      <input
-        aria-label={name}
-        disabled
-        value={typeof value === "string" ? value : ""}
-        placeholder={`${field.type} — editable in a later slice`}
-      />
-    </label>
-  );
+  if (field.type === "image") {
+    // Not a <label>: an image field's control is a cluster of buttons
+    // (Choose/Replace/Remove) plus a thumbnail, not a single labelable
+    // element — wrapping them in <label> makes some accessible-name
+    // implementations fold the label text into EVERY nested button's
+    // computed name, making "Replace" and "Remove" both match a
+    // `/remove/i` query.
+    return (
+      <div>
+        <span>{label}</span>
+        {err}
+        <ImagePicker value={value} onChange={(v) => onChange(v)} />
+      </div>
+    );
+  }
+
+  // Exhaustive: every FieldDescriptor variant is handled above.
+  field satisfies never;
+  throw new Error(`Unhandled field type: ${(field as FieldDescriptor).type}`);
 }
 
 interface ArrayEntry {

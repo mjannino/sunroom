@@ -23,3 +23,41 @@ export interface EditorActions {
   deletePage(slug: string): Promise<ActionResult>;
   reorderPages(orderedSlugs: string[]): Promise<ActionResult>;
 }
+
+export interface CommitMediaInput {
+  storageKey: string;
+  filename: string;
+  mime: string;
+  width: number;
+  height: number;
+  size: number;
+  alt: string;
+}
+
+export type MediaResult<T> =
+  | ({ ok: true } & T)
+  | {
+      ok: false;
+      reason: "unauthorized" | "config" | "error" | "validation";
+      message: string;
+    };
+
+export interface MediaActions {
+  requestUpload(
+    filename: string,
+    mime: string,
+  ): Promise<MediaResult<{ uploadUrl: string; storageKey: string }>>;
+  commitMedia(
+    input: CommitMediaInput,
+  ): Promise<MediaResult<{ id: string; url: string }>>;
+  deleteMedia(id: string): Promise<MediaResult<Record<string, never>>>;
+}
+
+export interface MediaItem {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+  alt: string;
+  filename: string;
+}

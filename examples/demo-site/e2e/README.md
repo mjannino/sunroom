@@ -136,3 +136,33 @@ handshake — must be checked by hand, once, in a real browser against
       iframe shows the page's current public content; make an edit and
       click **Save**; confirm the preview iframe updates to show the new
       content (it reloads automatically on a successful save).
+
+## Manual check: real R2 upload (media library)
+
+Same status as the gestures above — this is the OAuth-style manual
+boundary for Phase 6 Slice 6b's media library. Everything else (auth
+gating on `requestUploadAction`/`commitMediaAction`/`deleteMediaAction`,
+the picker UI, the `MediaProvider` wiring) is mocked-tested; the real PUT
+to R2 and the real image decode can't be. `.env.local`'s
+`R2_ACCOUNT_ID`/`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`/`R2_BUCKET` are
+placeholders for local dev/build/test — this check needs **real** R2
+credentials (a real Cloudflare R2 bucket + API token) swapped in locally,
+never committed.
+
+- [ ] With real R2 creds in `.env.local`, build and start the demo site,
+      sign in to `/admin`, open a page with an image field (e.g. the
+      Hero), click **Choose image**.
+- [ ] Click **Upload**, pick a real image file. Confirm: the browser PUTs
+      the file straight to R2 (via the presigned URL from
+      `requestUploadAction` — the client never sees R2 credentials, only
+      the presigned URL and, after commit, a public CDN URL), then
+      `commitMedia` fires and the new thumbnail appears in the library
+      list immediately.
+- [ ] Click the new thumbnail to pick it, click **Save**. Reload the
+      editor — the field still shows the picked image.
+- [ ] Rebuild and restart the demo site, then `curl`/load the public
+      route for that page — the image renders from the public R2 URL
+      (`R2_PUBLIC_BASE`).
+- [ ] Delete the media item from the library and confirm it's removed
+      from the list (the underlying R2 object delete is best-effort and
+      not independently observable here without R2 API access).

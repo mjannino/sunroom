@@ -4,6 +4,39 @@ import { describe, expect, it, vi } from "vitest";
 import { f } from "../../core/fields.js";
 import type { FieldDescriptor } from "../../core/fields.js";
 import { FieldControl } from "./FieldControl.js";
+import { MediaProvider } from "./MediaContext.js";
+import type { MediaActions, MediaResult } from "./types.js";
+
+function mediaActions(over: Partial<MediaActions> = {}): MediaActions {
+  return {
+    // `as const` keeps `ok` a literal `true` (not widened to `boolean`) so
+    // these structurally satisfy `MediaResult<T>`, which requires `ok: true`.
+    requestUpload: vi.fn(
+      async () =>
+        ({
+          ok: true,
+          uploadUrl: "https://put",
+          storageKey: "uploads/x.jpg",
+        }) as const,
+    ),
+    commitMedia: vi.fn(
+      async () =>
+        ({
+          ok: true,
+          id: "new",
+          url: "https://cdn/new.png",
+        }) as const,
+    ),
+    // `{ ok: true }` alone doesn't structurally satisfy `{ ok: true } &
+    // Record<string, never>` (the `ok` property gets checked against the
+    // index signature too); the cast is safe since there is no payload here
+    // (see actions.ts's deleteMediaAction for the same pattern).
+    deleteMedia: vi.fn(
+      async () => ({ ok: true }) as MediaResult<Record<string, never>>,
+    ),
+    ...over,
+  };
+}
 
 function renderControl(
   field: FieldDescriptor,
@@ -283,11 +316,21 @@ describe("array Add depth guard", () => {
 });
 
 describe("placeholders + validation + depth", () => {
-  it("renders a disabled placeholder for image", () => {
-    renderControl(f.image(), "x");
-    expect((screen.getByLabelText("fld") as HTMLInputElement).disabled).toBe(
-      true,
+  it("renders an image picker for image (no matching item falls back to Choose)", () => {
+    render(
+      <MediaProvider items={[]} actions={mediaActions()}>
+        <FieldControl
+          name="fld"
+          field={f.image()}
+          value="x"
+          onChange={vi.fn()}
+          path="fld"
+          issues={[]}
+          depth={0}
+        />
+      </MediaProvider>,
     );
+    expect(screen.getByRole("button", { name: /choose image/i })).toBeTruthy();
   });
 
   it("renders a live TipTap editor for richText (not the disabled placeholder)", () => {
@@ -324,5 +367,39 @@ describe("placeholders + validation + depth", () => {
       />,
     );
     expect(screen.getByText(/too deep/i)).toBeTruthy();
+  });
+});
+
+describe("image field picker", () => {
+  it("shows the current image and clears it on Remove", () => {
+    const onChange = vi.fn();
+    render(
+      <MediaProvider
+        items={[
+          {
+            id: "a",
+            url: "https://cdn/a.jpg",
+            width: 1,
+            height: 1,
+            alt: "A",
+            filename: "a.jpg",
+          },
+        ]}
+        actions={mediaActions()}
+      >
+        <FieldControl
+          name="photo"
+          field={f.image()}
+          value="a"
+          onChange={onChange}
+          path="photo"
+          issues={[]}
+          depth={0}
+        />
+      </MediaProvider>,
+    );
+    expect(screen.getByAltText("A")).toBeTruthy(); // current image thumbnail
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    expect(onChange).toHaveBeenCalledWith(undefined);
   });
 });
