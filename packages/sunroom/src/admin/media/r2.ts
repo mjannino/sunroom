@@ -51,7 +51,14 @@ const MIME_EXT: Record<string, string> = {
 
 function extFor(filename: string, mime: string): string {
   const dot = filename.lastIndexOf(".");
-  if (dot > 0) return filename.slice(dot).toLowerCase();
+  if (dot > 0) {
+    const ext = filename.slice(dot).toLowerCase();
+    // A well-formed extension is a dot followed only by letters/digits (e.g.
+    // ".jpg"). Anything else (e.g. a "/" from a path-like filename) means the
+    // "extension" isn't one — fall back to the mime-derived extension instead
+    // of embedding untrusted characters in the storage key.
+    if (/^\.[a-z0-9]+$/.test(ext)) return ext;
+  }
   return MIME_EXT[mime] ?? "";
 }
 

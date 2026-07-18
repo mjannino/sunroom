@@ -36,7 +36,11 @@ export interface CommitMediaInput {
 
 export type MediaResult<T> =
   | ({ ok: true } & T)
-  | { ok: false; reason: "unauthorized" | "config" | "error"; message: string };
+  | {
+      ok: false;
+      reason: "unauthorized" | "config" | "error" | "validation";
+      message: string;
+    };
 
 export interface MediaActions {
   requestUpload(

@@ -83,6 +83,11 @@ describe("createPresignedUpload", () => {
     const { storageKey } = await createPresignedUpload("noext", "image/png");
     expect(storageKey).toMatch(/\.png$/);
   });
+  it("falls back to a mime-derived extension when the filename's derived extension has non-alphanumeric characters", async () => {
+    getSignedUrl.mockResolvedValue("u");
+    const { storageKey } = await createPresignedUpload("a.b/c", "image/png");
+    expect(storageKey).toMatch(/^uploads\/[0-9a-f-]{36}\.png$/);
+  });
 });
 
 describe("deleteObject", () => {

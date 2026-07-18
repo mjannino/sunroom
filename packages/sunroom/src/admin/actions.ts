@@ -45,6 +45,18 @@ const UNAUTH_MEDIA = {
   message: "You must be signed in.",
 } as const;
 
+// Raster image types only: `accept="image/*"` on the client file input is
+// just a hint, not a guarantee, so a presigned "image" PUT must be re-checked
+// server-side. SVG is deliberately excluded — it can carry <script>, and is a
+// stored-XSS sink if R2_PUBLIC_BASE is ever same-origin.
+const ALLOWED_IMAGE_MIMES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
+
 function fail(e: unknown): ActionResult {
   if (e instanceof ConflictError)
     return { ok: false, reason: "conflict", message: e.message };
@@ -173,6 +185,13 @@ export async function requestUploadAction(
   "use server";
   const author = await authOr();
   if (!author) return UNAUTH_MEDIA;
+  if (!ALLOWED_IMAGE_MIMES.has(mime)) {
+    return {
+      ok: false,
+      reason: "validation",
+      message: "Unsupported image type.",
+    };
+  }
   try {
     const { uploadUrl, storageKey } = await createPresignedUpload(
       filename,

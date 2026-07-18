@@ -188,6 +188,23 @@ describe("requestUploadAction", () => {
     expect(res).toMatchObject({ ok: false, reason: "unauthorized" });
     expect(createPresignedUpload).not.toHaveBeenCalled();
   });
+  it("rejects a non-raster-image mime (e.g. SVG) with NO presign", async () => {
+    const res = await requestUploadAction("x.svg", "image/svg+xml");
+    expect(res).toMatchObject({ ok: false, reason: "validation" });
+    expect(createPresignedUpload).not.toHaveBeenCalled();
+  });
+  it("still mints a URL for an allowlisted raster mime", async () => {
+    createPresignedUpload.mockResolvedValue({
+      uploadUrl: "https://put",
+      storageKey: "uploads/x.png",
+    });
+    const res = await requestUploadAction("x.png", "image/png");
+    expect(res).toEqual({
+      ok: true,
+      uploadUrl: "https://put",
+      storageKey: "uploads/x.png",
+    });
+  });
 });
 
 describe("commitMediaAction", () => {
