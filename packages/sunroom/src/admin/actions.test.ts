@@ -11,11 +11,21 @@ vi.mock("next/cache", () => ({
 const getSession = vi.fn();
 vi.mock("./session-server.js", () => ({ getSession: () => getSession() }));
 
+const createPresignedUpload = vi.fn();
+const deleteObject = vi.fn();
+vi.mock("./media/r2.js", () => ({
+  createPresignedUpload: (...a: unknown[]) => createPresignedUpload(...a),
+  deleteObject: (...a: unknown[]) => deleteObject(...a),
+}));
+
 import { resetStores } from "../store/singleton.js";
 import {
+  commitMediaAction,
   createPageAction,
+  deleteMediaAction,
   deletePageAction,
   reorderPagesAction,
+  requestUploadAction,
   savePageAction,
 } from "./actions.js";
 
@@ -28,6 +38,8 @@ beforeEach(async () => {
   resetStores();
   revalidatePath.mockClear();
   getSession.mockResolvedValue(SIGNED_IN);
+  createPresignedUpload.mockReset();
+  deleteObject.mockReset().mockResolvedValue(undefined);
 });
 
 afterEach(async () => {
@@ -154,5 +166,108 @@ describe("reorderPagesAction", () => {
     const store = await getStore(resolveConfig({ sections: {} }));
     expect(store.listPages().map((p) => p.slug)).toEqual(["b", "a", ""]);
     expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+  });
+});
+
+describe("requestUploadAction", () => {
+  it("mints a presigned URL when authed", async () => {
+    createPresignedUpload.mockResolvedValue({
+      uploadUrl: "https://put",
+      storageKey: "uploads/x.jpg",
+    });
+    const res = await requestUploadAction("p.jpg", "image/jpeg");
+    expect(res).toEqual({
+      ok: true,
+      uploadUrl: "https://put",
+      storageKey: "uploads/x.jpg",
+    });
+  });
+  it("mints NO URL when unauthenticated", async () => {
+    getSession.mockResolvedValue(null);
+    const res = await requestUploadAction("p.jpg", "image/jpeg");
+    expect(res).toMatchObject({ ok: false, reason: "unauthorized" });
+    expect(createPresignedUpload).not.toHaveBeenCalled();
+  });
+});
+
+describe("commitMediaAction", () => {
+  const input = {
+    storageKey: "uploads/x.jpg",
+    filename: "p.jpg",
+    mime: "image/jpeg",
+    width: 800,
+    height: 600,
+    size: 1,
+    alt: "A",
+  };
+  it("writes a MediaRecord and returns its id + resolved public url", async () => {
+    process.env.R2_PUBLIC_BASE = "https://cdn.example.com";
+    const res = await commitMediaAction(input);
+    expect(res).toMatchObject({
+      ok: true,
+      url: "https://cdn.example.com/uploads/x.jpg",
+    });
+    delete process.env.R2_PUBLIC_BASE;
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    const rec = store.listMedia()[0]!;
+    expect(rec.storageKey).toBe("uploads/x.jpg");
+    expect(rec.width).toBe(800);
+    expect(rec.alt).toBe("A");
+    expect(rec.id).toBeTruthy();
+    expect(rec.createdAt).toBeTruthy();
+  });
+  it("writes NOTHING when unauthenticated", async () => {
+    getSession.mockResolvedValue(null);
+    const res = await commitMediaAction(input);
+    expect(res).toMatchObject({ ok: false, reason: "unauthorized" });
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    expect(store.listMedia()).toEqual([]);
+  });
+});
+
+describe("deleteMediaAction", () => {
+  it("deletes the record and best-effort the blob", async () => {
+    await commitMediaAction({
+      storageKey: "uploads/x.jpg",
+      filename: "p.jpg",
+      mime: "image/jpeg",
+      width: 1,
+      height: 1,
+      size: 1,
+      alt: "",
+    });
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    const id = store.listMedia()[0]!.id;
+    const res = await deleteMediaAction(id);
+    expect(res.ok).toBe(true);
+    expect(store.listMedia()).toEqual([]);
+    expect(deleteObject).toHaveBeenCalledWith("uploads/x.jpg");
+  });
+
+  it("deletes NOTHING when unauthenticated", async () => {
+    await commitMediaAction({
+      storageKey: "uploads/x.jpg",
+      filename: "p.jpg",
+      mime: "image/jpeg",
+      width: 1,
+      height: 1,
+      size: 1,
+      alt: "",
+    });
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    const id = store.listMedia()[0]!.id;
+    getSession.mockResolvedValue(null);
+    const res = await deleteMediaAction(id);
+    expect(res).toMatchObject({ ok: false, reason: "unauthorized" });
+    expect(store.listMedia().map((m) => m.id)).toEqual([id]);
+    expect(deleteObject).not.toHaveBeenCalled();
   });
 });
