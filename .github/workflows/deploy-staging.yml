@@ -1,0 +1,22 @@
+name: Deploy staging
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions pinned to commit SHAs (a moving tag can be repointed at
+      # malicious code). Bump deliberately when updating.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # master@2026-07
+      - run: flyctl deploy --remote-only
+        env:
+          # App-scoped deploy token (`fly tokens create deploy -a sunroom-staging`),
+          # stored as a repo secret. Never echoed.
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

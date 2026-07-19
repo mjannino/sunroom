@@ -1,0 +1,35 @@
+# Sunroom staging — single always-on-when-needed machine + persistent volume.
+# Replace <public-r2-domain> with your R2 public hostname before `fly deploy`.
+# Secrets are set via `fly secrets` (see the bootstrap runbook), NOT here.
+app = "sunroom-staging"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  SUNROOM_CONTENT_DIR = "/data/.sunroom-content"
+  # Schema file sits OUTSIDE the content git dir (a sibling on the volume), so
+  # the store's `git clean -fd` never wipes it. Required — do not omit.
+  SUNROOM_SCHEMA_PATH = "/data/schema.json"
+  SUNROOM_URL = "https://sunroom-staging.fly.dev"
+  SUNROOM_EDITORS = "michaeljannino@gmail.com"
+  R2_PUBLIC_BASE = "https://<public-r2-domain>"
+  R2_PUBLIC_HOST = "<public-r2-domain>"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[mounts]
+  source = "sunroom_content"
+  destination = "/data"
