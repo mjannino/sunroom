@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { newSession, signSession, verifySession } from "./session.js";
+import {
+  newSession,
+  SESSION_TTL_MS,
+  signSession,
+  verifySession,
+} from "./session.js";
 
 const SECRET = "test-secret";
 const NOW = 1_000_000_000_000;
@@ -11,9 +16,13 @@ describe("session sign/verify", () => {
     expect(verifySession(token, SECRET, NOW)).toEqual(payload);
   });
 
-  it("sets exp 30 days out", () => {
+  it("sets exp 7 days out", () => {
     const payload = newSession("jane@acme.com", "Jane", NOW);
-    expect(payload.exp).toBe(NOW + 2_592_000_000);
+    expect(payload.exp).toBe(NOW + 604_800_000);
+  });
+
+  it("expires sessions in 7 days", () => {
+    expect(SESSION_TTL_MS).toBe(604_800_000);
   });
 
   it("rejects an expired session", () => {

@@ -7,6 +7,9 @@ import type { ContentStore } from "../store/types.js";
 import type { Author, Page } from "../store/types.js";
 import { HOME_SLUG, validateSlug } from "../store/paths.js";
 import { getSession } from "./session-server.js";
+import { loadSchema } from "./schema-server.js";
+import { validateProps } from "../core/validate.js";
+import { sanitizeProps } from "../core/sanitize.js";
 import {
   createPresignedUpload,
   deleteObject,
@@ -71,6 +74,49 @@ function routeOf(slug: string): string {
   return slug === HOME_SLUG ? "/" : `/${slug}`;
 }
 
+// Returns a sanitized copy of the page, or a validation ActionResult to
+// return. The schema is the source of truth for what a section's props may
+// contain; when it's unavailable we cannot tell trusted shape from attacker
+// input, so we fail closed rather than trust the client-submitted page.
+function validateAndSanitize(page: Page): Page | { reject: ActionResult } {
+  const schema = loadSchema();
+  if (!schema)
+    return {
+      reject: {
+        ok: false,
+        reason: "validation",
+        message: "Editor schema unavailable.",
+      },
+    };
+
+  const sections = [];
+  for (const [i, section] of page.sections.entries()) {
+    const entry = schema[section.type];
+    if (!entry)
+      return {
+        reject: {
+          ok: false,
+          reason: "validation",
+          message: `Unknown section type "${section.type}" at index ${i}.`,
+        },
+      };
+    const issues = validateProps(entry.fields, section.props);
+    if (issues.length > 0)
+      return {
+        reject: {
+          ok: false,
+          reason: "validation",
+          message: `sections[${i}].${issues[0]!.path}: ${issues[0]!.message}`,
+        },
+      };
+    sections.push({
+      ...section,
+      props: sanitizeProps(entry.fields, section.props),
+    });
+  }
+  return { ...page, sections };
+}
+
 export async function savePageAction(
   page: Page,
   baseVersion: string | null,
@@ -78,10 +124,13 @@ export async function savePageAction(
   "use server";
   const author = await authOr();
   if (!author) return UNAUTHORIZED;
+  const checked = validateAndSanitize(page);
+  if ("reject" in checked) return checked.reject;
+  const safePage = checked;
   try {
     const s = await store();
-    const entry = await s.savePage(page, { baseVersion, author });
-    revalidatePath(routeOf(page.slug));
+    const entry = await s.savePage(safePage, { baseVersion, author });
+    revalidatePath(routeOf(safePage.slug));
     // The page's title (edited here) appears in the nav, so refresh the layout
     // too. Over-invalidation is negligible on an in-memory single instance.
     revalidatePath("/", "layout");
@@ -178,9 +227,12 @@ export async function reorderPagesAction(
   }
 }
 
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
 export async function requestUploadAction(
   filename: string,
   mime: string,
+  size: number,
 ): Promise<MediaResult<{ uploadUrl: string; storageKey: string }>> {
   "use server";
   const author = await authOr();
@@ -192,10 +244,18 @@ export async function requestUploadAction(
       message: "Unsupported image type.",
     };
   }
+  if (!Number.isFinite(size) || size <= 0 || size > MAX_UPLOAD_BYTES) {
+    return {
+      ok: false,
+      reason: "validation",
+      message: "Image is too large (max 10MB).",
+    };
+  }
   try {
     const { uploadUrl, storageKey } = await createPresignedUpload(
       filename,
       mime,
+      size,
     );
     return { ok: true, uploadUrl, storageKey };
   } catch (e) {

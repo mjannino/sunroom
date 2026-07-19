@@ -23,7 +23,11 @@ export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
     try {
       const { width, height } = await readImageDimensions(file);
 
-      const uploadRes = await actions.requestUpload(file.name, file.type);
+      const uploadRes = await actions.requestUpload(
+        file.name,
+        file.type,
+        file.size,
+      );
       if (!uploadRes.ok) {
         setError(uploadRes.message);
         return;

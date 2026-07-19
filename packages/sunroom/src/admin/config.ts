@@ -33,6 +33,9 @@ export function isEditor(config: AuthConfig, email: string): boolean {
   return config.editors.has(email.trim().toLowerCase());
 }
 
+/** Minimum length required for SUNROOM_SESSION_SECRET, so tokens can't be forged. */
+export const MIN_SESSION_SECRET_LENGTH = 32;
+
 export function getAuthConfig(env?: Partial<NodeJS.ProcessEnv>): AuthConfig {
   env = env ?? process.env;
   const missing: string[] = [];
@@ -48,6 +51,12 @@ export function getAuthConfig(env?: Partial<NodeJS.ProcessEnv>): AuthConfig {
   const editorsRaw = require("SUNROOM_EDITORS");
 
   if (missing.length > 0) throw new AuthConfigError(missing);
+
+  if (sessionSecret.length < MIN_SESSION_SECRET_LENGTH) {
+    throw new AuthConfigError([
+      `SUNROOM_SESSION_SECRET (session secret must be ≥ ${MIN_SESSION_SECRET_LENGTH} chars)`,
+    ]);
+  }
 
   return {
     googleClientId,

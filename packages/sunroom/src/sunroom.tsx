@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { EditorRoot } from "./admin/editor/EditorRoot.js";
 import { createHandlers, type SunroomHandlers } from "./admin/handlers.js";
 import { AdminLayout } from "./admin/components.js";
+import { persistSchema } from "./admin/schema-persist.js";
 import type { SunroomConfig, SunroomInput } from "./core/registry.js";
 import { resolveConfig } from "./core/registry.js";
 import { makeResolveMedia } from "./render/media.js";
@@ -50,6 +51,7 @@ export interface Sunroom {
  */
 export function createSunroom(input: SunroomInput): Sunroom {
   const config = resolveConfig(input);
+  persistSchema(config);
 
   async function generateStaticParams(): Promise<{ slug: string[] }[]> {
     const store = await getStore(config);

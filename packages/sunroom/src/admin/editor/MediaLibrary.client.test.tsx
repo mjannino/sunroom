@@ -86,7 +86,11 @@ describe("MediaLibrary", () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(actions.requestUpload).toHaveBeenCalledWith("up.png", "image/png");
+      expect(actions.requestUpload).toHaveBeenCalledWith(
+        "up.png",
+        "image/png",
+        3,
+      );
       expect(fetchMock).toHaveBeenCalledWith(
         "https://put",
         expect.objectContaining({ method: "PUT" }),
