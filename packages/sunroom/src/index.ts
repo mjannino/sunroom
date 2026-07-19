@@ -66,3 +66,4 @@ export { getSession } from "./admin/session-server.js";
 export { getAuthConfig, AuthConfigError } from "./admin/config.js";
 export type { AuthConfig } from "./admin/config.js";
 export type { SessionPayload } from "./admin/session.js";
+export { persistSchema } from "./admin/schema-persist.js";
