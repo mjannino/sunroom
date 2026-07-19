@@ -30,12 +30,14 @@ import {
   savePageAction,
 } from "./actions.js";
 
+let root: string;
 let dir: string;
 let schemaDir: string;
 const SIGNED_IN = { email: "jane@acme.com", name: "Jane" };
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "sunroom-actions-"));
+  root = await mkdtemp(join(tmpdir(), "sunroom-actions-"));
+  dir = join(root, ".sunroom-content");
   process.env.SUNROOM_CONTENT_DIR = dir;
   resetStores();
   revalidatePath.mockClear();
@@ -61,7 +63,11 @@ beforeEach(async () => {
 afterEach(async () => {
   resetStores();
   delete process.env.SUNROOM_CONTENT_DIR;
-  await rm(dir, { recursive: true, force: true });
+  // `root` also holds the default sibling schema path (a sibling of `dir`)
+  // that the "fails closed" test's default-path resolution would hit, so
+  // remove the whole root rather than just `dir` to avoid leaking it into
+  // the shared OS temp root.
+  await rm(root, { recursive: true, force: true });
   delete process.env.SUNROOM_SCHEMA_PATH;
   __resetSchemaCacheForTest();
   await rm(schemaDir, { recursive: true, force: true });
