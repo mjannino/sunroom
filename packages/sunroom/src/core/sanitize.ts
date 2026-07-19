@@ -19,8 +19,25 @@ function isValidHref(href: string | undefined): boolean {
 export function sanitizeRichTextHtml(html: string): string {
   return sanitizeHtml(html, {
     allowedTags: [
-      "p", "br", "hr", "strong", "em", "s", "code", "pre", "blockquote",
-      "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "a",
+      "p",
+      "br",
+      "hr",
+      "strong",
+      "em",
+      "s",
+      "code",
+      "pre",
+      "blockquote",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "ul",
+      "ol",
+      "li",
+      "a",
     ],
     allowedAttributes: { a: ["href", "rel"] },
     allowedSchemes: ["http", "https", "mailto"],
@@ -43,7 +60,9 @@ function sanitizeValue(field: FieldDescriptor, value: unknown): unknown {
     return typeof value === "string" ? sanitizeRichTextHtml(value) : value;
   if (
     field.type === "object" &&
-    typeof value === "object" && value !== null && !Array.isArray(value)
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
   )
     return sanitizeProps(field.fields, value as Record<string, unknown>);
   if (field.type === "array" && Array.isArray(value))

@@ -109,7 +109,10 @@ function validateAndSanitize(page: Page): Page | { reject: ActionResult } {
           message: `sections[${i}].${issues[0]!.path}: ${issues[0]!.message}`,
         },
       };
-    sections.push({ ...section, props: sanitizeProps(entry.fields, section.props) });
+    sections.push({
+      ...section,
+      props: sanitizeProps(entry.fields, section.props),
+    });
   }
   return { ...page, sections };
 }

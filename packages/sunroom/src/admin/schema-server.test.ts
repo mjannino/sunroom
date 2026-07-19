@@ -6,7 +6,9 @@ import { loadSchema, __resetSchemaCacheForTest } from "./schema-server.js";
 
 describe("loadSchema", () => {
   beforeEach(() => __resetSchemaCacheForTest());
-  afterEach(() => { delete process.env.SUNROOM_SCHEMA_PATH; });
+  afterEach(() => {
+    delete process.env.SUNROOM_SCHEMA_PATH;
+  });
 
   it("returns null when the path is unset", () => {
     delete process.env.SUNROOM_SCHEMA_PATH;
@@ -19,14 +21,25 @@ describe("loadSchema", () => {
   });
 
   it("reads the registry when present", () => {
-    const path = join(mkdtempSync(join(tmpdir(), "sunroom-schema-")), "schema.json");
-    writeFileSync(path, JSON.stringify({ hero: { label: "Hero", fields: { heading: { type: "text" } } } }));
+    const path = join(
+      mkdtempSync(join(tmpdir(), "sunroom-schema-")),
+      "schema.json",
+    );
+    writeFileSync(
+      path,
+      JSON.stringify({
+        hero: { label: "Hero", fields: { heading: { type: "text" } } },
+      }),
+    );
     process.env.SUNROOM_SCHEMA_PATH = path;
     expect(loadSchema()?.hero?.fields.heading).toEqual({ type: "text" });
   });
 
   it("returns null when the file contains malformed JSON", () => {
-    const path = join(mkdtempSync(join(tmpdir(), "sunroom-schema-")), "schema.json");
+    const path = join(
+      mkdtempSync(join(tmpdir(), "sunroom-schema-")),
+      "schema.json",
+    );
     writeFileSync(path, "{not valid json");
     process.env.SUNROOM_SCHEMA_PATH = path;
     expect(loadSchema()).toBeNull();

@@ -2,11 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { persistSchema, __resetSchemaPersistedForTest } from "./schema-persist.js";
+import {
+  persistSchema,
+  __resetSchemaPersistedForTest,
+} from "./schema-persist.js";
 import { resolveConfig } from "../core/registry.js";
 import { f } from "../core/fields.js";
 
-function dummy() { return null; }
+function dummy() {
+  return null;
+}
 
 describe("persistSchema", () => {
   let path: string;
@@ -15,11 +20,19 @@ describe("persistSchema", () => {
     process.env.SUNROOM_SCHEMA_PATH = path;
     __resetSchemaPersistedForTest();
   });
-  afterEach(() => { delete process.env.SUNROOM_SCHEMA_PATH; });
+  afterEach(() => {
+    delete process.env.SUNROOM_SCHEMA_PATH;
+  });
 
   it("writes the serialized registry (fields only, no components)", () => {
     const config = resolveConfig({
-      sections: { hero: { label: "Hero", component: dummy, fields: { heading: f.text() } } },
+      sections: {
+        hero: {
+          label: "Hero",
+          component: dummy,
+          fields: { heading: f.text() },
+        },
+      },
     });
     persistSchema(config);
     const written = JSON.parse(readFileSync(path, "utf8"));
