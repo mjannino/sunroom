@@ -46,6 +46,7 @@ export interface MediaActions {
   requestUpload(
     filename: string,
     mime: string,
+    size: number,
   ): Promise<MediaResult<{ uploadUrl: string; storageKey: string }>>;
   commitMedia(
     input: CommitMediaInput,

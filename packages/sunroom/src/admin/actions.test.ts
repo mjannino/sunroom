@@ -242,7 +242,7 @@ describe("requestUploadAction", () => {
       uploadUrl: "https://put",
       storageKey: "uploads/x.jpg",
     });
-    const res = await requestUploadAction("p.jpg", "image/jpeg");
+    const res = await requestUploadAction("p.jpg", "image/jpeg", 1234);
     expect(res).toEqual({
       ok: true,
       uploadUrl: "https://put",
@@ -251,12 +251,12 @@ describe("requestUploadAction", () => {
   });
   it("mints NO URL when unauthenticated", async () => {
     getSession.mockResolvedValue(null);
-    const res = await requestUploadAction("p.jpg", "image/jpeg");
+    const res = await requestUploadAction("p.jpg", "image/jpeg", 1234);
     expect(res).toMatchObject({ ok: false, reason: "unauthorized" });
     expect(createPresignedUpload).not.toHaveBeenCalled();
   });
   it("rejects a non-raster-image mime (e.g. SVG) with NO presign", async () => {
-    const res = await requestUploadAction("x.svg", "image/svg+xml");
+    const res = await requestUploadAction("x.svg", "image/svg+xml", 1234);
     expect(res).toMatchObject({ ok: false, reason: "validation" });
     expect(createPresignedUpload).not.toHaveBeenCalled();
   });
@@ -265,12 +265,31 @@ describe("requestUploadAction", () => {
       uploadUrl: "https://put",
       storageKey: "uploads/x.png",
     });
-    const res = await requestUploadAction("x.png", "image/png");
+    const res = await requestUploadAction("x.png", "image/png", 1234);
     expect(res).toEqual({
       ok: true,
       uploadUrl: "https://put",
       storageKey: "uploads/x.png",
     });
+  });
+  it("rejects uploads over the size cap without presigning", async () => {
+    const res = await requestUploadAction(
+      "big.jpg",
+      "image/jpeg",
+      11 * 1024 * 1024,
+    );
+    expect(res).toMatchObject({ ok: false, reason: "validation" });
+    expect(createPresignedUpload).not.toHaveBeenCalled();
+  });
+  it("rejects a zero or negative size without presigning", async () => {
+    const res = await requestUploadAction("x.jpg", "image/jpeg", 0);
+    expect(res).toMatchObject({ ok: false, reason: "validation" });
+    expect(createPresignedUpload).not.toHaveBeenCalled();
+  });
+  it("rejects a non-finite size without presigning", async () => {
+    const res = await requestUploadAction("x.jpg", "image/jpeg", NaN);
+    expect(res).toMatchObject({ ok: false, reason: "validation" });
+    expect(createPresignedUpload).not.toHaveBeenCalled();
   });
 });
 

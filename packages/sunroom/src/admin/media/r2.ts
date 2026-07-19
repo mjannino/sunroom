@@ -76,6 +76,7 @@ function client(cfg: R2Config): S3Client {
 export async function createPresignedUpload(
   filename: string,
   mime: string,
+  contentLength: number,
 ): Promise<{ uploadUrl: string; storageKey: string }> {
   const cfg = getR2Config();
   const storageKey = `uploads/${randomUUID()}${extFor(filename, mime)}`;
@@ -83,6 +84,7 @@ export async function createPresignedUpload(
     Bucket: cfg.bucket,
     Key: storageKey,
     ContentType: mime,
+    ContentLength: contentLength, // signed → the PUT body cannot exceed this
   });
   const uploadUrl = await getSignedUrl(client(cfg), command, {
     expiresIn: 600,

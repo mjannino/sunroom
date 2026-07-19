@@ -224,9 +224,12 @@ export async function reorderPagesAction(
   }
 }
 
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
 export async function requestUploadAction(
   filename: string,
   mime: string,
+  size: number,
 ): Promise<MediaResult<{ uploadUrl: string; storageKey: string }>> {
   "use server";
   const author = await authOr();
@@ -238,10 +241,18 @@ export async function requestUploadAction(
       message: "Unsupported image type.",
     };
   }
+  if (!Number.isFinite(size) || size <= 0 || size > MAX_UPLOAD_BYTES) {
+    return {
+      ok: false,
+      reason: "validation",
+      message: "Image is too large (max 10MB).",
+    };
+  }
   try {
     const { uploadUrl, storageKey } = await createPresignedUpload(
       filename,
       mime,
+      size,
     );
     return { ok: true, uploadUrl, storageKey };
   } catch (e) {
