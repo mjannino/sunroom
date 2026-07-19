@@ -59,6 +59,9 @@ export class GitStore implements ContentStore {
     await this.ensureRepo();
     await this.recover();
     await this.load();
+    // Keep the repo compact so an edit-heavy history can't balloon the volume.
+    // --auto only packs when git's own thresholds are exceeded, so this is cheap.
+    await git(this.dir, ["gc", "--auto"]).catch(() => {});
   }
 
   /** Boot path 1 (existing repo) and path 4 (git init an empty site). */

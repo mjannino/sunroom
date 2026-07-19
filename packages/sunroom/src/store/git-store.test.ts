@@ -2,8 +2,24 @@ import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
+
+// Wraps the real `git` helper so tests can assert on the exact argv it was
+// called with (e.g. `gc --auto` on init) while every other test in this file
+// still exercises the real git binary end to end.
+const { gitSpy } = vi.hoisted(() => ({ gitSpy: vi.fn() }));
+vi.mock("./git.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./git.js")>();
+  return {
+    ...actual,
+    git: (...args: Parameters<typeof actual.git>) => {
+      gitSpy(...args);
+      return actual.git(...args);
+    },
+  };
+});
+
 import { git } from "./git.js";
 import { GitStore } from "./git-store.js";
 import type { Page } from "./types.js";
@@ -49,6 +65,13 @@ describe("init on an empty directory", () => {
     const before = await git(dir, ["rev-parse", "HEAD"]);
     await freshStore();
     expect(await git(dir, ["rev-parse", "HEAD"])).toBe(before);
+  });
+
+  it("runs git gc --auto after loading, to keep the repo compact", async () => {
+    gitSpy.mockClear();
+    const store = new GitStore(dir);
+    await expect(store.init()).resolves.toBeUndefined();
+    expect(gitSpy).toHaveBeenCalledWith(dir, ["gc", "--auto"]);
   });
 });
 
