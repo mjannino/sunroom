@@ -2,8 +2,24 @@ import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
+
+// Wraps the real `git` helper so tests can assert on the exact argv it was
+// called with (e.g. `gc --auto` on init) while every other test in this file
+// still exercises the real git binary end to end.
+const { gitSpy } = vi.hoisted(() => ({ gitSpy: vi.fn() }));
+vi.mock("./git.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./git.js")>();
+  return {
+    ...actual,
+    git: (...args: Parameters<typeof actual.git>) => {
+      gitSpy(...args);
+      return actual.git(...args);
+    },
+  };
+});
+
 import { git } from "./git.js";
 import { GitStore } from "./git-store.js";
 import type { Page } from "./types.js";
@@ -49,6 +65,13 @@ describe("init on an empty directory", () => {
     const before = await git(dir, ["rev-parse", "HEAD"]);
     await freshStore();
     expect(await git(dir, ["rev-parse", "HEAD"])).toBe(before);
+  });
+
+  it("runs git gc --auto after loading, to keep the repo compact", async () => {
+    gitSpy.mockClear();
+    const store = new GitStore(dir);
+    await expect(store.init()).resolves.toBeUndefined();
+    expect(gitSpy).toHaveBeenCalledWith(dir, ["gc", "--auto"]);
   });
 });
 
@@ -285,6 +308,26 @@ describe("savePage", () => {
     expect(await git(dir, ["status", "--porcelain"])).toBe("");
   });
 
+  it("saving byte-identical content is a no-op: returns the same version and creates NO new commit", async () => {
+    const store = await freshStore();
+    const first = await store.savePage(page(), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+
+    const countBefore = await git(dir, ["rev-list", "--count", "HEAD"]);
+
+    const second = await store.savePage(page(), {
+      baseVersion: first.version,
+      author: AUTHOR,
+    });
+
+    expect(second.version).toBe(first.version);
+    expect(await git(dir, ["rev-list", "--count", "HEAD"])).toBe(countBefore);
+    expect(await git(dir, ["status", "--porcelain"])).toBe("");
+    expect(store.getPage("about")?.page.title).toBe("About Us");
+  });
+
   it("leaves no partial state when the commit fails", async () => {
     const store = await freshStore();
     const before = store.getPage("");
@@ -436,5 +479,18 @@ describe("media", () => {
     expect(store.getMedia("m1")).toBeNull();
     expect(store.listMedia()).toEqual([]);
     expect(await git(dir, ["status", "--porcelain"])).toBe("");
+  });
+
+  it("deleting an id that isn't present is a no-op: no throw, no new commit", async () => {
+    const store = await freshStore();
+    const countBefore = await git(dir, ["rev-list", "--count", "HEAD"]);
+
+    await expect(
+      store.deleteMedia("nope", { author: MEDIA_AUTHOR }),
+    ).resolves.toBeUndefined();
+
+    expect(await git(dir, ["rev-list", "--count", "HEAD"])).toBe(countBefore);
+    expect(await git(dir, ["status", "--porcelain"])).toBe("");
+    expect(store.listMedia()).toEqual([]);
   });
 });

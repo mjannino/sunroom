@@ -34,7 +34,6 @@ export function commitArgs(author: Author, message: string): string[] {
     "-c",
     `user.email=${author.email}`,
     "commit",
-    "--allow-empty",
     "-m",
     message,
   ];

@@ -12,7 +12,7 @@ import {
 const config = getAuthConfig({
   GOOGLE_CLIENT_ID: "id",
   GOOGLE_CLIENT_SECRET: "secret",
-  SUNROOM_SESSION_SECRET: "sessionsecret",
+  SUNROOM_SESSION_SECRET: "test-session-secret-value-0123456789ab",
   SUNROOM_EDITORS: "jane@acme.com",
   SUNROOM_URL: "https://acme.com",
   SUNROOM_OWNER_TOKEN: "owner-token",

@@ -48,6 +48,20 @@ describe("hasCommits", () => {
 });
 
 describe("commitArgs", () => {
+  it("does not pass --allow-empty", () => {
+    const args = commitArgs({ name: "A", email: "a@b.c" }, "msg");
+    expect(args).not.toContain("--allow-empty");
+    expect(args).toEqual([
+      "-c",
+      "user.name=A",
+      "-c",
+      "user.email=a@b.c",
+      "commit",
+      "-m",
+      "msg",
+    ]);
+  });
+
   it("records the author identity without touching git config", async () => {
     await git(dir, ["init", "-b", "main"]);
     await writeFile(join(dir, "a.txt"), "hello\n");

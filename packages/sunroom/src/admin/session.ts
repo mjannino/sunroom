@@ -8,7 +8,7 @@ export interface SessionPayload {
 }
 
 export const SESSION_COOKIE = "sunroom_session";
-export const SESSION_TTL_MS = 2_592_000_000; // 30 days
+export const SESSION_TTL_MS = 604_800_000; // 7 days
 
 export const STATE_COOKIE = "sunroom_oauth_state";
 export const VERIFIER_COOKIE = "sunroom_oauth_verifier";
