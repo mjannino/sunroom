@@ -24,4 +24,11 @@ describe("loadSchema", () => {
     process.env.SUNROOM_SCHEMA_PATH = path;
     expect(loadSchema()?.hero.fields.heading).toEqual({ type: "text" });
   });
+
+  it("returns null when the file contains malformed JSON", () => {
+    const path = join(mkdtempSync(join(tmpdir(), "sunroom-schema-")), "schema.json");
+    writeFileSync(path, "{not valid json");
+    process.env.SUNROOM_SCHEMA_PATH = path;
+    expect(loadSchema()).toBeNull();
+  });
 });
