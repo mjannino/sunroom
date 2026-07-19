@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { SunroomConfig } from "../core/registry.js";
 import { serializeRegistry } from "./editor-core.js";
+import { resolveSchemaPath } from "./schema-path.js";
 
 let persisted = false;
 
@@ -14,13 +15,14 @@ export function __resetSchemaPersistedForTest(): void {
  * Writes the component-free field schema to SUNROOM_SCHEMA_PATH so the
  * write-path server actions (which cannot import the config) can validate and
  * sanitize against it. Called from the render/admin graph, where the full
- * config — and thus `next/*` and the section components — resolves. No-op when
- * the path is unset or the config carries no sections (the action graph).
+ * config — and thus `next/*` and the section components — resolves. The schema
+ * path always resolves (explicit env, else a sibling of the content dir), so
+ * the only no-op is when the config carries no sections (the action graph).
  */
 export function persistSchema(config: SunroomConfig): void {
-  const path = process.env.SUNROOM_SCHEMA_PATH;
-  if (!path || persisted) return;
+  if (persisted) return;
   if (Object.keys(config.sections).length === 0) return;
+  const path = resolveSchemaPath(config.contentDir);
   try {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(

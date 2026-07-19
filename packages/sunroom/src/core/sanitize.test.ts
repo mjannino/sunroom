@@ -56,4 +56,26 @@ describe("sanitizeProps", () => {
     expect((out.items as any)[0].html).toBe("");
     expect((out.items as any)[0].name).toBe("<i>keep</i>");
   });
+
+  it("scheme-checks link fields: keeps safe hrefs, blanks unsafe ones", () => {
+    const fields = {
+      good: f.link(),
+      mail: f.link(),
+      rel: f.link(),
+      bad: f.link(),
+      data: f.link(),
+    };
+    const out = sanitizeProps(fields, {
+      good: "https://a.com",
+      mail: "mailto:a@b.com",
+      rel: "/about",
+      bad: "javascript:alert(1)",
+      data: "data:text/html,<script>alert(1)</script>",
+    });
+    expect(out.good).toBe("https://a.com");
+    expect(out.mail).toBe("mailto:a@b.com");
+    expect(out.rel).toBe("/about");
+    expect(out.bad).toBe("");
+    expect(out.data).toBe("");
+  });
 });

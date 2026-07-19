@@ -58,6 +58,12 @@ export function sanitizeRichTextHtml(html: string): string {
 function sanitizeValue(field: FieldDescriptor, value: unknown): unknown {
   if (field.type === "richText")
     return typeof value === "string" ? sanitizeRichTextHtml(value) : value;
+  if (field.type === "link")
+    return typeof value === "string"
+      ? isValidHref(value)
+        ? value
+        : ""
+      : value;
   if (
     field.type === "object" &&
     typeof value === "object" &&
