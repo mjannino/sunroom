@@ -5,7 +5,7 @@ import { authorizeIdentity, checkOwnerToken, checkState } from "./flow.js";
 const config = getAuthConfig({
   GOOGLE_CLIENT_ID: "id",
   GOOGLE_CLIENT_SECRET: "secret",
-  SUNROOM_SESSION_SECRET: "s",
+  SUNROOM_SESSION_SECRET: "a".repeat(32),
   SUNROOM_EDITORS: "jane@acme.com",
   SUNROOM_OWNER_TOKEN: "correct-owner-token",
 });
