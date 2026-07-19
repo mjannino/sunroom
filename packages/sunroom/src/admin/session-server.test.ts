@@ -9,10 +9,12 @@ import { getAuthConfig } from "./config.js";
 import { newSession, signSession, SESSION_COOKIE } from "./session.js";
 import { getSession } from "./session-server.js";
 
+const SESSION_SECRET = "test-session-secret-value-0123456789ab";
+
 const ENV = {
   GOOGLE_CLIENT_ID: "id",
   GOOGLE_CLIENT_SECRET: "secret",
-  SUNROOM_SESSION_SECRET: "sessionsecret",
+  SUNROOM_SESSION_SECRET: SESSION_SECRET,
   SUNROOM_EDITORS: "jane@acme.com",
 };
 
@@ -22,7 +24,7 @@ describe("getSession", () => {
     for (const [k, v] of Object.entries(ENV)) process.env[k] = v;
     const token = signSession(
       newSession("jane@acme.com", "Jane"),
-      "sessionsecret",
+      SESSION_SECRET,
     );
     store.set(SESSION_COOKIE, { value: token });
     expect(await getSession()).toEqual({

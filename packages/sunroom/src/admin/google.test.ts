@@ -20,7 +20,7 @@ import { buildAuthorization, exchangeCode } from "./google.js";
 const config = getAuthConfig({
   GOOGLE_CLIENT_ID: "id",
   GOOGLE_CLIENT_SECRET: "secret",
-  SUNROOM_SESSION_SECRET: "s",
+  SUNROOM_SESSION_SECRET: "a".repeat(32),
   SUNROOM_EDITORS: "jane@acme.com",
 });
 const REDIRECT = "https://acme.com/api/sunroom/auth/callback";

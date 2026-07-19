@@ -4,13 +4,16 @@ import {
   callbackUrl,
   getAuthConfig,
   isEditor,
+  MIN_SESSION_SECRET_LENGTH,
   parseEditors,
 } from "./config.js";
+
+const STRONG_SESSION_SECRET = "test-session-secret-value-0123456789ab";
 
 const FULL_ENV = {
   GOOGLE_CLIENT_ID: "id",
   GOOGLE_CLIENT_SECRET: "secret",
-  SUNROOM_SESSION_SECRET: "sessionsecret",
+  SUNROOM_SESSION_SECRET: STRONG_SESSION_SECRET,
   SUNROOM_EDITORS: "Jane@Acme.com, bob@acme.com",
   SUNROOM_URL: "https://acme.com",
   SUNROOM_OWNER_TOKEN: "ownertoken",
@@ -54,6 +57,26 @@ describe("getAuthConfig", () => {
       expect(msg).toContain("SUNROOM_SESSION_SECRET");
       expect(msg).toContain("SUNROOM_EDITORS");
     }
+  });
+  it("rejects a short session secret", () => {
+    expect(() =>
+      getAuthConfig({
+        GOOGLE_CLIENT_ID: "x",
+        GOOGLE_CLIENT_SECRET: "x",
+        SUNROOM_SESSION_SECRET: "short",
+        SUNROOM_EDITORS: "a@b.c",
+      }),
+    ).toThrow(/session secret/i);
+  });
+  it("accepts a strong session secret", () => {
+    expect(() =>
+      getAuthConfig({
+        GOOGLE_CLIENT_ID: "x",
+        GOOGLE_CLIENT_SECRET: "x",
+        SUNROOM_SESSION_SECRET: "a".repeat(MIN_SESSION_SECRET_LENGTH),
+        SUNROOM_EDITORS: "a@b.c",
+      }),
+    ).not.toThrow();
   });
 });
 
