@@ -308,6 +308,26 @@ describe("savePage", () => {
     expect(await git(dir, ["status", "--porcelain"])).toBe("");
   });
 
+  it("saving byte-identical content is a no-op: returns the same version and creates NO new commit", async () => {
+    const store = await freshStore();
+    const first = await store.savePage(page(), {
+      baseVersion: null,
+      author: AUTHOR,
+    });
+
+    const countBefore = await git(dir, ["rev-list", "--count", "HEAD"]);
+
+    const second = await store.savePage(page(), {
+      baseVersion: first.version,
+      author: AUTHOR,
+    });
+
+    expect(second.version).toBe(first.version);
+    expect(await git(dir, ["rev-list", "--count", "HEAD"])).toBe(countBefore);
+    expect(await git(dir, ["status", "--porcelain"])).toBe("");
+    expect(store.getPage("about")?.page.title).toBe("About Us");
+  });
+
   it("leaves no partial state when the commit fails", async () => {
     const store = await freshStore();
     const before = store.getPage("");
@@ -459,5 +479,18 @@ describe("media", () => {
     expect(store.getMedia("m1")).toBeNull();
     expect(store.listMedia()).toEqual([]);
     expect(await git(dir, ["status", "--porcelain"])).toBe("");
+  });
+
+  it("deleting an id that isn't present is a no-op: no throw, no new commit", async () => {
+    const store = await freshStore();
+    const countBefore = await git(dir, ["rev-list", "--count", "HEAD"]);
+
+    await expect(
+      store.deleteMedia("nope", { author: MEDIA_AUTHOR }),
+    ).resolves.toBeUndefined();
+
+    expect(await git(dir, ["rev-list", "--count", "HEAD"])).toBe(countBefore);
+    expect(await git(dir, ["status", "--porcelain"])).toBe("");
+    expect(store.listMedia()).toEqual([]);
   });
 });

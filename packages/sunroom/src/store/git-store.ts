@@ -208,6 +208,22 @@ export class GitStore implements ContentStore {
       try {
         await writeAtomic(join(this.dir, rel), json);
         await git(this.dir, ["add", "--", rel]);
+
+        const staged = await git(this.dir, [
+          "diff",
+          "--cached",
+          "--quiet",
+          "--",
+          rel,
+        ]).then(
+          () => false,
+          () => true,
+        );
+        if (!staged) {
+          // Byte-identical save: succeed as a genuine no-op, no empty commit.
+          return existing!;
+        }
+
         await git(
           this.dir,
           commitArgs(
@@ -316,6 +332,22 @@ export class GitStore implements ContentStore {
     try {
       await writeAtomic(join(this.dir, rel), serialize([...next.values()]));
       await git(this.dir, ["add", "--", rel]);
+
+      const staged = await git(this.dir, [
+        "diff",
+        "--cached",
+        "--quiet",
+        "--",
+        rel,
+      ]).then(
+        () => false,
+        () => true,
+      );
+      if (!staged) {
+        // No actual change to media/index.json: succeed as a no-op.
+        return;
+      }
+
       await git(this.dir, commitArgs(author, message));
     } catch (error) {
       await this.rollback();
