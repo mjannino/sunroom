@@ -15,6 +15,7 @@ function Hero({ heading }: { heading: string }) {
 
 const AUTHOR = { name: "T", email: "t@e.com" };
 
+let root: string;
 let dir: string;
 
 async function seed() {
@@ -59,14 +60,18 @@ function sunroom() {
 }
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "sunroom-next-"));
+  root = await mkdtemp(join(tmpdir(), "sunroom-next-"));
+  dir = join(root, ".sunroom-content");
   resetStores();
   await seed();
 });
 
 afterEach(async () => {
   resetStores();
-  await rm(dir, { recursive: true, force: true });
+  // `root` also holds the default sibling schema file persistSchema() writes
+  // (a sibling of `dir`), so removing `root` cleans that up too instead of
+  // leaking it into the shared OS temp root.
+  await rm(root, { recursive: true, force: true });
 });
 
 describe("generateStaticParams", () => {
