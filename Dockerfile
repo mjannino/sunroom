@@ -21,7 +21,6 @@ WORKDIR /app
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git ca-certificates \
   && rm -rf /var/lib/apt/lists/*
-RUN corepack enable
 ENV NODE_ENV=production
 ENV PORT=3000
 
@@ -30,4 +29,6 @@ COPY --from=build /app /app
 
 WORKDIR /app/examples/demo-site
 EXPOSE 3000
-CMD ["pnpm", "start"]
+# Run the next binary directly (not `pnpm start`) so a fresh machine boots
+# without corepack fetching pnpm from the registry on the auto-deploy path.
+CMD ["node_modules/.bin/next", "start"]

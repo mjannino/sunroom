@@ -7,6 +7,10 @@ concurrency:
   group: deploy-staging
   cancel-in-progress: false
 
+# Least privilege: the job only deploys via FLY_API_TOKEN and never uses GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
