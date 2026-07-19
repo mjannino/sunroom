@@ -15,14 +15,24 @@ describe("sanitizeRichTextHtml", () => {
   });
 
   it("drops javascript: and data: links but keeps http/mailto/relative", () => {
-    expect(sanitizeRichTextHtml('<a href="javascript:alert(1)">x</a>')).toBe("<a>x</a>");
-    expect(sanitizeRichTextHtml('<a href="https://a.com">x</a>')).toContain('href="https://a.com"');
-    expect(sanitizeRichTextHtml('<a href="mailto:a@b.com">x</a>')).toContain("mailto:a@b.com");
-    expect(sanitizeRichTextHtml('<a href="/about">x</a>')).toContain('href="/about"');
+    expect(sanitizeRichTextHtml('<a href="javascript:alert(1)">x</a>')).toBe(
+      "<a>x</a>",
+    );
+    expect(sanitizeRichTextHtml('<a href="https://a.com">x</a>')).toContain(
+      'href="https://a.com"',
+    );
+    expect(sanitizeRichTextHtml('<a href="mailto:a@b.com">x</a>')).toContain(
+      "mailto:a@b.com",
+    );
+    expect(sanitizeRichTextHtml('<a href="/about">x</a>')).toContain(
+      'href="/about"',
+    );
   });
 
   it("forces rel on links", () => {
-    expect(sanitizeRichTextHtml('<a href="https://a.com">x</a>')).toContain('rel="nofollow noopener"');
+    expect(sanitizeRichTextHtml('<a href="https://a.com">x</a>')).toContain(
+      'rel="nofollow noopener"',
+    );
   });
 });
 
@@ -35,10 +45,10 @@ describe("sanitizeProps", () => {
       items: f.array(f.object({ html: f.richText(), name: f.text() })),
     };
     const out = sanitizeProps(fields, {
-      title: "<b>x</b>",            // text field: not HTML-sanitized, passthrough
+      title: "<b>x</b>", // text field: not HTML-sanitized, passthrough
       body: "<script>a</script><p>ok</p>",
       block: { note: '<a href="javascript:1">n</a>' },
-      items: [{ html: '<img src=x onerror=alert(1)>', name: "<i>keep</i>" }],
+      items: [{ html: "<img src=x onerror=alert(1)>", name: "<i>keep</i>" }],
     });
     expect(out.title).toBe("<b>x</b>");
     expect(out.body).toBe("<p>ok</p>");

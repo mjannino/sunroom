@@ -4,7 +4,9 @@ import type { SerializedRegistry } from "./editor/types.js";
 let cache: SerializedRegistry | null | undefined;
 
 /** Test-only. */
-export function __resetSchemaCacheForTest(): void { cache = undefined; }
+export function __resetSchemaCacheForTest(): void {
+  cache = undefined;
+}
 
 /**
  * Reads the field schema written by `persistSchema`. Returns null when the

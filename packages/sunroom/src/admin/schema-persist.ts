@@ -6,7 +6,9 @@ import { serializeRegistry } from "./editor-core.js";
 let persisted = false;
 
 /** Test-only. */
-export function __resetSchemaPersistedForTest(): void { persisted = false; }
+export function __resetSchemaPersistedForTest(): void {
+  persisted = false;
+}
 
 /**
  * Writes the component-free field schema to SUNROOM_SCHEMA_PATH so the
@@ -21,7 +23,11 @@ export function persistSchema(config: SunroomConfig): void {
   if (Object.keys(config.sections).length === 0) return;
   try {
     mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, JSON.stringify(serializeRegistry(config)) + "\n", "utf8");
+    writeFileSync(
+      path,
+      JSON.stringify(serializeRegistry(config)) + "\n",
+      "utf8",
+    );
     persisted = true;
   } catch {
     // Best-effort: a write failure must not crash the render path. The action
