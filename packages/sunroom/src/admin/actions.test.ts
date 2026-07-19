@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,6 +19,7 @@ vi.mock("./media/r2.js", () => ({
 }));
 
 import { resetStores } from "../store/singleton.js";
+import { __resetSchemaCacheForTest } from "./schema-server.js";
 import {
   commitMediaAction,
   createPageAction,
@@ -30,6 +31,7 @@ import {
 } from "./actions.js";
 
 let dir: string;
+let schemaDir: string;
 const SIGNED_IN = { email: "jane@acme.com", name: "Jane" };
 
 beforeEach(async () => {
@@ -40,12 +42,29 @@ beforeEach(async () => {
   getSession.mockResolvedValue(SIGNED_IN);
   createPresignedUpload.mockReset();
   deleteObject.mockReset().mockResolvedValue(undefined);
+
+  schemaDir = await mkdtemp(join(tmpdir(), "sunroom-actions-schema-"));
+  const schemaPath = join(schemaDir, "schema.json");
+  await writeFile(
+    schemaPath,
+    JSON.stringify({
+      hero: {
+        label: "Hero",
+        fields: { heading: { type: "text" }, body: { type: "richText" } },
+      },
+    }),
+  );
+  process.env.SUNROOM_SCHEMA_PATH = schemaPath;
+  __resetSchemaCacheForTest();
 });
 
 afterEach(async () => {
   resetStores();
   delete process.env.SUNROOM_CONTENT_DIR;
   await rm(dir, { recursive: true, force: true });
+  delete process.env.SUNROOM_SCHEMA_PATH;
+  __resetSchemaCacheForTest();
+  await rm(schemaDir, { recursive: true, force: true });
 });
 
 describe("auth gate", () => {
@@ -133,6 +152,54 @@ describe("savePageAction", () => {
     const home = store.getPage("")!;
     await savePageAction({ ...home.page, title: "Home!" }, home.version);
     expect(revalidatePath).toHaveBeenCalledWith("/");
+  });
+
+  it("sanitizes richText and rejects wrong-typed props on save", async () => {
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    const home = store.getPage("")!;
+    const page = {
+      ...home.page,
+      sections: [
+        {
+          id: "s1",
+          type: "hero",
+          props: {
+            heading: "Hi",
+            body: "<script>alert(1)</script><p>ok</p>",
+          },
+        },
+      ],
+    };
+    const res = await savePageAction(page, home.version);
+    expect(res.ok).toBe(true);
+    const saved = store.getPage("")!.page.sections[0]!.props.body;
+    expect(saved).toBe("<p>ok</p>"); // script stripped, stored clean
+
+    const current = store.getPage("")!;
+    const bad = {
+      ...current.page,
+      sections: [{ id: "s2", type: "hero", props: { heading: 123 } }],
+    };
+    const badRes = await savePageAction(bad, current.version);
+    expect(badRes).toMatchObject({ ok: false, reason: "validation" });
+  });
+
+  it("fails closed when the schema is unavailable", async () => {
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    const home = store.getPage("")!;
+
+    delete process.env.SUNROOM_SCHEMA_PATH;
+    __resetSchemaCacheForTest();
+
+    const res = await savePageAction(
+      { ...home.page, title: "Home!" },
+      home.version,
+    );
+    expect(res).toMatchObject({ ok: false, reason: "validation" });
   });
 });
 
