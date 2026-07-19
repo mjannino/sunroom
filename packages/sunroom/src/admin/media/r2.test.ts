@@ -67,6 +67,7 @@ describe("createPresignedUpload", () => {
     const { uploadUrl, storageKey } = await createPresignedUpload(
       "photo.JPG",
       "image/jpeg",
+      1234,
     );
     expect(uploadUrl).toBe("https://presigned.example/put");
     expect(storageKey).toMatch(/^uploads\/[0-9a-f-]{36}\.jpg$/); // lowercased ext, uuid
@@ -80,13 +81,27 @@ describe("createPresignedUpload", () => {
   });
   it("falls back to a mime-derived extension when the filename has none", async () => {
     getSignedUrl.mockResolvedValue("u");
-    const { storageKey } = await createPresignedUpload("noext", "image/png");
+    const { storageKey } = await createPresignedUpload(
+      "noext",
+      "image/png",
+      1234,
+    );
     expect(storageKey).toMatch(/\.png$/);
   });
   it("falls back to a mime-derived extension when the filename's derived extension has non-alphanumeric characters", async () => {
     getSignedUrl.mockResolvedValue("u");
-    const { storageKey } = await createPresignedUpload("a.b/c", "image/png");
+    const { storageKey } = await createPresignedUpload(
+      "a.b/c",
+      "image/png",
+      1234,
+    );
     expect(storageKey).toMatch(/^uploads\/[0-9a-f-]{36}\.png$/);
+  });
+  it("signs the upload with the given ContentLength", async () => {
+    getSignedUrl.mockResolvedValue("https://presigned.example/put");
+    await createPresignedUpload("photo.jpg", "image/jpeg", 1234);
+    const [, command] = getSignedUrl.mock.calls[0]!;
+    expect(command.input).toMatchObject({ ContentLength: 1234 });
   });
 });
 
