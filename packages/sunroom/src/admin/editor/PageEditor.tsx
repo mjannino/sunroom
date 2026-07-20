@@ -196,6 +196,7 @@ export function PageEditor({
                     .map(([type, d]) => (
                       <button
                         key={type}
+                        className="sr-btn"
                         onClick={() => {
                           const id = crypto.randomUUID();
                           dispatch({
@@ -216,57 +217,66 @@ export function PageEditor({
           </aside>
 
           <main className="sr-col">
-            <fieldset>
-              <legend>Page</legend>
-              <label>
-                Title{" "}
-                <input
-                  value={page.title}
-                  onChange={(e) =>
-                    dispatch({
-                      type: "setPageField",
-                      key: "title",
-                      value: e.target.value,
-                    })
-                  }
-                />
-              </label>
-              {page.title.trim() === "" ? (
-                <span role="alert" className="sr-error">
-                  Title is required
-                </span>
-              ) : null}
-              <label>
-                SEO title{" "}
-                <input
-                  value={page.seo.title ?? ""}
-                  onChange={(e) =>
-                    dispatch({
-                      type: "setPageField",
-                      key: "seo.title",
-                      value: e.target.value,
-                    })
-                  }
-                />
-              </label>
-              <label>
-                SEO description{" "}
-                <input
-                  value={page.seo.description ?? ""}
-                  onChange={(e) =>
-                    dispatch({
-                      type: "setPageField",
-                      key: "seo.description",
-                      value: e.target.value,
-                    })
-                  }
-                />
-              </label>
+            <fieldset className="sr-fieldset">
+              <legend className="sr-legend">Page</legend>
+              <div className="sr-field">
+                <label className="sr-flabel">
+                  Title{" "}
+                  <input
+                    className="sr-input"
+                    value={page.title}
+                    onChange={(e) =>
+                      dispatch({
+                        type: "setPageField",
+                        key: "title",
+                        value: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+                {page.title.trim() === "" ? (
+                  <span role="alert" className="sr-error">
+                    Title is required
+                  </span>
+                ) : null}
+              </div>
+              <div className="sr-field">
+                <label className="sr-flabel">
+                  SEO title{" "}
+                  <input
+                    className="sr-input"
+                    value={page.seo.title ?? ""}
+                    onChange={(e) =>
+                      dispatch({
+                        type: "setPageField",
+                        key: "seo.title",
+                        value: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <div className="sr-field">
+                <label className="sr-flabel">
+                  SEO description{" "}
+                  <input
+                    className="sr-input"
+                    value={page.seo.description ?? ""}
+                    onChange={(e) =>
+                      dispatch({
+                        type: "setPageField",
+                        key: "seo.description",
+                        value: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+              </div>
             </fieldset>
 
             {section && schema ? (
-              <fieldset key={section.id}>
-                <legend>{schema.label}</legend>
+              <fieldset key={section.id} className="sr-fieldset">
+                <legend className="sr-legend">{schema.label}</legend>
                 {Object.entries(schema.fields).map(([key, field]) => (
                   <FieldControl
                     key={key}
