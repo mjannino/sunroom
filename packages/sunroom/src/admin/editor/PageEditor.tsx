@@ -89,11 +89,7 @@ export function PageEditor({
     <MediaProvider items={media} actions={mediaActions}>
       <div data-screen="editor">
         <div className="sr-edhead">
-          <button
-            className="sr-btn-primary"
-            onClick={save}
-            disabled={!canSave}
-          >
+          <button className="sr-btn-primary" onClick={save} disabled={!canSave}>
             Save
           </button>
           {status ? (
