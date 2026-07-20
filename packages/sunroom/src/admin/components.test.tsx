@@ -27,6 +27,16 @@ describe("AdminLayout", () => {
     expect(html).toContain("/api/sunroom/auth/logout");
   });
 
+  it("wraps the output in the sr-admin frame and injects the ADMIN_CSS theme", async () => {
+    getSession.mockResolvedValue({ email: "jane@acme.com", name: "Jane" });
+    const html = renderToStaticMarkup(
+      await AdminLayout({ children: "SECRET CHILD" }),
+    );
+    expect(html).toContain('class="sr-admin"');
+    expect(html).toContain("<style>");
+    expect(html).toContain("--sr-accent");
+  });
+
   it("renders a config-error panel instead of throwing when getSession fails with AuthConfigError", async () => {
     getSession.mockRejectedValue(new AuthConfigError(["GOOGLE_CLIENT_ID"]));
     const html = renderToStaticMarkup(

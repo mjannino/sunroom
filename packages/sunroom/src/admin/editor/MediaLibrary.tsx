@@ -79,11 +79,14 @@ export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
   }
 
   return (
-    <div role="dialog" aria-label="Media library">
-      <button type="button" onClick={onClose}>
-        Close
-      </button>
-      <label>
+    <div role="dialog" aria-label="Media library" className="sr-dialog">
+      <div className="sr-dialog-head">
+        <span>Media library</span>
+        <button type="button" className="sr-btn" onClick={onClose}>
+          Close
+        </button>
+      </div>
+      <label className="sr-upload">
         Upload
         <input
           type="file"
@@ -95,21 +98,26 @@ export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
           }}
         />
       </label>
-      {error ? <p role="alert">{error}</p> : null}
-      <ul>
+      {error ? (
+        <p role="alert" className="sr-alert">
+          {error}
+        </p>
+      ) : null}
+      <ul className="sr-media-grid">
         {items.map((item) => (
-          <li key={item.id}>
+          <li key={item.id} className="sr-media-item">
             <img
               src={item.url}
               alt={item.alt}
               width={80}
               height={80}
+              className="sr-media-thumb"
               onClick={() => onPick(item.id)}
-              style={{ cursor: "pointer" }}
             />
             <button
               type="button"
               aria-label={`delete ${item.alt}`}
+              className="sr-media-del"
               onClick={() => {
                 void handleDelete(item.id);
               }}

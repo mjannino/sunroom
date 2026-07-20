@@ -17,6 +17,12 @@ import { screenFromSegments, serializeRegistry } from "../editor-core.js";
 // tsup.config.ts's `external` list for why EditorRoot (server-only) must
 // reach these 'use client' components through the public package specifier.
 import { PageEditor, PagesScreen } from "sunroom/client";
+// Sidebar IS a relative import: it's a server component (no 'use client'),
+// so it must stay in the same server-only chunk as EditorRoot — routing it
+// through "sunroom/client" instead would be wrong (see the tsup.config.ts
+// comment above) and, per that comment's caught bug, could silently make
+// unrelated server-only exports client-only too.
+import { Sidebar } from "./Sidebar.js";
 import type { EditorActions, MediaActions } from "./types.js";
 
 const actions: EditorActions = {
@@ -45,12 +51,23 @@ export async function EditorRoot({
   const store = await getStore(resolveConfig(config));
   const screen = screenFromSegments(segments);
 
+  const body = (screenNode: ReactElement) => (
+    <>
+      <Sidebar
+        pages={store.listPages()}
+        activeSlug={screen.screen === "editor" ? screen.slug : null}
+        activeScreen={screen.screen}
+      />
+      <main className="sr-main">{screenNode}</main>
+    </>
+  );
+
   if (screen.screen === "pages") {
-    return <PagesScreen pages={store.listPages()} actions={actions} />;
+    return body(<PagesScreen pages={store.listPages()} actions={actions} />);
   }
 
   const entry = store.getPage(screen.slug);
-  if (!entry) return <div data-screen="editor">Page not found.</div>;
+  if (!entry) return body(<div data-screen="editor">Page not found.</div>);
 
   const base = process.env.R2_PUBLIC_BASE;
   const resolve = makeResolveMedia(store.listMedia(), base);
@@ -63,7 +80,7 @@ export async function EditorRoot({
     filename: m.filename,
   }));
 
-  return (
+  return body(
     <PageEditor
       page={entry.page}
       version={entry.version}
@@ -71,6 +88,6 @@ export async function EditorRoot({
       actions={actions}
       media={media}
       mediaActions={mediaActions}
-    />
+    />,
   );
 }
