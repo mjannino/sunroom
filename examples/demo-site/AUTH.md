@@ -6,6 +6,10 @@ This demo mounts Sunroom's admin auth via three one-line files:
 - `app/admin/layout.tsx` — `sunroom.AdminLayout`, the guard + shell.
 - `app/admin/[[...segments]]/page.tsx` — `sunroom.AdminPage`.
 
+> For the full integration contract (mounting the public site + admin, keeping
+> the admin isolated from your site chrome, the API surface), see the package
+> README: `packages/sunroom/README.md`. This file covers the auth env specifics.
+
 Config lives in `.env.local` (gitignored — never commit it):
 
 ```
