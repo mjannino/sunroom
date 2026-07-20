@@ -1,34 +1,29 @@
 import "server-only";
 import type { ReactElement, ReactNode } from "react";
+import { ADMIN_CSS } from "./admin-css.js";
 import { AuthConfigError } from "./config.js";
 import { getSession } from "./session-server.js";
 
+function AdminFrame({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <div className="sr-admin">
+      <style dangerouslySetInnerHTML={{ __html: ADMIN_CSS }} />
+      {children}
+    </div>
+  );
+}
+
 export function SignInScreen(): ReactElement {
   return (
-    <main
-      style={{
-        fontFamily: "system-ui",
-        maxWidth: 420,
-        margin: "10vh auto",
-        padding: "2rem",
-        textAlign: "center",
-      }}
-    >
-      <h1>Sunroom</h1>
-      <p>Sign in to edit this site.</p>
-      <a
-        href="/api/sunroom/auth/login"
-        style={{
-          display: "inline-block",
-          padding: "0.6rem 1.2rem",
-          border: "1px solid #ccc",
-          borderRadius: 8,
-          textDecoration: "none",
-        }}
-      >
-        Sign in with Google
-      </a>
-    </main>
+    <AdminFrame>
+      <main className="sr-center">
+        <h1>Sunroom</h1>
+        <p>Sign in to edit this site.</p>
+        <a href="/api/sunroom/auth/login" className="sr-signin-btn">
+          Sign in with Google
+        </a>
+      </main>
+    </AdminFrame>
   );
 }
 
@@ -38,20 +33,12 @@ export function ConfigErrorScreen({
   message: string;
 }): ReactElement {
   return (
-    <main
-      style={{
-        fontFamily: "system-ui",
-        maxWidth: 560,
-        margin: "10vh auto",
-        padding: "2rem",
-        border: "1px solid #e5b8b8",
-        borderRadius: 8,
-        background: "#fff5f5",
-      }}
-    >
-      <h1>Sunroom is misconfigured</h1>
-      <p>{message}</p>
-    </main>
+    <AdminFrame>
+      <main className="sr-center wide">
+        <h1>Sunroom is misconfigured</h1>
+        <p>{message}</p>
+      </main>
+    </AdminFrame>
   );
 }
 
@@ -72,7 +59,7 @@ export async function AdminLayout({
   if (!session) return <SignInScreen />;
 
   return (
-    <div style={{ fontFamily: "system-ui" }}>
+    <AdminFrame>
       <header
         style={{
           display: "flex",
@@ -95,6 +82,6 @@ export async function AdminLayout({
         </span>
       </header>
       <main style={{ padding: "1.5rem" }}>{children}</main>
-    </div>
+    </AdminFrame>
   );
 }
