@@ -60,28 +60,24 @@ export async function AdminLayout({
 
   return (
     <AdminFrame>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "0.75rem 1.5rem",
-          borderBottom: "1px solid #e5e5e5",
-        }}
-      >
-        <strong>Sunroom</strong>
-        <span style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <span>Signed in as {session.email}</span>
-          <form
-            method="post"
-            action="/api/sunroom/auth/logout"
-            style={{ margin: 0 }}
-          >
-            <button type="submit">Sign out</button>
-          </form>
+      <div className="sr-top">
+        <span className="sr-brand">
+          <span className="sr-sun" />
+          Sunroom
         </span>
-      </header>
-      <main style={{ padding: "1.5rem" }}>{children}</main>
+        <span className="sr-top-spacer" />
+        <span className="sr-user">{session.email}</span>
+        <form
+          method="post"
+          action="/api/sunroom/auth/logout"
+          style={{ margin: 0 }}
+        >
+          <button type="submit" className="sr-signout">
+            Sign out
+          </button>
+        </form>
+      </div>
+      <div className="sr-body">{children}</div>
     </AdminFrame>
   );
 }
