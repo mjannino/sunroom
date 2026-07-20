@@ -33,7 +33,7 @@ export function FieldControl({
   const label = field.label ?? name;
   const error = issues.find((i) => i.path === path);
   const err = error ? (
-    <span role="alert" style={{ color: "crimson", marginLeft: "0.5rem" }}>
+    <span role="alert" className="sr-error">
       {error.message}
     </span>
   ) : null;
@@ -44,8 +44,8 @@ export function FieldControl({
       typeof value === "object" && value !== null ? value : {}
     ) as Record<string, unknown>;
     return (
-      <fieldset>
-        <legend>
+      <fieldset className="sr-fieldset">
+        <legend className="sr-legend">
           {label}
           {err}
         </legend>
@@ -83,93 +83,107 @@ export function FieldControl({
   // Scalars
   if (field.type === "textarea") {
     return (
-      <label>
-        {label}
-        {err}{" "}
-        <textarea
-          aria-label={name}
-          value={String(value ?? "")}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </label>
+      <div className="sr-field">
+        <label className="sr-flabel">
+          {label}
+          {err}{" "}
+          <textarea
+            aria-label={name}
+            className="sr-input"
+            value={String(value ?? "")}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        </label>
+      </div>
     );
   }
   if (field.type === "text" || field.type === "link") {
     const type = field.type === "link" ? "url" : "text";
     return (
-      <label>
-        {label}
-        {err}{" "}
-        <input
-          type={type}
-          aria-label={name}
-          value={String(value ?? "")}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </label>
+      <div className="sr-field">
+        <label className="sr-flabel">
+          {label}
+          {err}{" "}
+          <input
+            type={type}
+            aria-label={name}
+            className="sr-input"
+            value={String(value ?? "")}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        </label>
+      </div>
     );
   }
   if (field.type === "number") {
     return (
-      <label>
-        {label}
-        {err}{" "}
-        <input
-          type="number"
-          aria-label={name}
-          value={typeof value === "number" ? value : ""}
-          onChange={(e) =>
-            onChange(e.target.value === "" ? undefined : Number(e.target.value))
-          }
-        />
-      </label>
+      <div className="sr-field">
+        <label className="sr-flabel">
+          {label}
+          {err}{" "}
+          <input
+            type="number"
+            aria-label={name}
+            className="sr-input"
+            value={typeof value === "number" ? value : ""}
+            onChange={(e) =>
+              onChange(e.target.value === "" ? undefined : Number(e.target.value))
+            }
+          />
+        </label>
+      </div>
     );
   }
   if (field.type === "boolean") {
     return (
-      <label>
-        {label}
-        {err}{" "}
-        <input
-          type="checkbox"
-          aria-label={name}
-          checked={value === true}
-          onChange={(e) => onChange(e.target.checked)}
-        />
-      </label>
+      <div className="sr-field">
+        <label className="sr-flabel">
+          {label}
+          {err}{" "}
+          <input
+            type="checkbox"
+            aria-label={name}
+            checked={value === true}
+            onChange={(e) => onChange(e.target.checked)}
+          />
+        </label>
+      </div>
     );
   }
   if (field.type === "select") {
     return (
-      <label>
-        {label}
-        {err}{" "}
-        <select
-          aria-label={name}
-          value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
-        >
-          {field.options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="sr-field">
+        <label className="sr-flabel">
+          {label}
+          {err}{" "}
+          <select
+            aria-label={name}
+            className="sr-input"
+            value={typeof value === "string" ? value : ""}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            {field.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     );
   }
 
   if (field.type === "richText") {
     return (
-      <label>
-        {label}
+      <div className="sr-field">
+        <label className="sr-flabel">{label}</label>
         {err}
         <RichTextControl
           value={value}
           onChange={(html) => onChange(html)}
           ariaLabel={name}
         />
-      </label>
+      </div>
     );
   }
 
@@ -181,8 +195,8 @@ export function FieldControl({
     // computed name, making "Replace" and "Remove" both match a
     // `/remove/i` query.
     return (
-      <div>
-        <span>{label}</span>
+      <div className="sr-field">
+        <span className="sr-flabel">{label}</span>
         {err}
         <ImagePicker value={value} onChange={(v) => onChange(v)} />
       </div>
@@ -241,7 +255,7 @@ function ArrayControl({
   const label = field.label ?? name;
   const error = issues.find((i) => i.path === path);
   const err = error ? (
-    <span role="alert" style={{ color: "crimson", marginLeft: "0.5rem" }}>
+    <span role="alert" className="sr-error">
       {error.message}
     </span>
   ) : null;
@@ -249,8 +263,8 @@ function ArrayControl({
   const atMaxDepth = depth + 1 > MAX_FIELD_DEPTH;
 
   return (
-    <fieldset>
-      <legend>
+    <fieldset className="sr-fieldset">
+      <legend className="sr-legend">
         {label}
         {err}
       </legend>
@@ -283,6 +297,7 @@ function ArrayControl({
               />
               <button
                 type="button"
+                className="sr-btn-icon"
                 aria-label={`move up ${i}`}
                 disabled={i === 0}
                 onClick={() => emit(swap(items, i, i - 1))}
@@ -291,6 +306,7 @@ function ArrayControl({
               </button>
               <button
                 type="button"
+                className="sr-btn-icon"
                 aria-label={`move down ${i}`}
                 disabled={i === items.length - 1}
                 onClick={() => emit(swap(items, i, i + 1))}
@@ -299,6 +315,7 @@ function ArrayControl({
               </button>
               <button
                 type="button"
+                className="sr-btn-icon"
                 aria-label={`remove ${i}`}
                 onClick={() => emit(items.filter((_, j) => j !== i))}
               >
@@ -310,6 +327,7 @@ function ArrayControl({
       </SortableList>
       <button
         type="button"
+        className="sr-add"
         disabled={atMaxDepth}
         onClick={() => {
           if (atMaxDepth) return;
