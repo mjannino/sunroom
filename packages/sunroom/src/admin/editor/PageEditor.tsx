@@ -87,193 +87,229 @@ export function PageEditor({
 
   return (
     <MediaProvider items={media} actions={mediaActions}>
-      <div data-screen="editor" style={{ display: "flex", gap: "2rem" }}>
-        <aside style={{ minWidth: 220 }}>
-          <h2>{page.title}</h2>
-          <SortableList
-            ids={page.sections.map((s) => s.id)}
-            onReorder={(orderedIds) =>
-              dispatch({ type: "reorderSections", orderedIds })
-            }
+      <div data-screen="editor">
+        <div className="sr-edhead">
+          <button
+            className="sr-btn-primary"
+            onClick={save}
+            disabled={!canSave}
           >
-            <ol>
-              {page.sections.map((s, i) => (
-                <li key={s.id}>
-                  <SortableRow
-                    id={s.id}
-                    label={registry[s.type]?.label ?? s.type}
-                  >
-                    <button
-                      onClick={() => setSelected(s.id)}
-                      style={{ fontWeight: s.id === selected ? 700 : 400 }}
-                    >
-                      {registry[s.type]?.label ?? s.type}
-                    </button>
-                    {sectionIssues(s).length > 0 ? (
-                      <span aria-label="has errors" title="has errors">
-                        ⚠
-                      </span>
-                    ) : null}
-                    <button
-                      disabled={i === 0}
-                      onClick={() =>
-                        dispatch({
-                          type: "moveSection",
-                          sectionId: s.id,
-                          dir: "up",
-                        })
-                      }
-                    >
-                      ↑
-                    </button>
-                    <button
-                      disabled={i === page.sections.length - 1}
-                      onClick={() =>
-                        dispatch({
-                          type: "moveSection",
-                          sectionId: s.id,
-                          dir: "down",
-                        })
-                      }
-                    >
-                      ↓
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm("Remove this section?"))
-                          dispatch({ type: "removeSection", sectionId: s.id });
-                      }}
-                    >
-                      ✕
-                    </button>
-                  </SortableRow>
-                </li>
-              ))}
-            </ol>
-          </SortableList>
-          <details
-            open={paletteOpen}
-            onToggle={(e) => setPaletteOpen(e.currentTarget.open)}
-          >
-            <summary>+ Add section</summary>
-            {paletteOpen
-              ? Object.entries(registry)
-                  .filter(([, d]) => !d.deprecated)
-                  .map(([type, d]) => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        const id = crypto.randomUUID();
-                        dispatch({
-                          type: "addSection",
-                          sectionType: type,
-                          id,
-                          props: defaultProps(d.fields),
-                        });
-                        setSelected(id);
-                        setPaletteOpen(false);
-                      }}
-                    >
-                      {d.label}
-                    </button>
-                  ))
-              : null}
-          </details>
-        </aside>
-
-        <main style={{ flex: 1 }}>
-          <fieldset>
-            <legend>Page</legend>
-            <label>
-              Title{" "}
-              <input
-                value={page.title}
-                onChange={(e) =>
-                  dispatch({
-                    type: "setPageField",
-                    key: "title",
-                    value: e.target.value,
-                  })
-                }
-              />
-            </label>
-            {page.title.trim() === "" ? (
-              <span role="alert" style={{ color: "crimson" }}>
-                Title is required
-              </span>
-            ) : null}
-            <label>
-              SEO title{" "}
-              <input
-                value={page.seo.title ?? ""}
-                onChange={(e) =>
-                  dispatch({
-                    type: "setPageField",
-                    key: "seo.title",
-                    value: e.target.value,
-                  })
-                }
-              />
-            </label>
-            <label>
-              SEO description{" "}
-              <input
-                value={page.seo.description ?? ""}
-                onChange={(e) =>
-                  dispatch({
-                    type: "setPageField",
-                    key: "seo.description",
-                    value: e.target.value,
-                  })
-                }
-              />
-            </label>
-          </fieldset>
-
-          {section && schema ? (
-            <fieldset key={section.id}>
-              <legend>{schema.label}</legend>
-              {Object.entries(schema.fields).map(([key, field]) => (
-                <FieldControl
-                  key={key}
-                  name={key}
-                  field={field}
-                  value={section.props[key]}
-                  onChange={(value) =>
-                    dispatch({
-                      type: "setSectionField",
-                      sectionId: section.id,
-                      key,
-                      value,
-                    })
-                  }
-                  path={key}
-                  issues={selectedIssues}
-                  depth={0}
-                />
-              ))}
-            </fieldset>
-          ) : (
-            <p>Select or add a section to edit it.</p>
-          )}
-
-          <button onClick={save} disabled={!canSave}>
             Save
           </button>
-          {status ? <span role="status">{status}</span> : null}
-
-          <button type="button" onClick={() => setShowPreview((v) => !v)}>
+          {status ? (
+            <span
+              role="status"
+              className={`sr-chip${dirty ? " is-dirty" : ""}`}
+            >
+              {status}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="sr-btn"
+            onClick={() => setShowPreview((v) => !v)}
+          >
             {showPreview ? "Hide" : "Show"} preview
           </button>
+        </div>
+
+        <div className="sr-cols">
+          <aside className="sr-col">
+            <h2 className="sr-title">{page.title}</h2>
+            <div className="sr-col-label">Sections</div>
+            <SortableList
+              ids={page.sections.map((s) => s.id)}
+              onReorder={(orderedIds) =>
+                dispatch({ type: "reorderSections", orderedIds })
+              }
+            >
+              <ol className="sr-seclist">
+                {page.sections.map((s, i) => (
+                  <li key={s.id}>
+                    <SortableRow
+                      id={s.id}
+                      label={registry[s.type]?.label ?? s.type}
+                      className={`sr-secrow${s.id === selected ? " is-active" : ""}`}
+                    >
+                      <button
+                        className="sr-secrow-label"
+                        onClick={() => setSelected(s.id)}
+                      >
+                        {registry[s.type]?.label ?? s.type}
+                      </button>
+                      {sectionIssues(s).length > 0 ? (
+                        <span
+                          className="sr-secrow-warn"
+                          aria-label="has errors"
+                          title="has errors"
+                        >
+                          ⚠
+                        </span>
+                      ) : null}
+                      <button
+                        className="sr-btn-icon"
+                        disabled={i === 0}
+                        onClick={() =>
+                          dispatch({
+                            type: "moveSection",
+                            sectionId: s.id,
+                            dir: "up",
+                          })
+                        }
+                      >
+                        ↑
+                      </button>
+                      <button
+                        className="sr-btn-icon"
+                        disabled={i === page.sections.length - 1}
+                        onClick={() =>
+                          dispatch({
+                            type: "moveSection",
+                            sectionId: s.id,
+                            dir: "down",
+                          })
+                        }
+                      >
+                        ↓
+                      </button>
+                      <button
+                        className="sr-btn-icon"
+                        onClick={() => {
+                          if (confirm("Remove this section?"))
+                            dispatch({
+                              type: "removeSection",
+                              sectionId: s.id,
+                            });
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </SortableRow>
+                  </li>
+                ))}
+              </ol>
+            </SortableList>
+            <details
+              open={paletteOpen}
+              onToggle={(e) => setPaletteOpen(e.currentTarget.open)}
+            >
+              <summary className="sr-add">+ Add section</summary>
+              {paletteOpen
+                ? Object.entries(registry)
+                    .filter(([, d]) => !d.deprecated)
+                    .map(([type, d]) => (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          const id = crypto.randomUUID();
+                          dispatch({
+                            type: "addSection",
+                            sectionType: type,
+                            id,
+                            props: defaultProps(d.fields),
+                          });
+                          setSelected(id);
+                          setPaletteOpen(false);
+                        }}
+                      >
+                        {d.label}
+                      </button>
+                    ))
+                : null}
+            </details>
+          </aside>
+
+          <main className="sr-col">
+            <fieldset>
+              <legend>Page</legend>
+              <label>
+                Title{" "}
+                <input
+                  value={page.title}
+                  onChange={(e) =>
+                    dispatch({
+                      type: "setPageField",
+                      key: "title",
+                      value: e.target.value,
+                    })
+                  }
+                />
+              </label>
+              {page.title.trim() === "" ? (
+                <span role="alert" className="sr-error">
+                  Title is required
+                </span>
+              ) : null}
+              <label>
+                SEO title{" "}
+                <input
+                  value={page.seo.title ?? ""}
+                  onChange={(e) =>
+                    dispatch({
+                      type: "setPageField",
+                      key: "seo.title",
+                      value: e.target.value,
+                    })
+                  }
+                />
+              </label>
+              <label>
+                SEO description{" "}
+                <input
+                  value={page.seo.description ?? ""}
+                  onChange={(e) =>
+                    dispatch({
+                      type: "setPageField",
+                      key: "seo.description",
+                      value: e.target.value,
+                    })
+                  }
+                />
+              </label>
+            </fieldset>
+
+            {section && schema ? (
+              <fieldset key={section.id}>
+                <legend>{schema.label}</legend>
+                {Object.entries(schema.fields).map(([key, field]) => (
+                  <FieldControl
+                    key={key}
+                    name={key}
+                    field={field}
+                    value={section.props[key]}
+                    onChange={(value) =>
+                      dispatch({
+                        type: "setSectionField",
+                        sectionId: section.id,
+                        key,
+                        value,
+                      })
+                    }
+                    path={key}
+                    issues={selectedIssues}
+                    depth={0}
+                  />
+                ))}
+              </fieldset>
+            ) : (
+              <p>Select or add a section to edit it.</p>
+            )}
+          </main>
+
           {showPreview ? (
-            <iframe
-              key={previewKey}
-              src={previewSrc}
-              title="Preview"
-              style={{ width: "100%", height: 480, border: "1px solid #ddd" }}
-            />
+            <div className="sr-col">
+              <div className="sr-col-label">Live preview</div>
+              <div className="sr-preview">
+                <iframe
+                  key={previewKey}
+                  src={previewSrc}
+                  title="Preview"
+                  className="sr-preview-frame"
+                />
+              </div>
+            </div>
           ) : null}
-        </main>
+        </div>
       </div>
     </MediaProvider>
   );
