@@ -179,6 +179,23 @@ describe("POST owner", () => {
         .some((c) => c.startsWith(`${SESSION_COOKIE}=`)),
     ).toBe(false);
   });
+
+  it("redirects to SUNROOM_URL, not the (proxied) request origin", async () => {
+    // Behind a TLS-terminating proxy (e.g. Fly) the request arrives on the
+    // internal http://localhost:PORT, but SUNROOM_URL is the real public host.
+    // The redirect must use SUNROOM_URL or the browser bounces to localhost.
+    const req = new NextRequest(
+      "http://localhost:3000/api/sunroom/auth/owner",
+      {
+        method: "POST",
+        body: new URLSearchParams({ token: "owner-token" }),
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+      },
+    );
+    const res = await handlers().POST(req);
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toBe("https://acme.com/admin");
+  });
 });
 
 describe("POST logout", () => {
