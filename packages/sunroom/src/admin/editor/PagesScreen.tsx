@@ -28,13 +28,16 @@ export function PagesScreen({
 
   return (
     <div data-screen="pages">
-      <h1>Pages</h1>
-      <ul>
+      <h1 className="sr-title">Pages</h1>
+      <ul className="sr-seclist">
         {pages.map((p, i) => (
-          <li key={p.slug || "(home)"}>
-            <a href={`/admin/pages/${p.slug}`}>{p.title}</a>{" "}
-            <code>/{p.slug}</code>
+          <li key={p.slug || "(home)"} className="sr-secrow">
+            <a className="sr-page" href={`/admin/pages/${p.slug}`}>
+              {p.title}
+            </a>{" "}
+            <code className="sr-slug">/{p.slug}</code>
             <button
+              className="sr-btn-icon"
               disabled={busy || i === 0}
               onClick={() =>
                 run(() => actions.reorderPages(move(pages, i, -1)))
@@ -43,12 +46,14 @@ export function PagesScreen({
               ↑
             </button>
             <button
+              className="sr-btn-icon"
               disabled={busy || i === pages.length - 1}
               onClick={() => run(() => actions.reorderPages(move(pages, i, 1)))}
             >
               ↓
             </button>
             <button
+              className="sr-btn-icon sr-btn-danger"
               aria-label={`delete ${p.title}`}
               disabled={busy || p.slug === ""}
               onClick={() => {
@@ -76,18 +81,27 @@ export function PagesScreen({
       >
         <label>
           Title{" "}
-          <input value={title} onChange={(e) => setTitle(e.target.value)} />
+          <input
+            className="sr-input"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </label>
         <label>
-          Slug <input value={slug} onChange={(e) => setSlug(e.target.value)} />
+          Slug{" "}
+          <input
+            className="sr-input"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+          />
         </label>
-        <button type="submit" disabled={busy}>
+        <button className="sr-btn-primary" type="submit" disabled={busy}>
           Create
         </button>
       </form>
 
       {error ? (
-        <p role="alert" style={{ color: "crimson" }}>
+        <p className="sr-error" role="alert">
           {error}
         </p>
       ) : null}

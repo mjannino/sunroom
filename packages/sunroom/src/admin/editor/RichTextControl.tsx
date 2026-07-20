@@ -33,13 +33,10 @@ export function RichTextControl({
 
   return (
     <div>
-      <div
-        role="toolbar"
-        aria-label="Formatting"
-        style={{ display: "flex", gap: 4, marginBottom: 4 }}
-      >
+      <div role="toolbar" aria-label="Formatting" className="sr-toolbar">
         <button
           type="button"
+          className="sr-tb"
           aria-label="Toggle bold"
           onClick={() => editor?.chain().focus().toggleBold().run()}
         >
@@ -47,6 +44,7 @@ export function RichTextControl({
         </button>
         <button
           type="button"
+          className="sr-tb"
           aria-label="Toggle italic"
           onClick={() => editor?.chain().focus().toggleItalic().run()}
         >
@@ -54,6 +52,7 @@ export function RichTextControl({
         </button>
         <button
           type="button"
+          className="sr-tb"
           aria-label="Heading 2"
           onClick={() =>
             editor?.chain().focus().toggleHeading({ level: 2 }).run()
@@ -63,6 +62,7 @@ export function RichTextControl({
         </button>
         <button
           type="button"
+          className="sr-tb"
           aria-label="Toggle bullet list"
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
         >
@@ -70,6 +70,7 @@ export function RichTextControl({
         </button>
         <button
           type="button"
+          className="sr-tb"
           aria-label="Insert link"
           onClick={() => {
             const url = window.prompt("Link URL");
@@ -81,7 +82,7 @@ export function RichTextControl({
           Link
         </button>
       </div>
-      <EditorContent editor={editor} />
+      <EditorContent editor={editor} className="sr-rich" />
     </div>
   );
 }

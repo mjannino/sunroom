@@ -19,17 +19,31 @@ export function ImagePicker({ value, onChange }: Props): React.ReactElement {
   return (
     <span>
       {current ? (
-        <span>
-          <img src={current.url} alt={current.alt} width={80} height={80} />
-          <button type="button" onClick={() => setOpen(true)}>
+        <span className="sr-imgrow">
+          <img
+            src={current.url}
+            alt={current.alt}
+            width={80}
+            height={80}
+            className="sr-thumb"
+          />
+          <button
+            type="button"
+            className="sr-link"
+            onClick={() => setOpen(true)}
+          >
             Replace
           </button>
-          <button type="button" onClick={() => onChange(undefined)}>
+          <button
+            type="button"
+            className="sr-link"
+            onClick={() => onChange(undefined)}
+          >
             Remove
           </button>
         </span>
       ) : (
-        <button type="button" onClick={() => setOpen(true)}>
+        <button type="button" className="sr-link" onClick={() => setOpen(true)}>
           Choose image
         </button>
       )}
