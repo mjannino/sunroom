@@ -127,7 +127,9 @@ export function FieldControl({
             className="sr-input"
             value={typeof value === "number" ? value : ""}
             onChange={(e) =>
-              onChange(e.target.value === "" ? undefined : Number(e.target.value))
+              onChange(
+                e.target.value === "" ? undefined : Number(e.target.value),
+              )
             }
           />
         </label>
@@ -276,14 +278,7 @@ function ArrayControl({
       >
         {items.map((entry, i) => (
           <SortableRow key={entry.id} id={entry.id} label={`item ${i + 1}`}>
-            <div
-              data-testid={`array-item-${entry.id}`}
-              style={{
-                borderLeft: "2px solid #eee",
-                paddingLeft: "0.5rem",
-                marginBottom: "0.5rem",
-              }}
-            >
+            <div data-testid={`array-item-${entry.id}`} className="sr-arr-item">
               <FieldControl
                 name={`${name}[${i}]`}
                 field={field.of}

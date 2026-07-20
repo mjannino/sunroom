@@ -13,14 +13,20 @@ export function Sidebar({
   return (
     <nav className="sr-side" aria-label="Admin navigation">
       <div className="sr-nav-label">Manage</div>
-      <a className={`sr-nav-item${activeScreen === "pages" ? " is-active" : ""}`} href="/admin">
-        <span className="sr-nav-ic" />Pages
+      <a
+        className={`sr-nav-item${activeScreen === "pages" ? " is-active" : ""}`}
+        href="/admin"
+      >
+        <span className="sr-nav-ic" />
+        Pages
       </a>
       <span className="sr-nav-item is-disabled" aria-disabled="true">
-        <span className="sr-nav-ic" />Media<span className="sr-soon">Soon</span>
+        <span className="sr-nav-ic" />
+        Media<span className="sr-soon">Soon</span>
       </span>
       <span className="sr-nav-item is-disabled" aria-disabled="true">
-        <span className="sr-nav-ic" />Settings<span className="sr-soon">Soon</span>
+        <span className="sr-nav-ic" />
+        Settings<span className="sr-soon">Soon</span>
       </span>
       <div className="sr-pagelist">
         <div className="sr-nav-label">Pages</div>
@@ -31,10 +37,16 @@ export function Sidebar({
             href={`/admin/pages/${p.slug}`}
           >
             {p.title}
-            {p.slug === "" ? <span className="sr-home-dot" title="home">☀</span> : null}
+            {p.slug === "" ? (
+              <span className="sr-home-dot" title="home">
+                ☀
+              </span>
+            ) : null}
           </a>
         ))}
-        <a className="sr-newpage" href="/admin">+ New page</a>
+        <a className="sr-newpage" href="/admin">
+          + New page
+        </a>
       </div>
     </nav>
   );

@@ -14,9 +14,7 @@ describe("Sidebar", () => {
     const html = renderToStaticMarkup(
       <Sidebar pages={pages} activeSlug={null} activeScreen="pages" />,
     );
-    expect(html).toMatch(
-      /<a class="sr-nav-item is-active" href="\/admin">/,
-    );
+    expect(html).toMatch(/<a class="sr-nav-item is-active" href="\/admin">/);
     expect(html).toContain('class="sr-nav-item is-disabled"');
     const soonCount = html.match(/class="sr-soon"/g)?.length ?? 0;
     expect(soonCount).toBe(2);
@@ -31,12 +29,14 @@ describe("Sidebar", () => {
     );
     expect(html).toContain('href="/admin/pages/"');
     expect(html).toContain('href="/admin/pages/about"');
-    expect(html).toMatch(/class="sr-page is-active" href="\/admin\/pages\/about"/);
+    expect(html).toMatch(
+      /class="sr-page is-active" href="\/admin\/pages\/about"/,
+    );
     // The home row (not active here) must not carry is-active.
     expect(html).toMatch(/class="sr-page" href="\/admin\/pages\/"/);
   });
 
-  it("shows a home-sun marker and title label for the home page (slug \"\")", () => {
+  it('shows a home-sun marker and title label for the home page (slug "")', () => {
     const html = renderToStaticMarkup(
       <Sidebar pages={pages} activeSlug={null} activeScreen="pages" />,
     );
@@ -48,6 +48,8 @@ describe("Sidebar", () => {
     const html = renderToStaticMarkup(
       <Sidebar pages={pages} activeSlug={null} activeScreen="pages" />,
     );
-    expect(html).toMatch(/<a class="sr-newpage" href="\/admin">\+ New page<\/a>/);
+    expect(html).toMatch(
+      /<a class="sr-newpage" href="\/admin">\+ New page<\/a>/,
+    );
   });
 });

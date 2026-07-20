@@ -90,6 +90,7 @@ export const ADMIN_CSS = `
 .sr-legend{font-size:12px;font-weight:600;color:var(--sr-text);padding:0 6px;}
 .sr-add{display:inline-block;font-size:12px;color:var(--sr-accent-soft);border:1px dashed var(--sr-border);
   border-radius:9px;padding:9px 14px;background:transparent;}
+.sr-arr-item{border-left:2px solid var(--sr-border);padding-left:0.5rem;margin-bottom:0.5rem;}
 
 /* richText */
 .sr-toolbar{display:flex;gap:3px;padding:5px 6px;background:var(--sr-surface-2);

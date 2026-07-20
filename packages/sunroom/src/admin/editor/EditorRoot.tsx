@@ -67,8 +67,7 @@ export async function EditorRoot({
   }
 
   const entry = store.getPage(screen.slug);
-  if (!entry)
-    return body(<div data-screen="editor">Page not found.</div>);
+  if (!entry) return body(<div data-screen="editor">Page not found.</div>);
 
   const base = process.env.R2_PUBLIC_BASE;
   const resolve = makeResolveMedia(store.listMedia(), base);

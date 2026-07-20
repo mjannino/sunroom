@@ -27,7 +27,11 @@ export function ImagePicker({ value, onChange }: Props): React.ReactElement {
             height={80}
             className="sr-thumb"
           />
-          <button type="button" className="sr-link" onClick={() => setOpen(true)}>
+          <button
+            type="button"
+            className="sr-link"
+            onClick={() => setOpen(true)}
+          >
             Replace
           </button>
           <button
