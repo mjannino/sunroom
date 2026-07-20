@@ -64,7 +64,6 @@ export const ADMIN_CSS = `
 /* editor */
 .sr-edhead{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
 .sr-title{font-size:19px;font-weight:700;color:var(--sr-text);}
-.sr-edhead-spacer{flex:1;}
 .sr-cols{display:flex;gap:16px;}
 .sr-col{flex:1;min-width:0;}
 .sr-col-label{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--sr-faint);margin-bottom:9px;}
