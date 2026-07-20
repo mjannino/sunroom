@@ -35,7 +35,7 @@ export function PagesScreen({
             <a className="sr-page" href={`/admin/pages/${p.slug}`}>
               {p.title}
             </a>{" "}
-            <code>/{p.slug}</code>
+            <code className="sr-slug">/{p.slug}</code>
             <button
               className="sr-btn-icon"
               disabled={busy || i === 0}

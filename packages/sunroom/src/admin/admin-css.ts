@@ -42,6 +42,7 @@ export const ADMIN_CSS = `
 .sr-page.is-active{color:var(--sr-text);background:var(--sr-surface-2);}
 .sr-home-dot{color:var(--sr-accent-soft);}
 .sr-newpage{display:inline-block;font-size:12px;color:var(--sr-accent-soft);padding:8px 10px;}
+.sr-slug{color:var(--sr-muted);font-size:11px;}
 
 /* main */
 .sr-main{flex:1;min-width:0;padding:18px 22px;}
