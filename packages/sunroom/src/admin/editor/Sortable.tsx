@@ -57,17 +57,19 @@ export function SortableList({
 export function SortableRow({
   id,
   label,
+  className,
   children,
 }: {
   id: string;
   label?: string;
+  className?: string;
   children: ReactNode;
 }): React.ReactElement {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className={className}>
       <button
         type="button"
         aria-label={`drag ${label ?? id}`}
