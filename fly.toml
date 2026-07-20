@@ -1,0 +1,38 @@
+# fly.toml app configuration file generated for sunroom-staging on 2026-07-20T07:29:07-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'sunroom-staging'
+primary_region = 'iad'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '3000'
+  R2_BUCKET = 'sunroom-staging'
+  R2_PUBLIC_BASE = 'https://pub-18cb94aab54b4f77961ec038e2ac9878.r2.dev'
+  R2_PUBLIC_HOST = 'pub-18cb94aab54b4f77961ec038e2ac9878.r2.dev'
+  SUNROOM_CONTENT_DIR = '/data/.sunroom-content'
+  SUNROOM_EDITORS = 'michaeljannino@gmail.com'
+  SUNROOM_SCHEMA_PATH = '/data/schema.json'
+  SUNROOM_URL = 'https://sunroom-staging.fly.dev'
+
+[[mounts]]
+  source = 'sunroom_content'
+  destination = '/data'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'
+  cpus = 1
+  memory_mb = 512

@@ -1,0 +1,13 @@
+# Build context is the whole monorepo; keep it lean and secret-free.
+**/node_modules
+**/.next
+**/dist
+**/.sunroom-content
+**/*.tsbuildinfo
+.git
+.github
+docs
+.superpowers
+# Secrets: never bake dev env files into image layers (review finding #6).
+**/.env
+**/.env.*

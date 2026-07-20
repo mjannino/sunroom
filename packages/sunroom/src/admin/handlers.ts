@@ -51,6 +51,19 @@ function origin(req: NextRequest): string {
   return req.nextUrl.origin;
 }
 
+/**
+ * The public base for building absolute redirect URLs: the configured
+ * SUNROOM_URL when set, else the request origin. Behind a TLS-terminating
+ * proxy (e.g. Fly) the inbound request origin is the internal
+ * http://localhost:PORT, so SUNROOM_URL must win — otherwise post-login
+ * redirects bounce the browser to localhost. Mirrors `callbackUrl`'s
+ * base-first precedence so the Google redirect_uri and the /admin redirects
+ * agree on the site's real origin.
+ */
+function adminUrl(config: AuthConfig, req: NextRequest): URL {
+  return new URL("/admin", config.baseUrl ?? origin(req));
+}
+
 function setSession(
   res: NextResponse,
   config: AuthConfig,
@@ -151,7 +164,7 @@ export function createHandlers(
       if (!decision.ok)
         return clearTxn(errorPage(decision.reason, decision.status));
 
-      const res = NextResponse.redirect(new URL("/admin", origin(req)), 302);
+      const res = NextResponse.redirect(adminUrl(config, req), 302);
       setSession(res, config, identity.email, identity.name);
       return clearTxn(res);
     }
@@ -180,13 +193,13 @@ export function createHandlers(
         return errorPage("Invalid owner token.", 403);
       }
       // 303 See Other: force the browser to GET /admin after this POST.
-      const res = NextResponse.redirect(new URL("/admin", origin(req)), 303);
+      const res = NextResponse.redirect(adminUrl(config, req), 303);
       setSession(res, config, OWNER_EMAIL, "Owner");
       return res;
     }
 
     if (action(req) === "logout") {
-      const res = NextResponse.redirect(new URL("/admin", origin(req)), 303);
+      const res = NextResponse.redirect(adminUrl(config, req), 303);
       res.cookies.set(SESSION_COOKIE, "", { ...sessionCookie, maxAge: 0 });
       return res;
     }
