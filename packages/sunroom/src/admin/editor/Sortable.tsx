@@ -72,10 +72,10 @@ export function SortableRow({
     <div ref={setNodeRef} style={style} className={className}>
       <button
         type="button"
+        className="sr-grip"
         aria-label={`drag ${label ?? id}`}
         {...attributes}
         {...listeners}
-        style={{ cursor: "grab" }}
       >
         ⠿
       </button>
