@@ -27,7 +27,7 @@ export function PagesScreen({
   }
 
   return (
-    <div data-screen="pages">
+    <div data-screen="pages" className="sr-screen">
       <h1 className="sr-title">Pages</h1>
       <ul className="sr-seclist">
         {pages.map((p, i) => (

@@ -146,4 +146,32 @@ export const ADMIN_CSS = `
 .sr-center h1{color:var(--sr-text);}
 .sr-signin-btn{display:inline-block;margin-top:8px;padding:.6rem 1.3rem;border-radius:9px;
   font-weight:600;background:var(--sr-accent);color:var(--sr-on-accent);}
+
+/* content width — keep screens off the full-bleed edge, consistently */
+.sr-screen{max-width:1160px;}
+
+/* add-section dropdown (button trigger + attached menu panel) */
+.sr-menu-wrap{position:relative;display:inline-block;margin-top:4px;}
+.sr-menu-trigger{display:inline-block;list-style:none;}
+.sr-menu-trigger::-webkit-details-marker{display:none;}
+.sr-menu-trigger::marker{content:"";}
+.sr-menu{position:absolute;top:calc(100% + 5px);left:0;z-index:20;min-width:190px;
+  background:var(--sr-surface);border:1px solid var(--sr-border);border-radius:10px;
+  box-shadow:0 12px 30px rgba(0,0,0,.45);padding:5px;}
+.sr-menu-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--sr-faint);padding:6px 9px 4px;}
+.sr-menu-item{display:block;width:100%;text-align:left;background:none;border:none;
+  color:var(--sr-text);font-size:13px;padding:8px 10px;border-radius:7px;}
+.sr-menu-item:hover{background:var(--sr-surface-2);}
+
+/* clickable affordances — hover feedback on interactive elements */
+.sr-nav-item:not(.is-active):not(.is-disabled):hover{color:var(--sr-text);background:var(--sr-surface-2);}
+.sr-newpage:hover{color:var(--sr-accent);text-decoration:underline;}
+.sr-secrow-label:hover{color:var(--sr-accent-soft);}
+.sr-link:hover{color:var(--sr-accent);text-decoration:underline;}
+.sr-btn-icon:not(:disabled):hover{color:var(--sr-text);border-color:var(--sr-faint);}
+.sr-add:hover{color:var(--sr-accent);border-color:var(--sr-accent);}
+.sr-media-thumb:hover{border-color:var(--sr-accent);}
+.sr-media-del:hover{color:var(--sr-accent-hi);border-color:var(--sr-faint);}
+.sr-page:hover,.sr-page:focus-visible{background:var(--sr-surface-2);color:var(--sr-text);}
 `;
