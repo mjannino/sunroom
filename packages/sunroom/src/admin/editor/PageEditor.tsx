@@ -34,6 +34,8 @@ export function PageEditor({
   mediaActions: MediaActions;
 }): React.ReactElement {
   const [page, setPage] = useState(initial);
+  // The last applied (saved) page — the target that "Revert" restores to.
+  const [basePage, setBasePage] = useState(initial);
   const [baseVersion, setBaseVersion] = useState(version);
   const [selected, setSelected] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -77,12 +79,20 @@ export function PageEditor({
     setBusy(false);
     if (res.ok) {
       if (res.version) setBaseVersion(res.version);
+      setBasePage(page);
       setDirty(false);
-      setStatus("Saved.");
+      setStatus("Applied.");
       setPreviewKey((k) => k + 1);
     } else {
       setStatus(res.message);
     }
+  }
+
+  function revert() {
+    setPage(basePage);
+    setSelected(null);
+    setDirty(false);
+    setStatus(null);
   }
 
   return (
@@ -90,13 +100,21 @@ export function PageEditor({
       <div data-screen="editor">
         <div className="sr-edhead">
           <button className="sr-btn-primary" onClick={save} disabled={!canSave}>
-            Save
+            Apply changes
           </button>
-          {status ? (
-            <span
-              role="status"
-              className={`sr-chip${dirty ? " is-dirty" : ""}`}
+          {dirty ? (
+            <button
+              type="button"
+              className="sr-btn"
+              onClick={revert}
+              disabled={busy}
             >
+              Revert
+            </button>
+          ) : null}
+          {dirty ? <span className="sr-pending">Unapplied changes</span> : null}
+          {status ? (
+            <span role="status" className="sr-chip">
               {status}
             </span>
           ) : null}
@@ -110,7 +128,7 @@ export function PageEditor({
         </div>
 
         <div className="sr-cols">
-          <aside className="sr-col">
+          <aside className="sr-col sr-col-sections">
             <h2 className="sr-title">{page.title}</h2>
             <div className="sr-col-label">Sections</div>
             <SortableList
@@ -303,7 +321,7 @@ export function PageEditor({
           </main>
 
           {showPreview ? (
-            <div className="sr-col">
+            <div className="sr-col sr-col-preview">
               <div className="sr-col-label">Live preview</div>
               <div className="sr-preview">
                 <iframe
