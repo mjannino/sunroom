@@ -97,7 +97,7 @@ export function PageEditor({
 
   return (
     <MediaProvider items={media} actions={mediaActions}>
-      <div data-screen="editor">
+      <div data-screen="editor" className="sr-screen">
         <div className="sr-edhead">
           <button className="sr-btn-primary" onClick={save} disabled={!canSave}>
             Apply changes
@@ -204,17 +204,24 @@ export function PageEditor({
               </ol>
             </SortableList>
             <details
+              className="sr-menu-wrap"
               open={paletteOpen}
               onToggle={(e) => setPaletteOpen(e.currentTarget.open)}
             >
-              <summary className="sr-add">+ Add section</summary>
-              {paletteOpen
-                ? Object.entries(registry)
+              <summary className="sr-btn sr-menu-trigger">
+                + Add section
+              </summary>
+              {paletteOpen ? (
+                <div className="sr-menu" role="menu">
+                  <div className="sr-menu-label">Add a section</div>
+                  {Object.entries(registry)
                     .filter(([, d]) => !d.deprecated)
                     .map(([type, d]) => (
                       <button
                         key={type}
-                        className="sr-btn"
+                        type="button"
+                        role="menuitem"
+                        className="sr-menu-item"
                         onClick={() => {
                           const id = crypto.randomUUID();
                           dispatch({
@@ -229,8 +236,9 @@ export function PageEditor({
                       >
                         {d.label}
                       </button>
-                    ))
-                : null}
+                    ))}
+                </div>
+              ) : null}
             </details>
           </aside>
 
