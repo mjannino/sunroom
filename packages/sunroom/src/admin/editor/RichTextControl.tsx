@@ -14,6 +14,11 @@ function isAllowedLinkUrl(url: string): boolean {
   );
 }
 
+/** Toolbar button class, lit when its mark/node is active at the cursor. */
+function tb(active: boolean | undefined): string {
+  return active ? "sr-tb is-active" : "sr-tb";
+}
+
 export function RichTextControl({
   value,
   onChange,
@@ -36,24 +41,36 @@ export function RichTextControl({
       <div role="toolbar" aria-label="Formatting" className="sr-toolbar">
         <button
           type="button"
-          className="sr-tb"
+          className={tb(editor?.isActive("paragraph"))}
+          aria-label="Normal text (paragraph)"
+          aria-pressed={editor?.isActive("paragraph") ?? false}
+          onClick={() => editor?.chain().focus().setParagraph().run()}
+        >
+          P
+        </button>
+        <button
+          type="button"
+          className={tb(editor?.isActive("bold"))}
           aria-label="Toggle bold"
+          aria-pressed={editor?.isActive("bold") ?? false}
           onClick={() => editor?.chain().focus().toggleBold().run()}
         >
           B
         </button>
         <button
           type="button"
-          className="sr-tb"
+          className={tb(editor?.isActive("italic"))}
           aria-label="Toggle italic"
+          aria-pressed={editor?.isActive("italic") ?? false}
           onClick={() => editor?.chain().focus().toggleItalic().run()}
         >
           <i>I</i>
         </button>
         <button
           type="button"
-          className="sr-tb"
+          className={tb(editor?.isActive("heading", { level: 2 }))}
           aria-label="Heading 2"
+          aria-pressed={editor?.isActive("heading", { level: 2 }) ?? false}
           onClick={() =>
             editor?.chain().focus().toggleHeading({ level: 2 }).run()
           }
@@ -62,16 +79,18 @@ export function RichTextControl({
         </button>
         <button
           type="button"
-          className="sr-tb"
+          className={tb(editor?.isActive("bulletList"))}
           aria-label="Toggle bullet list"
+          aria-pressed={editor?.isActive("bulletList") ?? false}
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
         >
           • List
         </button>
         <button
           type="button"
-          className="sr-tb"
+          className={tb(editor?.isActive("link"))}
           aria-label="Insert link"
+          aria-pressed={editor?.isActive("link") ?? false}
           onClick={() => {
             const url = window.prompt("Link URL");
             if (url && isAllowedLinkUrl(url)) {
