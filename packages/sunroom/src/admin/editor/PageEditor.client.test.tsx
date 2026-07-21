@@ -113,8 +113,11 @@ describe("PageEditor", () => {
       />,
     );
     expect(
-      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole("button", {
+          name: /apply changes/i,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true);
   });
 
@@ -134,7 +137,7 @@ describe("PageEditor", () => {
     fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "Hello" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    fireEvent.click(screen.getByRole("button", { name: /apply changes/i }));
     await waitFor(() => {
       expect(actions.savePage).toHaveBeenCalledTimes(1);
       const [savedPage, baseVersion] = (
@@ -185,14 +188,14 @@ describe("PageEditor", () => {
     fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "First edit" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    fireEvent.click(screen.getByRole("button", { name: /apply changes/i }));
     await waitFor(() => expect(savePage).toHaveBeenCalledTimes(1));
     expect(savePage.mock.calls[0]![1]).toBe("v1");
 
     fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "Second edit" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    fireEvent.click(screen.getByRole("button", { name: /apply changes/i }));
     await waitFor(() => expect(savePage).toHaveBeenCalledTimes(2));
     expect(savePage.mock.calls[1]![1]).toBe("v2");
   });
@@ -219,7 +222,7 @@ describe("PageEditor", () => {
     fireEvent.change(screen.getByLabelText("heading"), {
       target: { value: "x" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    fireEvent.click(screen.getByRole("button", { name: /apply changes/i }));
     await waitFor(() =>
       expect(screen.getByText(/changed elsewhere/)).toBeTruthy(),
     );
@@ -241,8 +244,11 @@ describe("validation gating", () => {
     );
     fireEvent.click(screen.getByText(/Hero/));
     expect(
-      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole("button", {
+          name: /apply changes/i,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true);
 
     // Emptying the required field both dirties the page AND makes it invalid.
@@ -252,8 +258,11 @@ describe("validation gating", () => {
       target: { value: "" },
     });
     expect(
-      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole("button", {
+          name: /apply changes/i,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true);
     expect(screen.getAllByText("is required").length).toBeGreaterThan(0);
 
@@ -262,8 +271,11 @@ describe("validation gating", () => {
       target: { value: "Hi again" },
     });
     expect(
-      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole("button", {
+          name: /apply changes/i,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(false);
   });
 
@@ -280,15 +292,21 @@ describe("validation gating", () => {
       />,
     );
     expect(
-      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole("button", {
+          name: /apply changes/i,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true);
 
     // Emptying the title both dirties the page AND makes titleEmpty true.
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "" } });
     expect(
-      (screen.getByRole("button", { name: /save/i }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole("button", {
+          name: /apply changes/i,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true);
   });
 
