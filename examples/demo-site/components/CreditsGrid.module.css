@@ -1,0 +1,13 @@
+.section { margin: 4rem 0; }
+.section :global(.label) { margin: 0 0 1.5rem; }
+.grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem 1.75rem;
+}
+.card { margin: 0; }
+.coverFrame { aspect-ratio: 1 / 1; overflow: hidden; margin-bottom: 0.75rem; }
+.cover { width: 100%; height: 100%; object-fit: cover; }
+.band { font-family: var(--font-heading); font-weight: 600; font-size: 1.05rem; margin: 0; }
+.release { font-family: var(--font-heading); font-style: italic; color: var(--muted); margin: 0.1rem 0 0; }
+@media (max-width: 720px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px) { .grid { grid-template-columns: 1fr; } }
