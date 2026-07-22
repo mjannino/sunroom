@@ -1,0 +1,15 @@
+.section { margin: 4rem 0; }
+.section :global(.label) { margin: 0 0 1.25rem; }
+.list {
+  list-style: none; margin: 0; padding: 0;
+  columns: 2; column-gap: 3rem;
+}
+.item {
+  font-family: var(--font-heading);
+  padding: 0.35rem 0;
+  break-inside: avoid;
+  color: var(--muted);
+}
+.link { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); }
+.link:hover { color: var(--accent); border-color: var(--accent); }
+@media (max-width: 560px) { .list { columns: 1; } }
