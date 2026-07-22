@@ -38,7 +38,7 @@ export const ADMIN_CSS = `
 .sr-pagelist{margin-top:6px;padding-top:10px;border-top:1px solid var(--sr-border);}
 .sr-page{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sr-muted);
   padding:6px 10px;border-radius:7px;}
-.sr-page:hover{background:var(--sr-surface-2);color:var(--sr-text);}
+.sr-page:hover,.sr-page:focus-visible{background:var(--sr-surface-2);color:var(--sr-text);}
 .sr-page.is-active{color:var(--sr-text);background:var(--sr-surface-2);}
 .sr-home-dot{color:var(--sr-accent-soft);}
 .sr-newpage{display:inline-block;font-size:12px;color:var(--sr-accent-soft);padding:8px 10px;}
@@ -58,9 +58,8 @@ export const ADMIN_CSS = `
 .sr-btn-icon{font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--sr-border);
   background:var(--sr-surface-2);color:var(--sr-muted);}
 .sr-btn-icon:disabled{opacity:.4;cursor:default;}
-.sr-btn-danger{color:#ff9d7a;}
+.sr-btn-danger{color:var(--sr-accent-soft);}
 .sr-chip{font-size:10.5px;padding:3px 9px;border-radius:999px;background:var(--sr-surface-2);color:var(--sr-muted);}
-.sr-chip.is-dirty{color:var(--sr-accent-soft);}
 .sr-pending{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
   color:var(--sr-accent-soft);background:var(--sr-surface-2);border:1px solid var(--sr-border);
   padding:5px 11px;border-radius:999px;}
@@ -72,7 +71,8 @@ export const ADMIN_CSS = `
 .sr-cols{display:flex;gap:16px;}
 .sr-col{flex:1;min-width:0;}
 .sr-col-sections{flex:0 1 240px;min-width:170px;}
-.sr-col-preview{flex:1.7;}
+/* editor + preview each claim half of the space left after the section list */
+.sr-col-preview{flex:1;}
 .sr-col-label{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--sr-faint);margin-bottom:9px;}
 
 /* section list (left aside of the editor) */
@@ -110,7 +110,6 @@ export const ADMIN_CSS = `
   min-height:70px;padding:8px 10px;color:var(--sr-text);font-size:12.5px;}
 .sr-rich:focus-within{border-color:var(--sr-accent);}
 .sr-rich .ProseMirror{outline:none;min-height:54px;color:var(--sr-text);}
-.sr-rich .ProseMirror:focus{outline:none;}
 .sr-rich .ProseMirror p{margin:0 0 8px;}
 .sr-rich .ProseMirror> :last-child{margin-bottom:0;}
 .sr-rich .ProseMirror h2{font-size:1.2rem;margin:0 0 8px;color:var(--sr-text);}
@@ -131,13 +130,14 @@ export const ADMIN_CSS = `
 .sr-media-item{position:relative;}
 .sr-media-thumb{width:100%;height:70px;object-fit:cover;border-radius:7px;border:1px solid var(--sr-border);cursor:pointer;}
 .sr-media-del{position:absolute;top:3px;right:3px;font-size:10px;background:rgba(24,18,16,.8);
-  border:1px solid var(--sr-border);border-radius:6px;color:#ff9d7a;padding:2px 5px;}
+  border:1px solid var(--sr-border);border-radius:6px;color:var(--sr-accent-soft);padding:2px 5px;}
 .sr-upload{font-size:12px;color:var(--sr-accent-soft);}
 .sr-alert{color:var(--sr-accent-hi);font-size:12px;}
 
-/* preview */
-.sr-preview{border:1px solid var(--sr-border);border-radius:10px;overflow:hidden;background:#efe7de;}
-.sr-preview-frame{width:100%;height:520px;border:none;display:block;background:#efe7de;}
+/* preview — let the iframed site paint its own background; the surface tone is
+   only a brief load placeholder, never an off-white cast over the real page */
+.sr-preview{border:1px solid var(--sr-border);border-radius:10px;overflow:hidden;background:var(--sr-surface-2);}
+.sr-preview-frame{width:100%;height:520px;border:none;display:block;background:transparent;}
 
 /* sign-in / error cards */
 .sr-center{max-width:420px;margin:14vh auto;padding:2rem;text-align:center;
@@ -166,12 +166,20 @@ export const ADMIN_CSS = `
 
 /* clickable affordances — hover feedback on interactive elements */
 .sr-nav-item:not(.is-active):not(.is-disabled):hover{color:var(--sr-text);background:var(--sr-surface-2);}
-.sr-newpage:hover{color:var(--sr-accent);text-decoration:underline;}
+.sr-newpage:hover,.sr-link:hover,.sr-upload:hover{color:var(--sr-accent);text-decoration:underline;}
 .sr-secrow-label:hover{color:var(--sr-accent-soft);}
-.sr-link:hover{color:var(--sr-accent);text-decoration:underline;}
 .sr-btn-icon:not(:disabled):hover{color:var(--sr-text);border-color:var(--sr-faint);}
 .sr-add:hover{color:var(--sr-accent);border-color:var(--sr-accent);}
 .sr-media-thumb:hover{border-color:var(--sr-accent);}
 .sr-media-del:hover{color:var(--sr-accent-hi);border-color:var(--sr-faint);}
-.sr-page:hover,.sr-page:focus-visible{background:var(--sr-surface-2);color:var(--sr-text);}
+
+/* keyboard focus — one accent ring for every interactive element (the browser
+   default outline is nearly invisible against this dark palette) */
+.sr-btn:focus-visible,.sr-btn-primary:focus-visible,.sr-btn-icon:focus-visible,
+.sr-tb:focus-visible,.sr-menu-item:focus-visible,.sr-grip:focus-visible,
+.sr-link:focus-visible,.sr-newpage:focus-visible,.sr-upload:focus-visible,
+.sr-add:focus-visible,.sr-signout:focus-visible,.sr-signin-btn:focus-visible,
+.sr-nav-item:focus-visible,.sr-secrow-label:focus-visible,
+.sr-media-thumb:focus-visible,.sr-page:focus-visible{
+  outline:2px solid var(--sr-accent);outline-offset:2px;}
 `;
