@@ -37,7 +37,7 @@ export function PagesScreen({
             </a>{" "}
             <code className="sr-slug">/{p.slug}</code>
             <button
-              className="sr-btn-icon"
+              className="sr-btn sr-btn-icon"
               disabled={busy || i === 0}
               onClick={() =>
                 run(() => actions.reorderPages(move(pages, i, -1)))
@@ -46,14 +46,14 @@ export function PagesScreen({
               ↑
             </button>
             <button
-              className="sr-btn-icon"
+              className="sr-btn sr-btn-icon"
               disabled={busy || i === pages.length - 1}
               onClick={() => run(() => actions.reorderPages(move(pages, i, 1)))}
             >
               ↓
             </button>
             <button
-              className="sr-btn-icon sr-btn-danger"
+              className="sr-btn sr-btn-icon sr-btn-danger"
               aria-label={`delete ${p.title}`}
               disabled={busy || p.slug === ""}
               onClick={() => {
@@ -95,7 +95,7 @@ export function PagesScreen({
             onChange={(e) => setSlug(e.target.value)}
           />
         </label>
-        <button className="sr-btn-primary" type="submit" disabled={busy}>
+        <button className="sr-btn sr-btn-primary" type="submit" disabled={busy}>
           Create
         </button>
       </form>
