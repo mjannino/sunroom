@@ -32,4 +32,6 @@ test("omits empty optional fields from the body", () => {
   const body = q.get("body") ?? "";
   assert.ok(!body.includes("Music link:"));
   assert.ok(!body.includes("Songs:"));
+  assert.ok(!body.includes("Timing:"));
+  assert.equal(body, "Name: Kit\nEmail: kit@x.example\nBand / project: Untitled");
 });

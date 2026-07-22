@@ -171,7 +171,8 @@ await store.savePage(
             contactBlurb: "Send a few details and I'll be in touch.",
             ctaLabel: "Contact",
             bookingHeading: "BOOKING & RATES",
-            bookingBody: '<p>Handled directly — <a href="#contact">get in touch</a>.</p>',
+            bookingBody:
+              '<p>Handled directly — <a href="mailto:booking@thelongshotroom.example">get in touch</a>.</p>',
           },
         },
       },
