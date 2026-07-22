@@ -1,29 +1,32 @@
 import Image from "next/image";
 import type { ImageValue } from "sunroom";
+import s from "./Hero.module.css";
 
 export default function Hero({
-  heading,
-  body,
+  kicker,
   image,
+  heading,
 }: {
-  heading: string;
-  body?: string;
-  image?: ImageValue;
+  kicker?: string;
+  image: ImageValue;
+  heading?: string;
 }) {
   return (
-    <section className="hero">
+    <section className={s.hero}>
+      {kicker ? <p className="label">{kicker}</p> : null}
       {image ? (
-        <Image
-          src={image.url}
-          alt={image.alt ?? ""}
-          width={image.width}
-          height={image.height}
-        />
+        <div className={s.frame}>
+          <Image
+            src={image.url}
+            alt={image.alt ?? ""}
+            width={image.width}
+            height={image.height}
+            className={s.img}
+            priority
+          />
+        </div>
       ) : null}
-      <h1>{heading}</h1>
-      {body ? (
-        <div className="hero-body" dangerouslySetInnerHTML={{ __html: body }} />
-      ) : null}
+      {heading ? <h1 className={s.heading}>{heading}</h1> : null}
     </section>
   );
 }

@@ -8,9 +8,9 @@ export default createSunroom({
       label: "Hero",
       component: Hero,
       fields: {
-        heading: f.text({ label: "Heading", required: true }),
-        body: f.richText({ label: "Body" }),
-        image: f.image({ label: "Image" }),
+        kicker: f.text({ label: "Kicker" }),
+        image: f.image({ label: "Image", required: true }),
+        heading: f.text({ label: "Heading" }),
       },
     }),
     testimonials: defineSection({
