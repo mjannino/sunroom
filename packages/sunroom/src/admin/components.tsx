@@ -19,7 +19,10 @@ export function SignInScreen(): ReactElement {
       <main className="sr-center">
         <h1>Sunroom</h1>
         <p>Sign in to edit this site.</p>
-        <a href="/api/sunroom/auth/login" className="sr-signin-btn">
+        <a
+          href="/api/sunroom/auth/login"
+          className="sr-btn sr-btn-primary sr-btn-lg"
+        >
           Sign in with Google
         </a>
       </main>
@@ -72,7 +75,7 @@ export async function AdminLayout({
           action="/api/sunroom/auth/logout"
           style={{ margin: 0 }}
         >
-          <button type="submit" className="sr-signout">
+          <button type="submit" className="sr-btn">
             Sign out
           </button>
         </form>

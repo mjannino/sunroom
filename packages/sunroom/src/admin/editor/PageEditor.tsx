@@ -99,7 +99,11 @@ export function PageEditor({
     <MediaProvider items={media} actions={mediaActions}>
       <div data-screen="editor" className="sr-screen">
         <div className="sr-edhead">
-          <button className="sr-btn-primary" onClick={save} disabled={!canSave}>
+          <button
+            className="sr-btn sr-btn-primary"
+            onClick={save}
+            disabled={!canSave}
+          >
             Apply changes
           </button>
           {dirty ? (
@@ -161,7 +165,7 @@ export function PageEditor({
                         </span>
                       ) : null}
                       <button
-                        className="sr-btn-icon"
+                        className="sr-btn sr-btn-icon"
                         disabled={i === 0}
                         onClick={() =>
                           dispatch({
@@ -174,7 +178,7 @@ export function PageEditor({
                         ↑
                       </button>
                       <button
-                        className="sr-btn-icon"
+                        className="sr-btn sr-btn-icon"
                         disabled={i === page.sections.length - 1}
                         onClick={() =>
                           dispatch({
@@ -187,7 +191,7 @@ export function PageEditor({
                         ↓
                       </button>
                       <button
-                        className="sr-btn-icon"
+                        className="sr-btn sr-btn-icon"
                         onClick={() => {
                           if (confirm("Remove this section?"))
                             dispatch({

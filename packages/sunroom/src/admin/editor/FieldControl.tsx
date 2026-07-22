@@ -292,7 +292,7 @@ function ArrayControl({
               />
               <button
                 type="button"
-                className="sr-btn-icon"
+                className="sr-btn sr-btn-icon"
                 aria-label={`move up ${i}`}
                 disabled={i === 0}
                 onClick={() => emit(swap(items, i, i - 1))}
@@ -301,7 +301,7 @@ function ArrayControl({
               </button>
               <button
                 type="button"
-                className="sr-btn-icon"
+                className="sr-btn sr-btn-icon"
                 aria-label={`move down ${i}`}
                 disabled={i === items.length - 1}
                 onClick={() => emit(swap(items, i, i + 1))}
@@ -310,7 +310,7 @@ function ArrayControl({
               </button>
               <button
                 type="button"
-                className="sr-btn-icon"
+                className="sr-btn sr-btn-icon"
                 aria-label={`remove ${i}`}
                 onClick={() => emit(items.filter((_, j) => j !== i))}
               >
@@ -322,7 +322,7 @@ function ArrayControl({
       </SortableList>
       <button
         type="button"
-        className="sr-add"
+        className="sr-btn sr-btn-add"
         disabled={atMaxDepth}
         onClick={() => {
           if (atMaxDepth) return;
