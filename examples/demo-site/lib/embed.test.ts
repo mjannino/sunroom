@@ -40,3 +40,11 @@ test("unparseable / mismatched URL -> null", () => {
   assert.equal(toEmbedSrc("spotify", "https://example.com/nope"), null);
   assert.equal(toEmbedSrc("spotify", "not a url"), null);
 });
+
+test("spoofed spotify domain -> null", () => {
+  assert.equal(toEmbedSrc("spotify", "https://evilspotify.com/playlist/abc"), null);
+});
+
+test("spoofed soundcloud domain -> null", () => {
+  assert.equal(toEmbedSrc("soundcloud", "https://notsoundcloud.com/artist/sets/mix"), null);
+});

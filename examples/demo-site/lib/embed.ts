@@ -15,7 +15,7 @@ export function toEmbedSrc(provider: EmbedProvider, url: string): string | null 
   if (provider === "spotify") {
     // /playlist/ID, /album/ID, /track/ID  ->  /embed/<kind>/ID
     const m = u.pathname.match(/^\/(playlist|album|track)\/([A-Za-z0-9]+)/);
-    if (!u.hostname.endsWith("spotify.com") || !m) return null;
+    if (!(u.hostname === "spotify.com" || u.hostname.endsWith(".spotify.com")) || !m) return null;
     return `https://open.spotify.com/embed/${m[1]}/${m[2]}`;
   }
 
@@ -27,7 +27,7 @@ export function toEmbedSrc(provider: EmbedProvider, url: string): string | null 
   }
 
   if (provider === "soundcloud") {
-    if (!u.hostname.endsWith("soundcloud.com")) return null;
+    if (!(u.hostname === "soundcloud.com" || u.hostname.endsWith(".soundcloud.com"))) return null;
     return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23ff6f52`;
   }
 
