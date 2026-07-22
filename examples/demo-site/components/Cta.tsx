@@ -8,7 +8,7 @@ export default function Cta({
   href,
 }: {
   label?: string;
-  action?: "contact" | "link";
+  action?: string;
   href?: string;
 }) {
   const { open } = useContactModal();
