@@ -1,4 +1,5 @@
 import s from "./Prose.module.css";
+import ContactLink from "./ContactLink";
 
 interface Sidebar {
   contactBlurb?: string;
@@ -37,9 +38,7 @@ export default function Prose({
             <p className={s.blurb}>{sidebar!.contactBlurb}</p>
           ) : null}
           {sidebar!.ctaLabel ? (
-            <a href="#contact" className={s.railCta}>
-              {sidebar!.ctaLabel} →
-            </a>
+            <ContactLink className={s.railCta} label={sidebar!.ctaLabel} />
           ) : null}
           {sidebar!.bookingHeading ? (
             <p className="label">{sidebar!.bookingHeading}</p>
