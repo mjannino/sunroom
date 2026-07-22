@@ -106,14 +106,14 @@ export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
       <ul className="sr-media-grid">
         {items.map((item) => (
           <li key={item.id} className="sr-media-item">
-            <img
-              src={item.url}
-              alt={item.alt}
-              width={80}
-              height={80}
+            <button
+              type="button"
               className="sr-media-thumb"
+              aria-label={`Use ${item.alt}`}
               onClick={() => onPick(item.id)}
-            />
+            >
+              <img src={item.url} alt={item.alt} width={80} height={80} />
+            </button>
             <button
               type="button"
               aria-label={`delete ${item.alt}`}
