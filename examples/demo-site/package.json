@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'no tests' && exit 0"
+    "test": "node --experimental-strip-types --test 'lib/**/*.test.ts'"
   },
   "dependencies": {
     "next": "^15.0.3",
