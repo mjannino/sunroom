@@ -1,13 +1,19 @@
 import type { ReactNode } from "react";
-import Nav from "@/components/Nav";
+import ContactModalProvider from "@/components/ContactModalProvider";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
-// Public-site chrome: the nav + main content wrapper. Because this lives in the
-// (site) route group, it wraps only the public pages, NOT /admin.
+// Public-site chrome. Lives in the (site) route group so it wraps only public
+// pages, never /admin. The ContactModalProvider makes the modal reachable from
+// both the header's Contact button and any Cta section.
 export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
-    <>
-      <Nav />
-      <main>{children}</main>
-    </>
+    <ContactModalProvider>
+      <SiteHeader />
+      <main style={{ maxWidth: "var(--measure)", margin: "0 auto", padding: "0 2rem" }}>
+        {children}
+      </main>
+      <SiteFooter />
+    </ContactModalProvider>
   );
 }

@@ -1,38 +1,38 @@
 :root {
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
+  /* palette — matches the Sunroom admin "Sunset Coral" theme */
+  --bg: #181210; --surface: #221814; --surface-2: #2c1e1a; --surface-3: #342420;
+  --border: #3a2820; --text: #f3e7e1; --muted: #a98a7e; --faint: #6f5a51;
+  --accent: #ff6f52; --accent-hi: #ff8b6f; --accent-soft: #ff9d7a; --on-accent: #2a0f08;
+  --accent-rgb: 255, 111, 82;
+
+  /* type roles — Phase 2 globals will override these */
+  --font-title: var(--font-serif), Georgia, serif;
+  --font-heading: var(--font-serif), Georgia, serif;
+  --font-prose: var(--font-serif), Georgia, serif;
+  --font-label: var(--font-mono), ui-monospace, monospace;
+
+  --measure: 68rem; /* content max-width */
 }
+
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-prose);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-nav ul {
-  display: flex;
-  gap: 1rem;
-  list-style: none;
-  margin: 0;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #e5e5e5;
+/* micro-label helper used by kickers/section labels */
+.label {
+  font-family: var(--font-label);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--faint);
 }
 
-main {
-  padding: 2rem;
-}
-
-.hero h1 {
-  font-size: 3rem;
-  margin: 0 0 1rem;
-}
-
-.testimonials ul {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  gap: 1.5rem;
-}
-
-.testimonials blockquote {
-  margin: 0 0 0.5rem;
-  font-style: italic;
-}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
