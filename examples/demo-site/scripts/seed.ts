@@ -13,21 +13,27 @@ const img = (
   width: number,
   height: number,
   alt: string,
-) => ({ id, storageKey: key, filename: key.split("/").pop()!, mime: "image/webp", width, height, size: 1, alt, createdAt: "2026-01-01T00:00:00Z" });
+) => ({ id, storageKey: key, filename: key.split("/").pop()!, mime: "image/jpeg", width, height, size: 1, alt, createdAt: "2026-01-01T00:00:00Z" });
 
+// Real assets live in public/media/seed/*.jpg (served offline via R2_PUBLIC_BASE=/media).
+// Widths/heights are the files' real intrinsic sizes; components crop with object-fit:cover.
 const media = [
-  img("hero-home", "seed/hero-home.webp", 1600, 900, "The Longshot Room control room"),
-  img("hero-credits", "seed/hero-credits.webp", 1600, 900, "Mixing console detail"),
-  img("hero-gear", "seed/hero-gear.webp", 1600, 900, "Outboard gear rack"),
-  img("hero-about", "seed/hero-about.webp", 1600, 900, "Mara Voss at the board"),
-  ...Array.from({ length: 12 }, (_, i) => {
-    const n = String(i + 1).padStart(2, "0");
-    return img(`cover-${n}`, `seed/cover-${n}.webp`, 1000, 1000, `Record cover ${n}`);
-  }),
-  ...Array.from({ length: 6 }, (_, i) => {
-    const n = String(i + 1).padStart(2, "0");
-    return img(`gear-${n}`, `seed/gear-${n}.webp`, 1200, 900, `Gear highlight ${n}`);
-  }),
+  img("hero-home", "seed/hero-home.jpg", 1575, 1049, "The Longshot Room control room"),
+  img("hero-credits", "seed/hero-credits.jpg", 1575, 1049, "Mixing console detail"),
+  img("hero-gear", "seed/hero-gear.jpg", 1246, 827, "Outboard gear rack"),
+  img("hero-about", "seed/hero-about.jpg", 1246, 831, "Mara Voss at the board"),
+  img("cover-01", "seed/cover-01.jpg", 1000, 998, "Slow Weather — Tin Roof Hymns cover"),
+  img("cover-02", "seed/cover-02.jpg", 700, 700, "Paper Anchors — Everything Louder cover"),
+  img("cover-03", "seed/cover-03.jpg", 1200, 1200, "The Gray Coast — Undertow cover"),
+  img("cover-04", "seed/cover-04.jpg", 700, 700, "Cheap Halos — Basement Light cover"),
+  img("cover-05", "seed/cover-05.jpg", 700, 700, "Northbound — Winter Count cover"),
+  img("cover-06", "seed/cover-06.jpg", 900, 900, "Ivy & Ammo — Static Bloom cover"),
+  img("gear-01", "seed/gear-01.jpg", 2000, 2000, "API 1608 console"),
+  img("gear-02", "seed/gear-02.jpg", 600, 600, "Studer A80 tape machine"),
+  img("gear-03", "seed/gear-03.jpg", 640, 427, "Neve 1073 preamps"),
+  img("gear-04", "seed/gear-04.jpg", 520, 387, "LA-2A compressor"),
+  img("gear-05", "seed/gear-05.jpg", 683, 1024, "Ludwig drum kit"),
+  img("gear-06", "seed/gear-06.jpg", 2000, 2982, "Distressor units"),
 ];
 for (const m of media) await store.addMedia(m, { author: AUTHOR });
 
