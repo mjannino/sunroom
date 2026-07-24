@@ -66,12 +66,16 @@ This script runs in its own process, so its writes land for real on disk and
 in git, but the _already-running_ `next start` process won't see them until
 it restarts and cold-loads the store fresh. Restarting is enough to prove
 the on-disk + git-store + rendering pipeline is correct end-to-end over
-real HTTP for a route that was never statically pre-rendered (e.g. a
-brand-new page). A route that already got baked into static HTML at build
-time (like `/` here, whose nav comes from `getPages()`) stays stale until
-the app is rebuilt — this is standard Next SSG behavior, not a store bug. A
-real Playwright click-through calling the action from _inside_ the live
-server process would hit `revalidatePath` for real and avoid the rebuild.
+real HTTP.
+
+Note: the public site no longer prerenders at build time — `app/(site)/
+[[...slug]]/page.tsx` sets `export const dynamic = "force-dynamic"`, so every
+request reads the live store and there is no baked static HTML to go stale.
+(It previously exported `generateStaticParams`, which froze an empty `/` into
+the image on any deploy whose build couldn't see the content — see that file's
+comment for the full rationale.) A restart is still needed after an
+out-of-band write only because of the in-memory store cache described above,
+not because of Next's render cache.
 
 ## Running it
 
