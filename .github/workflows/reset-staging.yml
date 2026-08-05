@@ -58,7 +58,9 @@ jobs:
       - run: npm install --prefix ops/reset-staging
 
       # Pre-flight: guard + wipe tests MUST pass before anything destructive.
-      - run: node --test ops/reset-staging
+      # Runs the package's own `node --test` from its dir (robust across Node
+      # versions; the bare-directory `node --test <dir>` form is not portable).
+      - run: npm --prefix ops/reset-staging test
 
       - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # master@2026-07
 
