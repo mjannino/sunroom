@@ -1,0 +1,119 @@
+name: Reset staging
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "sunroom-staging" to confirm a FULL destructive reset'
+        required: true
+        type: string
+
+# A reset and a deploy must never mutate staging at the same time. Shares the
+# 'staging' group with deploy-staging.yml.
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FLY_APP: sunroom-staging
+  STAGING_URL: https://sunroom-staging.fly.dev
+  # Non-secret R2 config (already public in fly.toml).
+  R2_BUCKET: sunroom-staging
+  R2_PUBLIC_HOST: pub-18cb94aab54b4f77961ec038e2ac9878.r2.dev
+
+jobs:
+  reset:
+    # Only the reviewed main-branch copy of this workflow may run the
+    # destructive job — blocks a tampered copy dispatched from a feature branch.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Verify confirmation input
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "sunroom-staging" ]; then
+            echo "confirmation mismatch: expected 'sunroom-staging', got '${{ github.event.inputs.confirm }}'"
+            exit 1
+          fi
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # Workspace install so packages/sunroom/scripts/upload-r2-objects.mjs can
+      # resolve @aws-sdk/client-s3.
+      - run: pnpm install --frozen-lockfile
+
+      # Standalone deps for the insulated wipe tool (not a workspace member).
+      - run: npm install --prefix ops/reset-staging
+
+      # Pre-flight: guard + wipe tests MUST pass before anything destructive.
+      - run: node --test ops/reset-staging
+
+      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # master@2026-07
+
+      - name: Wake the staging machine
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$STAGING_URL/" || true)
+            echo "attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 5
+          done
+          echo "staging did not become reachable"; exit 1
+
+      - name: Wipe R2 bucket
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: node ops/reset-staging/wipe-bucket.mjs
+
+      - name: Reseed content volume
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl ssh console -a "$FLY_APP" -C "sh -c 'rm -rf /data/.sunroom-content && cd /app/examples/demo-site && SUNROOM_CONTENT_DIR=/data/.sunroom-content node --import ./e2e/register-loader.mjs --experimental-strip-types scripts/seed.ts'"
+
+      - name: Restore schema baseline
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl ssh console -a "$FLY_APP" -C "cp /app/examples/demo-site/.sunroom-schema.json /data/schema.json"
+
+      - name: Re-upload seed media to R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: node packages/sunroom/scripts/upload-r2-objects.mjs examples/demo-site/public/media/seed seed
+
+      - name: Restart staging (cold-load the reseeded store)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          for id in $(flyctl machines list --app "$FLY_APP" --json | jq -r '.[].id'); do
+            echo "restarting machine $id"
+            flyctl machine restart "$id" --app "$FLY_APP"
+          done
+
+      - name: Wait for health
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$STAGING_URL/" || true)
+            echo "attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 5
+          done
+          echo "staging did not come back healthy"; exit 1
+
+      - name: Smoke gate
+        run: node examples/demo-site/scripts/smoke.mjs "$STAGING_URL"

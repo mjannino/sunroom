@@ -4,7 +4,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: deploy-staging
+  group: staging
   cancel-in-progress: false
 
 # Least privilege: the job only deploys via FLY_API_TOKEN and never uses GITHUB_TOKEN.
