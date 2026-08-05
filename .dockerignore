@@ -7,6 +7,7 @@
 .git
 .github
 docs
+ops
 .superpowers
 # Secrets: never bake dev env files into image layers (review finding #6).
 **/.env

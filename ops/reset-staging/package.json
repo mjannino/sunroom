@@ -1,0 +1,13 @@
+{
+  "name": "reset-staging",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CI-only staging reset tooling. MUST NOT be imported by any app, published, or moved under packages/ or examples/.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1089.0"
+  }
+}
