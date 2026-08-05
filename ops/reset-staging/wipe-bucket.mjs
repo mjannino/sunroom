@@ -19,6 +19,7 @@ import { assertStagingTarget } from "./guards.mjs";
 // Lists and deletes all objects, following pagination. Returns the count
 // deleted. Each ListObjectsV2 page is capped at 1000 keys by S3, and
 // DeleteObjects accepts up to 1000, so one delete per page stays in bounds.
+// Throws if any deletion fails — fail-fast to prevent silent partial success.
 export async function deleteAllObjects(client, bucket) {
   let deleted = 0;
   let ContinuationToken;
@@ -28,12 +29,20 @@ export async function deleteAllObjects(client, bucket) {
     );
     const objects = (page.Contents ?? []).map((o) => ({ Key: o.Key }));
     if (objects.length > 0) {
-      await client.send(
+      const response = await client.send(
         new DeleteObjectsCommand({
           Bucket: bucket,
           Delete: { Objects: objects, Quiet: true },
         }),
       );
+      // Fail-fast if any deletions fail, even with Quiet: true (Quiet only
+      // suppresses success list, not error list).
+      if (response.Errors && response.Errors.length > 0) {
+        const first = response.Errors[0];
+        throw new Error(
+          `failed to delete ${response.Errors.length} object(s): "${first.Key}" (${first.Code}: ${first.Message})`,
+        );
+      }
       deleted += objects.length;
     }
     ContinuationToken = page.IsTruncated

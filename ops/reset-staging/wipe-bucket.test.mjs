@@ -42,3 +42,28 @@ test("makes no delete call for an already-empty bucket", async () => {
   assert.equal(deleted, 0);
   assert.deepEqual(client.deleteBatches, []);
 });
+
+test("throws if DeleteObjects reports errors (fail-fast)", async () => {
+  // Client that returns errors on delete — simulates permissions denied, throttling, etc.
+  const client = {
+    async send(command) {
+      const name = command.constructor.name;
+      if (name === "ListObjectsV2Command") {
+        return {
+          Contents: [{ Key: "a" }, { Key: "b" }],
+          IsTruncated: false,
+        };
+      }
+      if (name === "DeleteObjectsCommand") {
+        return {
+          Errors: [{ Key: "b", Code: "AccessDenied", Message: "denied" }],
+        };
+      }
+      throw new Error(`unexpected command ${name}`);
+    },
+  };
+  await assert.rejects(
+    () => deleteAllObjects(client, "sunroom-staging"),
+    /failed to delete.*AccessDenied.*denied/,
+  );
+});
