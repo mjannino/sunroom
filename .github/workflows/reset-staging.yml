@@ -32,9 +32,11 @@ jobs:
     environment: staging
     steps:
       - name: Verify confirmation input
+        env:
+          CONFIRM: ${{ github.event.inputs.confirm }}
         run: |
-          if [ "${{ github.event.inputs.confirm }}" != "sunroom-staging" ]; then
-            echo "confirmation mismatch: expected 'sunroom-staging', got '${{ github.event.inputs.confirm }}'"
+          if [ "$CONFIRM" != "sunroom-staging" ]; then
+            echo "confirmation mismatch: expected 'sunroom-staging'"
             exit 1
           fi
 
