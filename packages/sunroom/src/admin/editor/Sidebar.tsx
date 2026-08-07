@@ -47,7 +47,7 @@ export function Sidebar({
             ) : null}
           </a>
         ))}
-        <a className="sr-newpage" href="/admin">
+        <a className="sr-newpage" href="/admin?new">
           + New page
         </a>
       </div>

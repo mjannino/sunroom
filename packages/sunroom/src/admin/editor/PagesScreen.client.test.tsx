@@ -27,10 +27,11 @@ describe("PagesScreen", () => {
     render(<PagesScreen pages={pages} actions={actions} />);
     expect(screen.getByText("About")).toBeTruthy();
 
+    fireEvent.click(screen.getByRole("button", { name: /^new page$/i }));
     fireEvent.change(screen.getByLabelText(/slug/i), {
       target: { value: "services" },
     });
-    fireEvent.change(screen.getByLabelText(/title/i), {
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
       target: { value: "Services" },
     });
     fireEvent.click(screen.getByRole("button", { name: /create/i }));
@@ -39,6 +40,7 @@ describe("PagesScreen", () => {
       expect(actions.createPage).toHaveBeenCalledWith({
         slug: "services",
         title: "Services",
+        seo: { title: "", description: "" },
       }),
     );
   });
@@ -52,10 +54,11 @@ describe("PagesScreen", () => {
       })),
     });
     render(<PagesScreen pages={pages} actions={actions} />);
+    fireEvent.click(screen.getByRole("button", { name: /^new page$/i }));
     fireEvent.change(screen.getByLabelText(/slug/i), {
       target: { value: "Bad" },
     });
-    fireEvent.change(screen.getByLabelText(/title/i), {
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
       target: { value: "B" },
     });
     fireEvent.click(screen.getByRole("button", { name: /create/i }));
@@ -65,7 +68,7 @@ describe("PagesScreen", () => {
     expect((screen.getByLabelText(/slug/i) as HTMLInputElement).value).toBe(
       "Bad",
     );
-    expect((screen.getByLabelText(/title/i) as HTMLInputElement).value).toBe(
+    expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe(
       "B",
     );
   });

@@ -143,6 +143,7 @@ export async function savePageAction(
 export async function createPageAction(input: {
   slug: string;
   title: string;
+  seo?: { title?: string; description?: string };
 }): Promise<ActionResult> {
   "use server";
   const author = await authOr();
@@ -160,7 +161,7 @@ export async function createPageAction(input: {
       slug: input.slug,
       title: input.title,
       position,
-      seo: {},
+      seo: input.seo ?? {},
       sections: [],
     };
     const entry = await s.savePage(page, { baseVersion: null, author });

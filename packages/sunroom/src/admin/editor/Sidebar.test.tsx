@@ -44,12 +44,12 @@ describe("Sidebar", () => {
     expect(html).toContain(">Home<");
   });
 
-  it("renders a New page link pointing at /admin", () => {
+  it("renders a New page link pointing at /admin?new", () => {
     const html = renderToStaticMarkup(
       <Sidebar pages={pages} activeSlug={null} activeScreen="pages" />,
     );
     expect(html).toMatch(
-      /<a class="sr-newpage" href="\/admin">\+ New page<\/a>/,
+      /<a class="sr-newpage" href="\/admin\?new">\+ New page<\/a>/,
     );
   });
 

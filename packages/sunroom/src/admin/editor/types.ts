@@ -19,7 +19,11 @@ export type SerializedRegistry = Record<string, SerializedSection>;
 
 export interface EditorActions {
   savePage(page: Page, baseVersion: string | null): Promise<ActionResult>;
-  createPage(input: { slug: string; title: string }): Promise<ActionResult>;
+  createPage(input: {
+    slug: string;
+    title: string;
+    seo?: { title?: string; description?: string };
+  }): Promise<ActionResult>;
   deletePage(slug: string): Promise<ActionResult>;
   reorderPages(orderedSlugs: string[]): Promise<ActionResult>;
 }

@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PageSummary } from "../../store/types.js";
+import { NewPageDialog } from "./NewPageDialog.js";
 import type { EditorActions } from "./types.js";
 
 export function PagesScreen({
@@ -10,10 +11,14 @@ export function PagesScreen({
   pages: PageSummary[];
   actions: EditorActions;
 }): React.ReactElement {
-  const [slug, setSlug] = useState("");
-  const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("new"))
+      setShowNew(true);
+  }, []);
 
   async function run(
     fn: () => Promise<{ ok: boolean; message?: string; reason?: string }>,
@@ -67,38 +72,18 @@ export function PagesScreen({
         ))}
       </ul>
 
-      <h2>New page</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          run(() => actions.createPage({ slug, title })).then((res) => {
-            if (res.ok) {
-              setSlug("");
-              setTitle("");
-            }
-          });
-        }}
+      <button
+        className="sr-btn sr-btn-primary"
+        disabled={busy}
+        onClick={() => setShowNew(true)}
       >
-        <label>
-          Title{" "}
-          <input
-            className="sr-input"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </label>
-        <label>
-          Slug{" "}
-          <input
-            className="sr-input"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-          />
-        </label>
-        <button className="sr-btn sr-btn-primary" type="submit" disabled={busy}>
-          Create
-        </button>
-      </form>
+        New page
+      </button>
+      <NewPageDialog
+        open={showNew}
+        onClose={() => setShowNew(false)}
+        onCreate={actions.createPage}
+      />
 
       {error ? (
         <p className="sr-error" role="alert">

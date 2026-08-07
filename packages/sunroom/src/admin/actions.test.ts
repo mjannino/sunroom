@@ -118,6 +118,22 @@ describe("createPageAction", () => {
     const res = await createPageAction({ slug: "about", title: "Again" });
     expect(res).toMatchObject({ ok: false, reason: "conflict" });
   });
+
+  it("writes SEO fields when provided", async () => {
+    const res = await createPageAction({
+      slug: "about",
+      title: "About",
+      seo: { title: "About us", description: "Who we are" },
+    });
+    expect(res.ok).toBe(true);
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    expect(store.getPage("about")?.page.seo).toEqual({
+      title: "About us",
+      description: "Who we are",
+    });
+  });
 });
 
 describe("savePageAction", () => {
