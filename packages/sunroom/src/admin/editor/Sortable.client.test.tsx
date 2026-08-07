@@ -2,6 +2,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
+  shouldStartRowDrag,
   SortableList,
   SortableRow,
   startsFromInteractiveTarget,
@@ -64,5 +65,35 @@ describe("startsFromInteractiveTarget", () => {
 
   it("returns false for null", () => {
     expect(startsFromInteractiveTarget(null)).toBe(false);
+  });
+});
+
+describe("shouldStartRowDrag", () => {
+  // PointerEvent isn't fully implemented in jsdom, so we pass a minimal
+  // plain object cast to the type.
+  const ev = (over: Partial<PointerEvent>) =>
+    ({
+      isPrimary: true,
+      button: 0,
+      target: document.createElement("div"),
+      ...over,
+    }) as unknown as PointerEvent;
+
+  it("returns true for a primary left-button press on a div", () => {
+    expect(shouldStartRowDrag(ev({}))).toBe(true);
+  });
+
+  it("returns false for a right-click", () => {
+    expect(shouldStartRowDrag(ev({ button: 2 }))).toBe(false);
+  });
+
+  it("returns false for a non-primary pointer", () => {
+    expect(shouldStartRowDrag(ev({ isPrimary: false }))).toBe(false);
+  });
+
+  it("returns false for an interactive target", () => {
+    expect(
+      shouldStartRowDrag(ev({ target: document.createElement("input") })),
+    ).toBe(false);
   });
 });

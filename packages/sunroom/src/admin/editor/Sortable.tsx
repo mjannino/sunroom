@@ -28,12 +28,23 @@ export function startsFromInteractiveTarget(
   );
 }
 
+// A drag may start only from a primary left-button press on non-interactive
+// row space — mirrors dnd-kit's stock PointerSensor guard plus our own
+// interactive-target exclusion.
+export function shouldStartRowDrag(event: PointerEvent): boolean {
+  return (
+    event.isPrimary === true &&
+    event.button === 0 &&
+    !startsFromInteractiveTarget(event.target)
+  );
+}
+
 class RowPointerSensor extends PointerSensor {
   static activators = [
     {
       eventName: "onPointerDown" as const,
       handler: ({ nativeEvent }: { nativeEvent: PointerEvent }) =>
-        !startsFromInteractiveTarget(nativeEvent.target),
+        shouldStartRowDrag(nativeEvent),
     },
   ];
 }
