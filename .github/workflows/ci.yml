@@ -18,7 +18,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      # Build before typecheck/test: sunroom's own source imports its published
+      # `sunroom/client` subpath (-> dist/client.d.ts), so the type declarations
+      # must exist before `tsc --noEmit` can resolve them.
+      - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
-      - run: pnpm build
       - run: node packages/sunroom/scripts/check-directives.mjs
