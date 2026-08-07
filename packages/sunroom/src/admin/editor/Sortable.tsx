@@ -28,7 +28,7 @@ export function SortableList({
   children: ReactNode;
 }): React.ReactElement {
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -67,18 +67,23 @@ export function SortableRow({
 }): React.ReactElement {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
-  const style = { transform: CSS.Transform.toString(transform), transition };
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: "grab",
+  };
   return (
-    <div ref={setNodeRef} style={style} className={className}>
-      <button
-        type="button"
-        className="sr-grip"
-        aria-label={`drag ${label ?? id}`}
-        {...attributes}
-        {...listeners}
-      >
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={className}
+      aria-label={`drag ${label ?? id}`}
+      {...attributes}
+      {...listeners}
+    >
+      <span className="sr-grip" aria-hidden="true">
         ⠿
-      </button>
+      </span>
       {children}
     </div>
   );
