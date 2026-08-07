@@ -84,6 +84,14 @@ export default createSunroom({
       fields: {
         kicker: f.text({ label: "Kicker" }),
         body: f.richText({ label: "Body" }),
+      },
+    }),
+    proseWithSidebar: defineSection({
+      label: "Prose with sidebar",
+      component: Prose,
+      fields: {
+        kicker: f.text({ label: "Kicker" }),
+        body: f.richText({ label: "Body" }),
         sidebar: f.object(
           {
             contactBlurb: f.textarea({ label: "Contact blurb" }),

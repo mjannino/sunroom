@@ -259,7 +259,7 @@ await store.savePage(
       },
       {
         id: "about-prose",
-        type: "prose",
+        type: "proseWithSidebar",
         props: {
           body:
             "<p>Mara Voss is a producer, mixer, and engineer based just outside " +
