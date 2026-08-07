@@ -14,6 +14,8 @@ export interface ImageValue {
 interface Base {
   label?: string;
   required?: boolean;
+  /** Show this field only when a SIBLING field equals a value. */
+  showWhen?: { field: string; equals: string | number | boolean };
 }
 
 type TextOpts = Base & { default?: string };

@@ -403,3 +403,46 @@ describe("image field picker", () => {
     expect(onChange).toHaveBeenCalledWith(undefined);
   });
 });
+
+describe("conditional fields (showWhen)", () => {
+  const field = f.object({
+    action: f.select({
+      options: [
+        { label: "Contact", value: "contact" },
+        { label: "Link", value: "link" },
+      ],
+    }),
+    href: f.link({
+      label: "Link",
+      showWhen: { field: "action", equals: "link" },
+    }),
+  });
+  it("hides the dependent field when the sibling doesn't match", () => {
+    render(
+      <FieldControl
+        name="cta"
+        field={field}
+        value={{ action: "contact", href: "" }}
+        onChange={vi.fn()}
+        path="cta"
+        issues={[]}
+        depth={0}
+      />,
+    );
+    expect(screen.queryByLabelText("href")).toBeNull();
+  });
+  it("shows the dependent field when the sibling matches", () => {
+    render(
+      <FieldControl
+        name="cta"
+        field={field}
+        value={{ action: "link", href: "" }}
+        onChange={vi.fn()}
+        path="cta"
+        issues={[]}
+        depth={0}
+      />,
+    );
+    expect(screen.getByLabelText("href")).toBeTruthy();
+  });
+});

@@ -51,6 +51,14 @@ export function defaultProps(
   return out;
 }
 
+export function isFieldVisible(
+  field: FieldDescriptor,
+  siblings: Record<string, unknown>,
+): boolean {
+  if (!field.showWhen) return true;
+  return siblings[field.showWhen.field] === field.showWhen.equals;
+}
+
 export function serializeRegistry(config: SunroomConfig): SerializedRegistry {
   const out: SerializedRegistry = {};
   for (const [type, def] of Object.entries(config.sections)) {

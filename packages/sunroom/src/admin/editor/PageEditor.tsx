@@ -6,6 +6,7 @@ import {
   defaultProps,
   editorValidate,
   editReducer,
+  isFieldVisible,
   type EditAction,
 } from "../editor-core.js";
 import { FieldControl } from "./FieldControl.js";
@@ -307,25 +308,27 @@ export function PageEditor({
             {section && schema ? (
               <fieldset key={section.id} className="sr-fieldset">
                 <legend className="sr-legend">{schema.label}</legend>
-                {Object.entries(schema.fields).map(([key, field]) => (
-                  <FieldControl
-                    key={key}
-                    name={key}
-                    field={field}
-                    value={section.props[key]}
-                    onChange={(value) =>
-                      dispatch({
-                        type: "setSectionField",
-                        sectionId: section.id,
-                        key,
-                        value,
-                      })
-                    }
-                    path={key}
-                    issues={selectedIssues}
-                    depth={0}
-                  />
-                ))}
+                {Object.entries(schema.fields)
+                  .filter(([, field]) => isFieldVisible(field, section.props))
+                  .map(([key, field]) => (
+                    <FieldControl
+                      key={key}
+                      name={key}
+                      field={field}
+                      value={section.props[key]}
+                      onChange={(value) =>
+                        dispatch({
+                          type: "setSectionField",
+                          sectionId: section.id,
+                          key,
+                          value,
+                        })
+                      }
+                      path={key}
+                      issues={selectedIssues}
+                      depth={0}
+                    />
+                  ))}
               </fieldset>
             ) : (
               <p>Select or add a section to edit it.</p>

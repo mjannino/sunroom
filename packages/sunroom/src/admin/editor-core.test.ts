@@ -8,6 +8,7 @@ import {
   serializeRegistry,
   editorValidate,
   defaultForField,
+  isFieldVisible,
   MAX_FIELD_DEPTH,
 } from "./editor-core.js";
 
@@ -284,5 +285,16 @@ describe("editReducer reorderSections", () => {
       orderedIds: ["s2", "nope"],
     });
     expect(next.sections.map((s) => s.id)).toEqual(["s2", "s1", "s3"]);
+  });
+});
+
+describe("isFieldVisible", () => {
+  it("shows a field with no showWhen", () => {
+    expect(isFieldVisible(f.text(), {})).toBe(true);
+  });
+  it("hides when the sibling value differs, shows when it matches", () => {
+    const href = f.link({ showWhen: { field: "action", equals: "link" } });
+    expect(isFieldVisible(href, { action: "contact" })).toBe(false);
+    expect(isFieldVisible(href, { action: "link" })).toBe(true);
   });
 });

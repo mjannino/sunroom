@@ -2,7 +2,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { FieldDescriptor } from "../../core/fields.js";
 import type { ValidationIssue } from "../../errors.js";
-import { defaultForField, MAX_FIELD_DEPTH } from "../editor-core.js";
+import {
+  defaultForField,
+  isFieldVisible,
+  MAX_FIELD_DEPTH,
+} from "../editor-core.js";
 import { ImagePicker } from "./ImagePicker.js";
 import { RichTextControl } from "./RichTextControl.js";
 import { SortableList, SortableRow } from "./Sortable.js";
@@ -49,18 +53,20 @@ export function FieldControl({
           {label}
           {err}
         </legend>
-        {Object.entries(field.fields).map(([subKey, subField]) => (
-          <FieldControl
-            key={subKey}
-            name={subKey}
-            field={subField}
-            value={obj[subKey]}
-            onChange={(v) => onChange({ ...obj, [subKey]: v })}
-            path={`${path}.${subKey}`}
-            issues={issues}
-            depth={depth + 1}
-          />
-        ))}
+        {Object.entries(field.fields)
+          .filter(([, subField]) => isFieldVisible(subField, obj))
+          .map(([subKey, subField]) => (
+            <FieldControl
+              key={subKey}
+              name={subKey}
+              field={subField}
+              value={obj[subKey]}
+              onChange={(v) => onChange({ ...obj, [subKey]: v })}
+              path={`${path}.${subKey}`}
+              issues={issues}
+              depth={depth + 1}
+            />
+          ))}
       </fieldset>
     );
   }
