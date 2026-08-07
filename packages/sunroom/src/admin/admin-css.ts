@@ -92,6 +92,7 @@ export const ADMIN_CSS = `
 .sr-col-label{margin-bottom:9px;}
 .sr-preview-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
 .sr-device{display:flex;gap:6px;}
+.sr-device .is-active{background:var(--sr-accent);color:var(--sr-on-accent);border-color:transparent;}
 
 /* section list (left aside of the editor) */
 .sr-seclist{list-style:none;margin:0;padding:0;}
