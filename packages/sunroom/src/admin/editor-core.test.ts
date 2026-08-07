@@ -149,6 +149,19 @@ describe("screenFromSegments", () => {
       slug: "services/pricing",
     });
   });
+
+  describe("settings", () => {
+    it("routes ['settings'] to the settings screen", () => {
+      expect(screenFromSegments(["settings"])).toEqual({ screen: "settings" });
+    });
+    it("still routes [] to pages and ['pages','about'] to the editor", () => {
+      expect(screenFromSegments([])).toEqual({ screen: "pages" });
+      expect(screenFromSegments(["pages", "about"])).toEqual({
+        screen: "editor",
+        slug: "about",
+      });
+    });
+  });
 });
 
 describe("editReducer", () => {

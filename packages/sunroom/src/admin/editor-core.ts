@@ -66,9 +66,13 @@ export function serializeRegistry(config: SunroomConfig): SerializedRegistry {
 
 export function screenFromSegments(
   segments: string[] | undefined,
-): { screen: "pages" } | { screen: "editor"; slug: string } {
+):
+  | { screen: "pages" }
+  | { screen: "settings" }
+  | { screen: "editor"; slug: string } {
   const seg = segments ?? [];
   if (seg.length === 0) return { screen: "pages" };
+  if (seg[0] === "settings") return { screen: "settings" };
   if (seg[0] === "pages")
     return { screen: "editor", slug: paramsToSlug(seg.slice(1)) };
   return { screen: "pages" };
