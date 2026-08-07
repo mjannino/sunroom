@@ -44,6 +44,8 @@ export interface Settings {
   site?: {
     name?: string;
     tagline?: string;
+    /** Public site header. Text → renders `name`; Image → renders `image`. */
+    header?: { type: "text" | "image"; image?: string };
   };
   /** Written automatically when a slug is renamed (Phase 7). */
   redirects: { from: string; to: string }[];

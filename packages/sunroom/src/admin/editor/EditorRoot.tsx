@@ -52,6 +52,17 @@ export async function EditorRoot({
   const store = await getStore(resolveConfig(config));
   const screen = screenFromSegments(segments);
 
+  const base = process.env.R2_PUBLIC_BASE;
+  const resolve = makeResolveMedia(store.listMedia(), base);
+  const media = store.listMedia().map((m) => ({
+    id: m.id,
+    url: resolve(m.id)?.url ?? "",
+    width: m.width,
+    height: m.height,
+    alt: m.alt,
+    filename: m.filename,
+  }));
+
   const body = (screenNode: ReactElement) => (
     <>
       <Sidebar
@@ -68,6 +79,8 @@ export async function EditorRoot({
       <SettingsScreen
         settings={store.getSettings()}
         onSave={saveSettingsAction}
+        media={media}
+        mediaActions={mediaActions}
       />,
     );
   }
@@ -78,17 +91,6 @@ export async function EditorRoot({
 
   const entry = store.getPage(screen.slug);
   if (!entry) return body(<div data-screen="editor">Page not found.</div>);
-
-  const base = process.env.R2_PUBLIC_BASE;
-  const resolve = makeResolveMedia(store.listMedia(), base);
-  const media = store.listMedia().map((m) => ({
-    id: m.id,
-    url: resolve(m.id)?.url ?? "",
-    width: m.width,
-    height: m.height,
-    alt: m.alt,
-    filename: m.filename,
-  }));
 
   return body(
     <PageEditor
