@@ -81,7 +81,7 @@ describe("AdminLayout", () => {
     await store.saveSettings(
       {
         seoDefaults: {},
-        site: { name: "Mara Voss", madeWith: true },
+        site: { name: "Mara Voss" },
         redirects: [],
       },
       { author: { name: "Jane", email: "jane@acme.com" } },
@@ -99,7 +99,7 @@ describe("AdminLayout", () => {
     await store.saveSettings(
       {
         seoDefaults: {},
-        site: { name: "Mara Voss", madeWith: true },
+        site: { name: "Mara Voss" },
         redirects: [],
       },
       { author: { name: "Jane", email: "jane@acme.com" } },

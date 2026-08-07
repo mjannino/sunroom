@@ -34,9 +34,7 @@ export function SignInScreen({
     <AdminFrame>
       <main className="sr-center">
         <h1>{site?.name || "Sunroom"}</h1>
-        {site?.madeWith !== false ? (
-          <p className="sr-madewith">made with Sunroom</p>
-        ) : null}
+        <p className="sr-madewith">made with Sunroom</p>
         <p>Sign in to edit this site.</p>
         <a href="/api/sunroom/auth/login" className="sr-btn sr-btn-google">
           <span className="sr-g" aria-hidden="true">

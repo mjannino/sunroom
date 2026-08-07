@@ -12,7 +12,6 @@ export function SettingsScreen({
 }): React.ReactElement {
   const [name, setName] = useState(settings.site?.name ?? "");
   const [tagline, setTagline] = useState(settings.site?.tagline ?? "");
-  const [madeWith, setMadeWith] = useState(settings.site?.madeWith !== false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -21,7 +20,7 @@ export function SettingsScreen({
     setStatus(null);
     const res = await onSave({
       ...settings,
-      site: { name, tagline, madeWith },
+      site: { name, tagline },
     });
     setBusy(false);
     setStatus(res.ok ? "Saved." : res.message);
@@ -50,16 +49,6 @@ export function SettingsScreen({
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
             />
-          </label>
-        </div>
-        <div className="sr-field">
-          <label className="sr-flabel">
-            <input
-              type="checkbox"
-              checked={madeWith}
-              onChange={(e) => setMadeWith(e.target.checked)}
-            />{" "}
-            Show &ldquo;made with Sunroom&rdquo; on sign-in
           </label>
         </div>
       </fieldset>
