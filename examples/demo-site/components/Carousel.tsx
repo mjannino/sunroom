@@ -28,46 +28,52 @@ export default function Carousel({
   const list = items ?? [];
   return (
     <section className={s.section}>
-      <div className={s.head}>
-        {title ? <p className="label">{title}</p> : <span />}
-        <div className={s.nav}>
-          <button
-            type="button"
-            aria-label="Previous"
-            onClick={() => scroll(-1)}
-            className={s.btn}
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            aria-label="Next"
-            onClick={() => scroll(1)}
-            className={s.btn}
-          >
-            →
-          </button>
-        </div>
+      {title ? <p className="label">{title}</p> : null}
+      <div className={s.viewport}>
+        <button
+          type="button"
+          aria-label="Previous"
+          className={`${s.btn} ${s.prev}`}
+          onClick={() => scroll(-1)}
+        >
+          ←
+        </button>
+        <ul
+          ref={track}
+          className={s.track}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight") scroll(1);
+            if (e.key === "ArrowLeft") scroll(-1);
+          }}
+        >
+          {list.map((it, i) => (
+            <li key={i} className={s.slide}>
+              {it.image ? (
+                <div className={s.frame}>
+                  <Image
+                    src={it.image.url}
+                    alt={it.image.alt ?? it.name ?? ""}
+                    width={it.image.width}
+                    height={it.image.height}
+                    className={s.img}
+                  />
+                </div>
+              ) : null}
+              {it.name ? <p className={s.name}>{it.name}</p> : null}
+              {it.note ? <p className={s.note}>{it.note}</p> : null}
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          aria-label="Next"
+          className={`${s.btn} ${s.next}`}
+          onClick={() => scroll(1)}
+        >
+          →
+        </button>
       </div>
-      <ul ref={track} className={s.track}>
-        {list.map((it, i) => (
-          <li key={i} className={s.slide}>
-            {it.image ? (
-              <div className={s.frame}>
-                <Image
-                  src={it.image.url}
-                  alt={it.image.alt ?? it.name ?? ""}
-                  width={it.image.width}
-                  height={it.image.height}
-                  className={s.img}
-                />
-              </div>
-            ) : null}
-            {it.name ? <p className={s.name}>{it.name}</p> : null}
-            {it.note ? <p className={s.note}>{it.note}</p> : null}
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }
