@@ -29,6 +29,11 @@ export interface Sunroom {
   generateMetadata(props: SunroomRouteProps): Promise<Metadata>;
   getPages(): Promise<PageSummary[]>;
   getPage(slug: string): Promise<Page | null>;
+  getSettings(): Promise<{
+    name?: string;
+    tagline?: string;
+    header: { type: "text" | "image"; imageUrl?: string };
+  }>;
   handlers: SunroomHandlers;
   AdminLayout: typeof AdminLayout;
   AdminPage(props: AdminRouteProps): Promise<ReactElement>;
@@ -117,6 +122,27 @@ export function createSunroom(input: SunroomInput): Sunroom {
     return store.getPage(slug)?.page ?? null;
   }
 
+  async function getSettings() {
+    const store = await getStore(config);
+    const site = store.getSettings().site;
+    const header = site?.header;
+    let imageUrl: string | undefined;
+    if (header?.type === "image" && header.image) {
+      imageUrl = makeResolveMedia(
+        store.listMedia(),
+        process.env.R2_PUBLIC_BASE,
+      )(header.image)?.url;
+    }
+    return {
+      name: site?.name,
+      tagline: site?.tagline,
+      header: {
+        type: header?.type ?? ("text" as const),
+        ...(imageUrl ? { imageUrl } : {}),
+      },
+    };
+  }
+
   return {
     config,
     Page,
@@ -124,6 +150,7 @@ export function createSunroom(input: SunroomInput): Sunroom {
     generateMetadata,
     getPages,
     getPage,
+    getSettings,
     handlers: createHandlers(),
     AdminLayout,
     AdminPage: (props: AdminRouteProps) => EditorRoot({ config, ...props }),
