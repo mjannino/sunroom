@@ -454,7 +454,7 @@ describe("preview + cleanups", () => {
     expect(screen.getByText(/title is required/i)).toBeTruthy();
   });
 
-  it("switches preview device width via the segmented control", () => {
+  it("switches preview device dimensions via the segmented control", () => {
     render(
       <PageEditor
         page={page}
@@ -466,10 +466,13 @@ describe("preview + cleanups", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: /show preview/i }));
+    const frame = () =>
+      document.querySelector(".sr-preview-frame") as HTMLElement;
     fireEvent.click(screen.getByRole("button", { name: /mobile/i }));
-    const frame = document.querySelector(".sr-preview-frame") as HTMLElement;
-    expect(frame.style.width).toBe("390px");
+    expect(frame().style.width).toBe("390px");
+    expect(frame().style.height).toBe("844px");
     fireEvent.click(screen.getByRole("button", { name: /desktop/i }));
-    expect(frame.style.width).toBe("100%");
+    expect(frame().style.width).toBe("100%");
+    expect(frame().style.height).toBe("100%");
   });
 });

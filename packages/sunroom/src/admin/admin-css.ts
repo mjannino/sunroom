@@ -84,11 +84,11 @@ export const ADMIN_CSS = `
 /* editor */
 .sr-edhead{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
 .sr-title{font-size:19px;font-weight:700;color:var(--sr-text);}
-.sr-cols{display:flex;gap:16px;align-items:flex-start;}
-.sr-col{flex:0 1 420px;min-width:0;}
-.sr-col-sections{flex:0 1 240px;min-width:170px;}
+.sr-cols{display:flex;gap:16px;align-items:stretch;height:calc(100vh - 160px);min-height:420px;}
+.sr-col{flex:0 1 420px;min-width:0;min-height:0;overflow:auto;}
+.sr-col-sections{flex:0 1 240px;min-width:170px;min-height:0;overflow:auto;}
 /* preview claims whatever space is left after the fixed-width columns */
-.sr-col-preview{flex:1;min-width:0;}
+.sr-col-preview{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;}
 .sr-col-label{margin-bottom:9px;}
 .sr-preview-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
 .sr-device{display:flex;gap:6px;}
@@ -158,8 +158,9 @@ export const ADMIN_CSS = `
 
 /* preview — let the iframed site paint its own background; the surface tone is
    only a brief load placeholder, never an off-white cast over the real page */
-.sr-preview{border:1px solid var(--sr-border);border-radius:10px;overflow:hidden;background:var(--sr-surface-2);}
-.sr-preview-frame{height:520px;border:none;display:block;background:transparent;}
+.sr-preview{border:1px solid var(--sr-border);border-radius:10px;overflow:auto;background:var(--sr-surface-2);
+  flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center;}
+.sr-preview-frame{border:none;display:block;background:transparent;}
 
 /* sign-in / error cards */
 .sr-center{max-width:420px;margin:14vh auto;padding:2rem;text-align:center;
@@ -170,6 +171,7 @@ export const ADMIN_CSS = `
 
 /* content width — keep screens off the full-bleed edge, consistently */
 .sr-screen{max-width:1600px;}
+.sr-screen[data-screen="editor"]{max-width:none;}
 
 /* add-section dropdown (button trigger + attached menu panel) */
 .sr-menu-wrap{position:relative;display:inline-block;margin-top:4px;}

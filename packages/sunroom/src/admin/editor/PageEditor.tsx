@@ -19,12 +19,12 @@ import type {
   SerializedRegistry,
 } from "./types.js";
 
-const DEVICE_WIDTHS = {
-  mobile: "390px",
-  tablet: "768px",
-  desktop: "100%",
+const DEVICE_DIMS = {
+  mobile: { width: "390px", height: "844px", maxHeight: "100%" },
+  tablet: { width: "768px", height: "1024px", maxHeight: "100%" },
+  desktop: { width: "100%", height: "100%" },
 } as const;
-type Device = keyof typeof DEVICE_WIDTHS;
+type Device = keyof typeof DEVICE_DIMS;
 
 export function PageEditor({
   page: initial,
@@ -142,7 +142,6 @@ export function PageEditor({
 
         <div className="sr-cols">
           <aside className="sr-col sr-col-sections">
-            <h2 className="sr-title">{page.title}</h2>
             <div className="sr-col-label">Sections</div>
             <SortableList
               ids={page.sections.map((s) => s.id)}
@@ -256,6 +255,7 @@ export function PageEditor({
           </aside>
 
           <main className="sr-col">
+            <div className="sr-col-label">Page</div>
             <fieldset className="sr-fieldset">
               <legend className="sr-legend">Page</legend>
               <div className="sr-field">
@@ -371,7 +371,7 @@ export function PageEditor({
                   src={previewSrc}
                   title="Preview"
                   className="sr-preview-frame"
-                  style={{ width: DEVICE_WIDTHS[device], margin: "0 auto" }}
+                  style={{ ...DEVICE_DIMS[device], margin: "0 auto" }}
                 />
               </div>
             </div>
