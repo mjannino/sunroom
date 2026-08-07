@@ -19,6 +19,12 @@
   border: 2px solid var(--text);
   padding: 0.2rem 0.5rem;
   color: var(--text);
+  text-transform: uppercase;
+}
+.wordmarkImg {
+  height: 2rem;
+  width: auto;
+  display: block;
 }
 .rec {
   width: 10px;

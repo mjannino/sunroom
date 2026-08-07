@@ -282,4 +282,12 @@ await store.savePage(
   { baseVersion: null, author: AUTHOR },
 );
 
+await store.saveSettings(
+  {
+    ...store.getSettings(),
+    site: { name: "Mara Voss", header: { type: "text" } },
+  },
+  { author: AUTHOR },
+);
+
 console.log("Seeded 4 pages + media into", CONTENT_DIR);

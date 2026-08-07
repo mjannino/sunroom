@@ -3,12 +3,26 @@ import Link from "next/link";
 import { useContactModal } from "./ContactModalProvider";
 import s from "./SiteHeader.module.css";
 
-export default function SiteHeader() {
+export default function SiteHeader({
+  name,
+  header,
+}: {
+  name?: string;
+  header?: { type: "text" | "image"; imageUrl?: string };
+}) {
   const { open } = useContactModal();
   return (
     <header className={s.header}>
       <Link href="/" className={s.brand}>
-        <span className={s.wordmark}>MARA VOSS</span>
+        {header?.type === "image" && header.imageUrl ? (
+          <img
+            src={header.imageUrl}
+            alt={name ?? ""}
+            className={s.wordmarkImg}
+          />
+        ) : (
+          <span className={s.wordmark}>{name ?? "Mara Voss"}</span>
+        )}
         <span className={s.rec} aria-hidden="true" />
       </Link>
       <nav className={s.nav}>
