@@ -3,6 +3,9 @@ import type { ReactElement, ReactNode } from "react";
 import { ADMIN_CSS } from "./admin-css.js";
 import { AuthConfigError } from "./config.js";
 import { getSession } from "./session-server.js";
+import { getStore } from "../store/singleton.js";
+import { resolveConfig } from "../core/registry.js";
+import type { Settings } from "../store/types.js";
 
 function AdminFrame({ children }: { children: ReactNode }): ReactElement {
   return (
@@ -13,11 +16,27 @@ function AdminFrame({ children }: { children: ReactNode }): ReactElement {
   );
 }
 
-export function SignInScreen(): ReactElement {
+async function siteIdentity(): Promise<Settings["site"]> {
+  try {
+    const s = await getStore(resolveConfig({ sections: {} }));
+    return s.getSettings().site;
+  } catch {
+    return undefined;
+  }
+}
+
+export function SignInScreen({
+  site,
+}: {
+  site?: Settings["site"];
+}): ReactElement {
   return (
     <AdminFrame>
       <main className="sr-center">
-        <h1>Sunroom</h1>
+        <h1>{site?.name || "Sunroom"}</h1>
+        {site?.madeWith !== false ? (
+          <p className="sr-madewith">made with Sunroom</p>
+        ) : null}
         <p>Sign in to edit this site.</p>
         <a href="/api/sunroom/auth/login" className="sr-btn sr-btn-google">
           <span className="sr-g" aria-hidden="true">
@@ -50,6 +69,8 @@ export async function AdminLayout({
 }: {
   children: ReactNode;
 }): Promise<ReactElement> {
+  const site = await siteIdentity();
+
   let session;
   try {
     session = await getSession();
@@ -59,7 +80,7 @@ export async function AdminLayout({
     }
     throw err;
   }
-  if (!session) return <SignInScreen />;
+  if (!session) return <SignInScreen site={site} />;
 
   return (
     <AdminFrame>
@@ -67,6 +88,7 @@ export async function AdminLayout({
         <span className="sr-brand">
           <span className="sr-sun" />
           Sunroom
+          {site?.name ? <span className="sr-sitename">{site.name}</span> : null}
         </span>
         <span className="sr-top-spacer" />
         <span className="sr-user">{session.email}</span>

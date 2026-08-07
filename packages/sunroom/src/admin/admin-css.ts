@@ -16,6 +16,7 @@ export const ADMIN_CSS = `
 .sr-top{display:flex;align-items:center;gap:12px;padding:11px 18px;
   background:var(--sr-surface);border-bottom:1px solid var(--sr-border);}
 .sr-brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.02em;color:var(--sr-text);}
+.sr-sitename{color:var(--sr-accent);font-weight:600;margin-left:2px;}
 .sr-sun{width:17px;height:17px;border-radius:50%;
   background:radial-gradient(circle at 35% 35%,#ffd0a3,rgb(var(--sr-accent-rgb)) 70%);
   box-shadow:0 0 10px rgba(var(--sr-accent-rgb),.5);}
@@ -160,6 +161,7 @@ export const ADMIN_CSS = `
   background:var(--sr-surface);border:1px solid var(--sr-border);border-radius:14px;}
 .sr-center.wide{max-width:560px;text-align:left;}
 .sr-center h1{color:var(--sr-text);}
+.sr-madewith{color:var(--sr-muted);font-size:12px;margin:.25rem 0 1rem;}
 
 /* content width — keep screens off the full-bleed edge, consistently */
 .sr-screen{max-width:1160px;}

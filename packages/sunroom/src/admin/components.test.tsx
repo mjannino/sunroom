@@ -1,11 +1,30 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSession = vi.fn();
 vi.mock("./session-server.js", () => ({ getSession: () => getSession() }));
 
 import { AuthConfigError } from "./config.js";
 import { AdminLayout } from "./components.js";
+import { resetStores } from "../store/singleton.js";
+
+let dir: string;
+beforeEach(async () => {
+  dir = join(
+    await mkdtemp(join(tmpdir(), "sunroom-comp-")),
+    ".sunroom-content",
+  );
+  process.env.SUNROOM_CONTENT_DIR = dir;
+  resetStores();
+});
+afterEach(async () => {
+  resetStores();
+  delete process.env.SUNROOM_CONTENT_DIR;
+  await rm(dir, { recursive: true, force: true }).catch(() => {});
+});
 
 describe("AdminLayout", () => {
   it("renders the sign-in screen when unauthenticated, not the children", async () => {
@@ -52,5 +71,41 @@ describe("AdminLayout", () => {
     const html = renderToStaticMarkup(await AdminLayout({ children: "X" }));
     expect(html).toContain("sr-btn-google");
     expect(html).not.toContain("sr-btn-primary sr-btn-lg");
+  });
+
+  it("shows the configured site name in the top bar", async () => {
+    getSession.mockResolvedValue({ email: "jane@acme.com", name: "Jane" });
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    await store.saveSettings(
+      {
+        seoDefaults: {},
+        site: { name: "Mara Voss", madeWith: true },
+        redirects: [],
+      },
+      { author: { name: "Jane", email: "jane@acme.com" } },
+    );
+    const html = renderToStaticMarkup(await AdminLayout({ children: "X" }));
+    expect(html).toContain("Mara Voss");
+    expect(html).toContain("sr-sitename");
+  });
+
+  it("uses the site name as the sign-in headline + made-with subheading", async () => {
+    getSession.mockResolvedValue(null);
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    await store.saveSettings(
+      {
+        seoDefaults: {},
+        site: { name: "Mara Voss", madeWith: true },
+        redirects: [],
+      },
+      { author: { name: "Jane", email: "jane@acme.com" } },
+    );
+    const html = renderToStaticMarkup(await AdminLayout({ children: "X" }));
+    expect(html).toContain("Mara Voss");
+    expect(html).toContain("made with Sunroom");
   });
 });
