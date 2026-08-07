@@ -10,3 +10,4 @@
 //
 export { PagesScreen } from "./admin/editor/PagesScreen.js";
 export { PageEditor } from "./admin/editor/PageEditor.js";
+export { SettingsScreen } from "./admin/editor/SettingsScreen.js";
