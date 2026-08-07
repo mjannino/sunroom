@@ -189,7 +189,6 @@ export const ADMIN_CSS = `
 /* clickable affordances — hover feedback on interactive elements */
 .sr-nav-item:not(.is-active):not(.is-disabled):hover{color:var(--sr-text);background:var(--sr-surface-2);}
 .sr-newpage:hover,.sr-link:hover,.sr-upload:hover{color:var(--sr-accent);text-decoration:underline;}
-.sr-secrow-label:hover{color:var(--sr-accent-soft);}
 .sr-media-thumb:hover{border-color:var(--sr-accent);}
 .sr-media-del:hover{color:var(--sr-accent-hi);border-color:var(--sr-faint);}
 
@@ -197,7 +196,7 @@ export const ADMIN_CSS = `
    default outline is nearly invisible against this dark palette) */
 .sr-btn:focus-visible,.sr-tb:focus-visible,.sr-menu-item:focus-visible,
 .sr-grip:focus-visible,.sr-link:focus-visible,.sr-newpage:focus-visible,
-.sr-upload:focus-visible,.sr-nav-item:focus-visible,.sr-secrow-label:focus-visible,
+.sr-upload:focus-visible,.sr-nav-item:focus-visible,
 .sr-media-thumb:focus-visible,.sr-page:focus-visible{
   outline:2px solid var(--sr-accent);outline-offset:2px;}
 `;

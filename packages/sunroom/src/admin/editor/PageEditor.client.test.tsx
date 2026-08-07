@@ -353,10 +353,10 @@ describe("section switching (content-corruption regression)", () => {
     );
     const rows = screen.getAllByRole("listitem");
 
-    fireEvent.click(within(rows[0]!).getByRole("button", { name: "Hero" }));
+    fireEvent.click(within(rows[0]!).getByText("Hero"));
     await waitFor(() => expect(document.body.textContent).toContain("Alpha"));
 
-    fireEvent.click(within(rows[1]!).getByRole("button", { name: "Hero" }));
+    fireEvent.click(within(rows[1]!).getByText("Hero"));
     await waitFor(() => {
       expect(document.body.textContent).toContain("Bravo");
       expect(document.body.textContent).not.toContain("Alpha");
@@ -474,5 +474,25 @@ describe("preview + cleanups", () => {
     fireEvent.click(screen.getByRole("button", { name: /desktop/i }));
     expect(frame().style.width).toBe("100%");
     expect(frame().style.height).toBe("100%");
+  });
+});
+
+describe("row click-to-select", () => {
+  it("selects a section by clicking its row, but not when clicking an action button", () => {
+    render(
+      <PageEditor
+        page={page}
+        version="v1"
+        registry={registry}
+        actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
+      />,
+    );
+    // Nothing selected initially → the section's field ("heading") isn't shown.
+    expect(screen.queryByLabelText("heading")).toBeNull();
+    // Clicking the row's label selects the section → its fields render.
+    fireEvent.click(screen.getByText("Hero"));
+    expect(screen.getByLabelText("heading")).toBeTruthy();
   });
 });

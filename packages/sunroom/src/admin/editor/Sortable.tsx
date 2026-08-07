@@ -89,11 +89,13 @@ export function SortableRow({
   id,
   label,
   className,
+  onActivate,
   children,
 }: {
   id: string;
   label?: string;
   className?: string;
+  onActivate?: () => void;
   children: ReactNode;
 }): React.ReactElement {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -109,6 +111,7 @@ export function SortableRow({
       style={style}
       className={className}
       aria-label={`drag ${label ?? id}`}
+      onClick={onActivate}
       {...attributes}
       {...listeners}
     >

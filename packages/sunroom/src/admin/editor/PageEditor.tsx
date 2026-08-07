@@ -156,13 +156,11 @@ export function PageEditor({
                       id={s.id}
                       label={registry[s.type]?.label ?? s.type}
                       className={`sr-secrow${s.id === selected ? " is-active" : ""}`}
+                      onActivate={() => setSelected(s.id)}
                     >
-                      <button
-                        className="sr-secrow-label"
-                        onClick={() => setSelected(s.id)}
-                      >
+                      <span className="sr-secrow-label">
                         {registry[s.type]?.label ?? s.type}
-                      </button>
+                      </span>
                       {sectionIssues(s).length > 0 ? (
                         <span
                           className="sr-secrow-warn"
@@ -175,32 +173,35 @@ export function PageEditor({
                       <button
                         className="sr-btn sr-btn-icon"
                         disabled={i === 0}
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           dispatch({
                             type: "moveSection",
                             sectionId: s.id,
                             dir: "up",
-                          })
-                        }
+                          });
+                        }}
                       >
                         ↑
                       </button>
                       <button
                         className="sr-btn sr-btn-icon"
                         disabled={i === page.sections.length - 1}
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           dispatch({
                             type: "moveSection",
                             sectionId: s.id,
                             dir: "down",
-                          })
-                        }
+                          });
+                        }}
                       >
                         ↓
                       </button>
                       <button
                         className="sr-btn sr-btn-icon"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (confirm("Remove this section?"))
                             dispatch({
                               type: "removeSection",
