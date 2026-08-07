@@ -40,6 +40,13 @@ export interface Settings {
     titleTemplate?: string;
     description?: string;
   };
+  /** Site identity shown in admin chrome. Absent → falls back to "Sunroom". */
+  site?: {
+    name?: string;
+    tagline?: string;
+    /** Show the "made with Sunroom" line on the sign-in screen. Default true. */
+    madeWith?: boolean;
+  };
   /** Written automatically when a slug is renamed (Phase 7). */
   redirects: { from: string; to: string }[];
 }

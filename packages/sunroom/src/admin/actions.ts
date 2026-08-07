@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { resolveConfig } from "../core/registry.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
 import { getStore } from "../store/singleton.js";
-import type { ContentStore } from "../store/types.js";
+import type { ContentStore, Settings } from "../store/types.js";
 import type { Author, Page } from "../store/types.js";
 import { HOME_SLUG, validateSlug } from "../store/paths.js";
 import { getSession } from "./session-server.js";
@@ -311,5 +311,21 @@ export async function deleteMediaAction(
       reason: "error",
       message: "Could not delete the media.",
     };
+  }
+}
+
+export async function saveSettingsAction(
+  settings: Settings,
+): Promise<ActionResult> {
+  "use server";
+  const author = await authOr();
+  if (!author) return UNAUTHORIZED;
+  try {
+    const s = await store();
+    await s.saveSettings(settings, { author });
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
   }
 }

@@ -380,3 +380,27 @@ describe("deleteMediaAction", () => {
     expect(deleteObject).not.toHaveBeenCalled();
   });
 });
+
+describe("saveSettingsAction", () => {
+  it("persists site identity when authed", async () => {
+    const { saveSettingsAction } = await import("./actions.js");
+    const res = await saveSettingsAction({
+      seoDefaults: {},
+      site: { name: "Mara Voss", madeWith: true },
+      redirects: [],
+    });
+    expect(res.ok).toBe(true);
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    expect(store.getSettings().site?.name).toBe("Mara Voss");
+    expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+  });
+
+  it("writes NOTHING when unauthenticated", async () => {
+    getSession.mockResolvedValue(null);
+    const { saveSettingsAction } = await import("./actions.js");
+    const res = await saveSettingsAction({ seoDefaults: {}, redirects: [] });
+    expect(res).toMatchObject({ ok: false, reason: "unauthorized" });
+  });
+});
