@@ -17,7 +17,7 @@ describe("Sidebar", () => {
     expect(html).toMatch(/<a class="sr-nav-item is-active" href="\/admin">/);
     expect(html).toContain('class="sr-nav-item is-disabled"');
     const soonCount = html.match(/class="sr-soon"/g)?.length ?? 0;
-    expect(soonCount).toBe(2);
+    expect(soonCount).toBe(1);
     expect(html).toContain(">Soon<");
     expect(html).toContain(">Media<");
     expect(html).toContain(">Settings<");
@@ -50,6 +50,16 @@ describe("Sidebar", () => {
     );
     expect(html).toMatch(
       /<a class="sr-newpage" href="\/admin">\+ New page<\/a>/,
+    );
+  });
+
+  it("links Settings and marks it active on the settings screen", () => {
+    const html = renderToStaticMarkup(
+      <Sidebar pages={pages} activeSlug={null} activeScreen="settings" />,
+    );
+    expect(html).toContain('href="/admin/settings"');
+    expect(html).toMatch(
+      /class="sr-nav-item is-active" href="\/admin\/settings"/,
     );
   });
 });

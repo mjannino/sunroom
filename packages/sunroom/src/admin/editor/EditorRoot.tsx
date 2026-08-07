@@ -11,12 +11,13 @@ import {
   requestUploadAction,
   reorderPagesAction,
   savePageAction,
+  saveSettingsAction,
 } from "../actions.js";
 import { screenFromSegments, serializeRegistry } from "../editor-core.js";
 // Deliberately NOT a relative import: see the "sunroom/client" entry in
 // tsup.config.ts's `external` list for why EditorRoot (server-only) must
 // reach these 'use client' components through the public package specifier.
-import { PageEditor, PagesScreen } from "sunroom/client";
+import { PageEditor, PagesScreen, SettingsScreen } from "sunroom/client";
 // Sidebar IS a relative import: it's a server component (no 'use client'),
 // so it must stay in the same server-only chunk as EditorRoot — routing it
 // through "sunroom/client" instead would be wrong (see the tsup.config.ts
@@ -61,6 +62,15 @@ export async function EditorRoot({
       <main className="sr-main">{screenNode}</main>
     </>
   );
+
+  if (screen.screen === "settings") {
+    return body(
+      <SettingsScreen
+        settings={store.getSettings()}
+        onSave={saveSettingsAction}
+      />,
+    );
+  }
 
   if (screen.screen === "pages") {
     return body(<PagesScreen pages={store.listPages()} actions={actions} />);

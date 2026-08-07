@@ -8,7 +8,7 @@ export function Sidebar({
 }: {
   pages: PageSummary[];
   activeSlug: string | null;
-  activeScreen: "pages" | "editor";
+  activeScreen: "pages" | "editor" | "settings";
 }): ReactElement {
   return (
     <nav className="sr-side" aria-label="Admin navigation">
@@ -24,10 +24,13 @@ export function Sidebar({
         <span className="sr-nav-ic" />
         Media<span className="sr-soon">Soon</span>
       </span>
-      <span className="sr-nav-item is-disabled" aria-disabled="true">
+      <a
+        className={`sr-nav-item${activeScreen === "settings" ? " is-active" : ""}`}
+        href="/admin/settings"
+      >
         <span className="sr-nav-ic" />
-        Settings<span className="sr-soon">Soon</span>
-      </span>
+        Settings
+      </a>
       <div className="sr-pagelist">
         <div className="sr-nav-label">Pages</div>
         {pages.map((p) => (
