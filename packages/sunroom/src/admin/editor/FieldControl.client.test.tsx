@@ -446,3 +446,38 @@ describe("conditional fields (showWhen)", () => {
     expect(screen.getByLabelText("href")).toBeTruthy();
   });
 });
+
+describe("array item labels", () => {
+  it("labels items with itemLabel + 1-based index", () => {
+    render(
+      <FieldControl
+        name="entries"
+        field={f.array(f.object({ label: f.text() }), {
+          label: "Entries",
+          itemLabel: "Entry",
+        })}
+        value={[{}, {}]}
+        onChange={vi.fn()}
+        path="entries"
+        issues={[]}
+        depth={0}
+      />,
+    );
+    expect(screen.getByText("Entry 1")).toBeTruthy();
+    expect(screen.getByText("Entry 2")).toBeTruthy();
+  });
+  it("defaults the item label to 'Item'", () => {
+    render(
+      <FieldControl
+        name="xs"
+        field={f.array(f.object({ label: f.text() }))}
+        value={[{}]}
+        onChange={vi.fn()}
+        path="xs"
+        issues={[]}
+        depth={0}
+      />,
+    );
+    expect(screen.getByText("Item 1")).toBeTruthy();
+  });
+});

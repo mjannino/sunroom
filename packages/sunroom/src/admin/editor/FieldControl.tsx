@@ -269,6 +269,7 @@ function ArrayControl({
   ) : null;
 
   const atMaxDepth = depth + 1 > MAX_FIELD_DEPTH;
+  const itemLabel = field.itemLabel ?? "Item";
 
   return (
     <fieldset className="sr-fieldset">
@@ -283,10 +284,14 @@ function ArrayControl({
         }
       >
         {items.map((entry, i) => (
-          <SortableRow key={entry.id} id={entry.id} label={`item ${i + 1}`}>
+          <SortableRow
+            key={entry.id}
+            id={entry.id}
+            label={`${itemLabel} ${i + 1}`}
+          >
             <div data-testid={`array-item-${entry.id}`} className="sr-arr-item">
               <FieldControl
-                name={`${name}[${i}]`}
+                name={`${itemLabel} ${i + 1}`}
                 field={field.of}
                 value={entry.value}
                 onChange={(v) =>

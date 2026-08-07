@@ -22,6 +22,7 @@ type TextOpts = Base & { default?: string };
 type NumberOpts = Base & { default?: number };
 type BooleanOpts = Base & { default?: boolean };
 type SelectOpts = Base & { options: SelectOption[]; default?: string };
+type ArrayOpts = Base & { itemLabel?: string };
 
 export type FieldDescriptor =
   | ({ type: "text" } & TextOpts)
@@ -33,7 +34,7 @@ export type FieldDescriptor =
   | ({ type: "boolean" } & BooleanOpts)
   | ({ type: "select" } & SelectOpts)
   | ({ type: "object"; fields: FieldMap } & Base)
-  | ({ type: "array"; of: FieldDescriptor } & Base);
+  | ({ type: "array"; of: FieldDescriptor } & ArrayOpts);
 
 export type FieldMap = Record<string, FieldDescriptor>;
 
@@ -69,7 +70,7 @@ export const f = {
     } & O,
   array: <
     const I extends FieldDescriptor,
-    const O extends Base = Record<string, never>,
+    const O extends ArrayOpts = Record<string, never>,
   >(
     of: I,
     o?: O,
