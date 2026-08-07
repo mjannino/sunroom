@@ -40,7 +40,7 @@ describe("PagesScreen", () => {
       expect(actions.createPage).toHaveBeenCalledWith({
         slug: "services",
         title: "Services",
-        seo: { title: "", description: "" },
+        seo: {},
       }),
     );
   });

@@ -23,10 +23,13 @@ export function NewPageDialog({
     e.preventDefault();
     setBusy(true);
     setError(null);
+    const seo: { title?: string; description?: string } = {};
+    if (seoTitle.trim()) seo.title = seoTitle.trim();
+    if (seoDesc.trim()) seo.description = seoDesc.trim();
     const res = await onCreate({
       slug,
       title,
-      seo: { title: seoTitle, description: seoDesc },
+      seo,
     });
     setBusy(false);
     if (res.ok) onClose();
