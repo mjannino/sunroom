@@ -17,9 +17,13 @@ export default function Cta({
   return (
     <section className={s.section}>
       {action === "link" && href ? (
-        <a href={href} className={s.btn}>{text} →</a>
+        <a href={href} className={s.btn}>
+          {text} →
+        </a>
       ) : (
-        <button type="button" className={s.btn} onClick={open}>{text} →</button>
+        <button type="button" className={s.btn} onClick={open}>
+          {text} →
+        </button>
       )}
     </section>
   );

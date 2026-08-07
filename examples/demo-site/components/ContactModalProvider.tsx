@@ -8,7 +8,11 @@ export function useContactModal() {
   return useContext(Ctx);
 }
 
-export default function ContactModalProvider({ children }: { children: ReactNode }) {
+export default function ContactModalProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <Ctx.Provider value={{ open: () => setIsOpen(true) }}>

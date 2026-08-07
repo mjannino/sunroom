@@ -10,7 +10,13 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <ContactModalProvider>
       <SiteHeader />
-      <main style={{ maxWidth: "var(--measure)", margin: "0 auto", padding: "0 2rem" }}>
+      <main
+        style={{
+          maxWidth: "var(--measure)",
+          margin: "0 auto",
+          padding: "0 2rem",
+        }}
+      >
         {children}
       </main>
       <SiteFooter />

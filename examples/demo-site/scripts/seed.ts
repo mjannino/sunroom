@@ -13,21 +13,79 @@ const img = (
   width: number,
   height: number,
   alt: string,
-) => ({ id, storageKey: key, filename: key.split("/").pop()!, mime: "image/jpeg", width, height, size: 1, alt, createdAt: "2026-01-01T00:00:00Z" });
+) => ({
+  id,
+  storageKey: key,
+  filename: key.split("/").pop()!,
+  mime: "image/jpeg",
+  width,
+  height,
+  size: 1,
+  alt,
+  createdAt: "2026-01-01T00:00:00Z",
+});
 
 // Real assets live in public/media/seed/*.jpg (served offline via R2_PUBLIC_BASE=/media).
 // Widths/heights are the files' real intrinsic sizes; components crop with object-fit:cover.
 const media = [
-  img("hero-home", "seed/hero-home.jpg", 1575, 1049, "The Longshot Room control room"),
-  img("hero-credits", "seed/hero-credits.jpg", 1575, 1049, "Mixing console detail"),
+  img(
+    "hero-home",
+    "seed/hero-home.jpg",
+    1575,
+    1049,
+    "The Longshot Room control room",
+  ),
+  img(
+    "hero-credits",
+    "seed/hero-credits.jpg",
+    1575,
+    1049,
+    "Mixing console detail",
+  ),
   img("hero-gear", "seed/hero-gear.jpg", 1246, 827, "Outboard gear rack"),
   img("hero-about", "seed/hero-about.jpg", 1246, 831, "Mara Voss at the board"),
-  img("cover-01", "seed/cover-01.jpg", 1000, 998, "Slow Weather — Tin Roof Hymns cover"),
-  img("cover-02", "seed/cover-02.jpg", 700, 700, "Paper Anchors — Everything Louder cover"),
-  img("cover-03", "seed/cover-03.jpg", 1200, 1200, "The Gray Coast — Undertow cover"),
-  img("cover-04", "seed/cover-04.jpg", 700, 700, "Cheap Halos — Basement Light cover"),
-  img("cover-05", "seed/cover-05.jpg", 700, 700, "Northbound — Winter Count cover"),
-  img("cover-06", "seed/cover-06.jpg", 900, 900, "Ivy & Ammo — Static Bloom cover"),
+  img(
+    "cover-01",
+    "seed/cover-01.jpg",
+    1000,
+    998,
+    "Slow Weather — Tin Roof Hymns cover",
+  ),
+  img(
+    "cover-02",
+    "seed/cover-02.jpg",
+    700,
+    700,
+    "Paper Anchors — Everything Louder cover",
+  ),
+  img(
+    "cover-03",
+    "seed/cover-03.jpg",
+    1200,
+    1200,
+    "The Gray Coast — Undertow cover",
+  ),
+  img(
+    "cover-04",
+    "seed/cover-04.jpg",
+    700,
+    700,
+    "Cheap Halos — Basement Light cover",
+  ),
+  img(
+    "cover-05",
+    "seed/cover-05.jpg",
+    700,
+    700,
+    "Northbound — Winter Count cover",
+  ),
+  img(
+    "cover-06",
+    "seed/cover-06.jpg",
+    900,
+    900,
+    "Ivy & Ammo — Static Bloom cover",
+  ),
   img("gear-01", "seed/gear-01.jpg", 2000, 2000, "API 1608 console"),
   img("gear-02", "seed/gear-02.jpg", 600, 600, "Studer A80 tape machine"),
   img("gear-03", "seed/gear-03.jpg", 640, 427, "Neve 1073 preamps"),
@@ -55,7 +113,10 @@ await store.savePage(
     slug: "",
     title: "Home",
     position: 0,
-    seo: { description: "Mara Voss — producer, mixer, engineer. The Longshot Room, Philadelphia." },
+    seo: {
+      description:
+        "Mara Voss — producer, mixer, engineer. The Longshot Room, Philadelphia.",
+    },
     sections: [
       { id: "home-hero", type: "hero", props: { image: "hero-home" } },
       {
@@ -70,7 +131,11 @@ await store.savePage(
           })),
         },
       },
-      { id: "home-cta", type: "cta", props: { label: "Contact", action: "contact" } },
+      {
+        id: "home-cta",
+        type: "cta",
+        props: { label: "Contact", action: "contact" },
+      },
     ],
   },
   { baseVersion: home.version, author: AUTHOR },
@@ -83,7 +148,11 @@ await store.savePage(
     position: 1,
     seo: { title: "Credits | Mara Voss" },
     sections: [
-      { id: "credits-hero", type: "hero", props: { kicker: "CREDITS", image: "hero-credits" } },
+      {
+        id: "credits-hero",
+        type: "hero",
+        props: { kicker: "CREDITS", image: "hero-credits" },
+      },
       {
         id: "credits-embed",
         type: "embed",
@@ -99,7 +168,10 @@ await store.savePage(
         props: {
           title: "Full discography",
           entries: [
-            { label: "Slow Weather — Tin Roof Hymns", url: "https://example.com" },
+            {
+              label: "Slow Weather — Tin Roof Hymns",
+              url: "https://example.com",
+            },
             { label: "Paper Anchors — Everything Louder" },
             { label: "The Gray Coast — Undertow", url: "https://example.com" },
             { label: "Cheap Halos — Basement Light" },
@@ -110,7 +182,11 @@ await store.savePage(
           ],
         },
       },
-      { id: "credits-cta", type: "cta", props: { label: "Work with me", action: "contact" } },
+      {
+        id: "credits-cta",
+        type: "cta",
+        props: { label: "Work with me", action: "contact" },
+      },
     ],
   },
   { baseVersion: null, author: AUTHOR },
@@ -123,7 +199,11 @@ await store.savePage(
     position: 2,
     seo: { title: "Gear | Mara Voss" },
     sections: [
-      { id: "gear-hero", type: "hero", props: { kicker: "GEAR", image: "hero-gear" } },
+      {
+        id: "gear-hero",
+        type: "hero",
+        props: { kicker: "GEAR", image: "hero-gear" },
+      },
       {
         id: "gear-carousel",
         type: "carousel",
@@ -131,8 +211,19 @@ await store.savePage(
           title: "Highlights",
           items: Array.from({ length: 6 }, (_, i) => {
             const n = String(i + 1).padStart(2, "0");
-            const names = ["API 1608", "Studer A80", "Neve 1073 ×2", "LA-2A", "Ludwig kit", "Distressor ×4"];
-            return { image: `gear-${n}`, name: names[i], note: "In regular rotation." };
+            const names = [
+              "API 1608",
+              "Studer A80",
+              "Neve 1073 ×2",
+              "LA-2A",
+              "Ludwig kit",
+              "Distressor ×4",
+            ];
+            return {
+              image: `gear-${n}`,
+              name: names[i],
+              note: "In regular rotation.",
+            };
           }),
         },
       },
@@ -161,7 +252,11 @@ await store.savePage(
     position: 3,
     seo: { title: "About | Mara Voss" },
     sections: [
-      { id: "about-hero", type: "hero", props: { kicker: "ABOUT", image: "hero-about" } },
+      {
+        id: "about-hero",
+        type: "hero",
+        props: { kicker: "ABOUT", image: "hero-about" },
+      },
       {
         id: "about-prose",
         type: "prose",

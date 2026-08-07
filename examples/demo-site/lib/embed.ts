@@ -8,7 +8,10 @@ function isHostOrSubdomain(hostname: string, root: string): boolean {
  * Turn a normal share URL into the provider's embeddable iframe src.
  * Returns null when the URL doesn't match the provider (caller renders nothing).
  */
-export function toEmbedSrc(provider: EmbedProvider, url: string): string | null {
+export function toEmbedSrc(
+  provider: EmbedProvider,
+  url: string,
+): string | null {
   let u: URL;
   try {
     u = new URL(url);

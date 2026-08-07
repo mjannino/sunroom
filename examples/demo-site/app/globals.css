@@ -1,8 +1,17 @@
 :root {
   /* palette — matches the Sunroom admin "Sunset Coral" theme */
-  --bg: #181210; --surface: #221814; --surface-2: #2c1e1a; --surface-3: #342420;
-  --border: #3a2820; --text: #f3e7e1; --muted: #a98a7e; --faint: #6f5a51;
-  --accent: #ff6f52; --accent-hi: #ff8b6f; --accent-soft: #ff9d7a; --on-accent: #2a0f08;
+  --bg: #181210;
+  --surface: #221814;
+  --surface-2: #2c1e1a;
+  --surface-3: #342420;
+  --border: #3a2820;
+  --text: #f3e7e1;
+  --muted: #a98a7e;
+  --faint: #6f5a51;
+  --accent: #ff6f52;
+  --accent-hi: #ff8b6f;
+  --accent-soft: #ff9d7a;
+  --on-accent: #2a0f08;
   --accent-rgb: 255, 111, 82;
 
   /* type roles — Phase 2 globals will override these */
@@ -14,7 +23,9 @@
   --measure: 68rem; /* content max-width */
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -34,5 +45,10 @@ body {
   color: var(--faint);
 }
 
-img { max-width: 100%; display: block; }
-a { color: inherit; }
+img {
+  max-width: 100%;
+  display: block;
+}
+a {
+  color: inherit;
+}

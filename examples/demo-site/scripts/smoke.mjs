@@ -27,7 +27,11 @@ function fail(msg) {
 
 async function get(url) {
   const res = await fetch(url, { redirect: "follow" });
-  return { status: res.status, type: res.headers.get("content-type") ?? "", res };
+  return {
+    status: res.status,
+    type: res.headers.get("content-type") ?? "",
+    res,
+  };
 }
 
 console.log(`smoke: ${base}`);
@@ -66,7 +70,8 @@ for (const path of PAGES) {
     continue;
   }
 
-  for (const src of imgs) imageUrls.add(src.startsWith("http") ? src : `${base}${src}`);
+  for (const src of imgs)
+    imageUrls.add(src.startsWith("http") ? src : `${base}${src}`);
   note(`✓ ${path} — ${sections} section(s), ${imgs.length} image(s)`);
 }
 
@@ -76,7 +81,8 @@ for (const url of imageUrls) {
   try {
     const { status, type } = await get(url);
     if (status !== 200) fail(`image ${url} — HTTP ${status}`);
-    else if (!type.startsWith("image/")) fail(`image ${url} — content-type "${type}"`);
+    else if (!type.startsWith("image/"))
+      fail(`image ${url} — content-type "${type}"`);
   } catch (err) {
     fail(`image ${url} — request failed: ${err.message}`);
   }
@@ -87,4 +93,6 @@ if (failures.length) {
   for (const f of failures) console.log(`  - ${f}`);
   process.exit(1);
 }
-console.log(`\nOK — ${PAGES.length} pages rendered, ${imageUrls.size} images resolved.`);
+console.log(
+  `\nOK — ${PAGES.length} pages rendered, ${imageUrls.size} images resolved.`,
+);

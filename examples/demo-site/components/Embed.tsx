@@ -2,7 +2,11 @@
 import { toEmbedSrc, type EmbedProvider } from "../lib/embed";
 import s from "./Embed.module.css";
 
-const PROVIDERS: readonly EmbedProvider[] = ["spotify", "youtube", "soundcloud"];
+const PROVIDERS: readonly EmbedProvider[] = [
+  "spotify",
+  "youtube",
+  "soundcloud",
+];
 
 function isEmbedProvider(value: string): value is EmbedProvider {
   return (PROVIDERS as readonly string[]).includes(value);
@@ -18,7 +22,9 @@ export default function Embed({
   title?: string;
 }) {
   const src =
-    provider && url && isEmbedProvider(provider) ? toEmbedSrc(provider, url) : null;
+    provider && url && isEmbedProvider(provider)
+      ? toEmbedSrc(provider, url)
+      : null;
   if (!src) return null;
 
   return (

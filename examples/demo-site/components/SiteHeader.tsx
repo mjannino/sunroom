@@ -12,10 +12,18 @@ export default function SiteHeader() {
         <span className={s.rec} aria-hidden="true" />
       </Link>
       <nav className={s.nav}>
-        <Link href="/credits" className={s.link}>Credits</Link>
-        <Link href="/gear" className={s.link}>Gear</Link>
-        <Link href="/about" className={s.link}>About</Link>
-        <button type="button" className={s.link} onClick={open}>Contact</button>
+        <Link href="/credits" className={s.link}>
+          Credits
+        </Link>
+        <Link href="/gear" className={s.link}>
+          Gear
+        </Link>
+        <Link href="/about" className={s.link}>
+          About
+        </Link>
+        <button type="button" className={s.link} onClick={open}>
+          Contact
+        </button>
         <a
           href="https://instagram.com"
           className={s.link}

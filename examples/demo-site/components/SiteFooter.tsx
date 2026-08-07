@@ -5,9 +5,17 @@ export default function SiteFooter() {
     <footer className={s.footer}>
       <span>© MARA VOSS RECORDING — THE LONGSHOT ROOM, PHILADELPHIA</span>
       <span className={s.social}>
-        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">YouTube</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
+          YouTube
+        </a>
         <span aria-hidden="true">·</span>
-        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <a
+          href="https://instagram.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Instagram
+        </a>
       </span>
     </footer>
   );

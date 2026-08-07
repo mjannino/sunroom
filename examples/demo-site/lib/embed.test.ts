@@ -4,7 +4,10 @@ import { toEmbedSrc } from "./embed.ts";
 
 test("spotify playlist share URL -> embed src", () => {
   assert.equal(
-    toEmbedSrc("spotify", "https://open.spotify.com/playlist/37i9dQZF1DX?si=abc"),
+    toEmbedSrc(
+      "spotify",
+      "https://open.spotify.com/playlist/37i9dQZF1DX?si=abc",
+    ),
     "https://open.spotify.com/embed/playlist/37i9dQZF1DX",
   );
 });
@@ -31,9 +34,14 @@ test("youtube watch URL with list -> embed videoseries src", () => {
 });
 
 test("soundcloud URL -> widget player src (url-encoded)", () => {
-  const src = toEmbedSrc("soundcloud", "https://soundcloud.com/artist/sets/mix");
+  const src = toEmbedSrc(
+    "soundcloud",
+    "https://soundcloud.com/artist/sets/mix",
+  );
   assert.ok(src?.startsWith("https://w.soundcloud.com/player/?url="));
-  assert.ok(src?.includes(encodeURIComponent("https://soundcloud.com/artist/sets/mix")));
+  assert.ok(
+    src?.includes(encodeURIComponent("https://soundcloud.com/artist/sets/mix")),
+  );
 });
 
 test("unparseable / mismatched URL -> null", () => {
@@ -42,9 +50,15 @@ test("unparseable / mismatched URL -> null", () => {
 });
 
 test("spoofed spotify domain -> null", () => {
-  assert.equal(toEmbedSrc("spotify", "https://evilspotify.com/playlist/abc"), null);
+  assert.equal(
+    toEmbedSrc("spotify", "https://evilspotify.com/playlist/abc"),
+    null,
+  );
 });
 
 test("spoofed soundcloud domain -> null", () => {
-  assert.equal(toEmbedSrc("soundcloud", "https://notsoundcloud.com/artist/sets/mix"), null);
+  assert.equal(
+    toEmbedSrc("soundcloud", "https://notsoundcloud.com/artist/sets/mix"),
+    null,
+  );
 });

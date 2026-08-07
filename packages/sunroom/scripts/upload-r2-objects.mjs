@@ -38,9 +38,7 @@ const dryRun = args.includes("--dry-run");
 const [sourceDir, rawPrefix] = args.filter((a) => a !== "--dry-run");
 
 if (!sourceDir || !rawPrefix) {
-  fail(
-    "usage: node upload-r2-objects.mjs <sourceDir> <keyPrefix> [--dry-run]",
-  );
+  fail("usage: node upload-r2-objects.mjs <sourceDir> <keyPrefix> [--dry-run]");
 }
 const prefix = rawPrefix.replace(/\/+$/, ""); // no trailing slash
 
@@ -67,7 +65,8 @@ const plan = files.map((name) => {
 console.log(
   `${dryRun ? "[dry-run] would upload" : "uploading"} ${plan.length} file(s) from ${sourceDir} -> <bucket>/${prefix}/`,
 );
-for (const p of plan) console.log(`  ${p.name}  ->  ${p.key}  (${p.contentType})`);
+for (const p of plan)
+  console.log(`  ${p.name}  ->  ${p.key}  (${p.contentType})`);
 
 if (dryRun) {
   console.log("[dry-run] no credentials used, nothing uploaded.");

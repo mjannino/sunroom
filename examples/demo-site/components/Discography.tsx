@@ -21,7 +21,12 @@ export default function Discography({
           .map((e, i) => (
             <li key={i} className={s.item}>
               {e.url ? (
-                <a href={e.url} className={s.link} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={e.url}
+                  className={s.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {e.label}
                 </a>
               ) : (

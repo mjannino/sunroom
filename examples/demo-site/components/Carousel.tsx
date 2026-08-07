@@ -31,10 +31,20 @@ export default function Carousel({
       <div className={s.head}>
         {title ? <p className="label">{title}</p> : <span />}
         <div className={s.nav}>
-          <button type="button" aria-label="Previous" onClick={() => scroll(-1)} className={s.btn}>
+          <button
+            type="button"
+            aria-label="Previous"
+            onClick={() => scroll(-1)}
+            className={s.btn}
+          >
             ←
           </button>
-          <button type="button" aria-label="Next" onClick={() => scroll(1)} className={s.btn}>
+          <button
+            type="button"
+            aria-label="Next"
+            onClick={() => scroll(1)}
+            className={s.btn}
+          >
             →
           </button>
         </div>
