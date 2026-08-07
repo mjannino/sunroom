@@ -1,0 +1,29 @@
+#!/bin/sh
+# Auto-format staged files with Prettier before they're committed, so the tree
+# always matches CI's `pnpm lint` (prettier --check). No extra dependencies:
+# just this script, enabled via `git config core.hooksPath .githooks`.
+#
+# --ignore-unknown lets Prettier skip anything it has no parser for (this hook
+# script, images, lockfiles), so there's no file-extension list to maintain.
+
+set -e
+
+root=$(git rev-parse --show-toplevel)
+prettier="$root/node_modules/.bin/prettier"
+
+if [ ! -x "$prettier" ]; then
+  echo "pre-commit: prettier not found at node_modules/.bin — run 'pnpm install'." >&2
+  echo "pre-commit: skipping format check." >&2
+  exit 0
+fi
+
+# Files staged for this commit (added/copied/modified/renamed), NUL-delimited
+# so paths with spaces survive. Piped straight to xargs -0: a shell variable
+# can't hold the list because command substitution strips the NUL separators.
+# --no-run-if-empty makes an empty staged set a clean no-op.
+git diff --cached --name-only --diff-filter=ACMR -z \
+  | xargs -0 --no-run-if-empty "$prettier" --write --ignore-unknown
+
+# Re-stage whatever Prettier just rewrote.
+git diff --cached --name-only --diff-filter=ACMR -z \
+  | xargs -0 --no-run-if-empty git add
