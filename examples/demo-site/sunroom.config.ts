@@ -13,9 +13,15 @@ export default createSunroom({
       label: "Hero",
       component: Hero,
       fields: {
-        kicker: f.text({ label: "Kicker" }),
         image: f.image({ label: "Image", required: true }),
-        heading: f.text({ label: "Heading" }),
+        text: f.text({ label: "Text" }),
+        placement: f.select({
+          label: "Text placement",
+          options: [
+            { value: "overlay", label: "Overlay on image" },
+            { value: "above", label: "Above image" },
+          ],
+        }),
       },
     }),
     creditsGrid: defineSection({

@@ -151,7 +151,7 @@ await store.savePage(
       {
         id: "credits-hero",
         type: "hero",
-        props: { kicker: "CREDITS", image: "hero-credits" },
+        props: { image: "hero-credits", text: "CREDITS", placement: "overlay" },
       },
       {
         id: "credits-embed",
@@ -202,7 +202,7 @@ await store.savePage(
       {
         id: "gear-hero",
         type: "hero",
-        props: { kicker: "GEAR", image: "hero-gear" },
+        props: { image: "hero-gear", text: "GEAR", placement: "overlay" },
       },
       {
         id: "gear-carousel",
@@ -255,7 +255,7 @@ await store.savePage(
       {
         id: "about-hero",
         type: "hero",
-        props: { kicker: "ABOUT", image: "hero-about" },
+        props: { image: "hero-about", text: "ABOUT", placement: "overlay" },
       },
       {
         id: "about-prose",

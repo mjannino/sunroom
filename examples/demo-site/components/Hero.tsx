@@ -3,30 +3,34 @@ import type { ImageValue } from "sunroom";
 import s from "./Hero.module.css";
 
 export default function Hero({
-  kicker,
   image,
-  heading,
+  text,
+  placement = "overlay",
 }: {
-  kicker?: string;
   image: ImageValue;
-  heading?: string;
+  text?: string;
+  placement?: string;
 }) {
+  const frame = image ? (
+    <div className={s.frame}>
+      <Image
+        src={image.url}
+        alt={image.alt ?? ""}
+        width={image.width}
+        height={image.height}
+        className={s.img}
+        priority
+      />
+      {placement === "overlay" && text ? (
+        <p className={`label ${s.overlay}`}>{text}</p>
+      ) : null}
+    </div>
+  ) : null;
+
   return (
     <section className={s.hero}>
-      {kicker ? <p className="label">{kicker}</p> : null}
-      {image ? (
-        <div className={s.frame}>
-          <Image
-            src={image.url}
-            alt={image.alt ?? ""}
-            width={image.width}
-            height={image.height}
-            className={s.img}
-            priority
-          />
-        </div>
-      ) : null}
-      {heading ? <h1 className={s.heading}>{heading}</h1> : null}
+      {placement === "above" && text ? <p className="label">{text}</p> : null}
+      {frame}
     </section>
   );
 }
