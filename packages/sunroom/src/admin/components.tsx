@@ -19,10 +19,10 @@ export function SignInScreen(): ReactElement {
       <main className="sr-center">
         <h1>Sunroom</h1>
         <p>Sign in to edit this site.</p>
-        <a
-          href="/api/sunroom/auth/login"
-          className="sr-btn sr-btn-primary sr-btn-lg"
-        >
+        <a href="/api/sunroom/auth/login" className="sr-btn sr-btn-google">
+          <span className="sr-g" aria-hidden="true">
+            G
+          </span>
           Sign in with Google
         </a>
       </main>

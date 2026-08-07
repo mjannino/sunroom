@@ -46,4 +46,11 @@ describe("AdminLayout", () => {
     expect(html).not.toContain("SECRET CHILD");
     expect(html).not.toContain("/api/sunroom/auth/login");
   });
+
+  it("styles the sign-in button as a dedicated Google button (not the accent CTA)", async () => {
+    getSession.mockResolvedValue(null);
+    const html = renderToStaticMarkup(await AdminLayout({ children: "X" }));
+    expect(html).toContain("sr-btn-google");
+    expect(html).not.toContain("sr-btn-primary sr-btn-lg");
+  });
 });

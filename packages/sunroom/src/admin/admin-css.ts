@@ -68,6 +68,12 @@ export const ADMIN_CSS = `
 /* dashed "add" affordance */
 .sr-btn-add{border-style:dashed;color:var(--sr-accent-soft);padding:9px 14px;border-radius:9px;}
 .sr-btn-add:hover{color:var(--sr-accent);border-color:var(--sr-accent);}
+/* Google sign-in: white surface + dark text (accessible), not the accent CTA */
+.sr-btn-google{background:#fff;color:#1f1f1f;border-color:#dadce0;font-weight:600;
+  font-size:14px;padding:.6rem 1.3rem;border-radius:9px;gap:10px;}
+.sr-btn-google:not(:disabled):hover{background:#f7f8f8;color:#1f1f1f;border-color:#c9ccd0;}
+.sr-g{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;
+  border-radius:3px;background:#fff;color:#4285f4;font-weight:700;font-family:Arial,sans-serif;}
 .sr-chip{font-size:10.5px;padding:3px 9px;border-radius:999px;background:var(--sr-surface-2);color:var(--sr-muted);}
 .sr-pending{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
   color:var(--sr-accent-soft);background:var(--sr-surface-2);border:1px solid var(--sr-border);
@@ -89,7 +95,8 @@ export const ADMIN_CSS = `
 .sr-secrow{display:flex;align-items:center;gap:7px;background:var(--sr-surface);
   border:1px solid var(--sr-border);border-radius:9px;padding:8px 10px;margin-bottom:7px;}
 .sr-secrow.is-active{border-color:var(--sr-accent);box-shadow:0 0 0 2px rgba(var(--sr-accent-rgb),.18);}
-.sr-grip{background:none;border:none;padding:0 2px;color:var(--sr-faint);font-size:15px;cursor:grab;line-height:1;}
+.sr-grip{background:none;border:none;padding:0 2px;color:var(--sr-faint);font-size:15px;
+  cursor:grab;line-height:1;align-self:center;height:18px;display:flex;align-items:center;}
 .sr-grip:hover{color:var(--sr-muted);}
 .sr-secrow-label{flex:1;background:transparent;border:none;color:var(--sr-text);font-size:13px;text-align:left;padding:0;}
 .sr-secrow-warn{color:var(--sr-accent);}
