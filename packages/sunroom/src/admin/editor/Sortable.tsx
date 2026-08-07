@@ -18,6 +18,26 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { ReactNode } from "react";
 
+// Exported so the predicate is unit-testable.
+export function startsFromInteractiveTarget(
+  target: EventTarget | null,
+): boolean {
+  const el = target as HTMLElement | null;
+  return !!el?.closest?.(
+    'input, textarea, select, button, a, [contenteditable="true"], .ProseMirror, [role="textbox"]',
+  );
+}
+
+class RowPointerSensor extends PointerSensor {
+  static activators = [
+    {
+      eventName: "onPointerDown" as const,
+      handler: ({ nativeEvent }: { nativeEvent: PointerEvent }) =>
+        !startsFromInteractiveTarget(nativeEvent.target),
+    },
+  ];
+}
+
 export function SortableList({
   ids,
   onReorder,
@@ -28,7 +48,7 @@ export function SortableList({
   children: ReactNode;
 }): React.ReactElement {
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(RowPointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
