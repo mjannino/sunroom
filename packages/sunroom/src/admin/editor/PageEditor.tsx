@@ -19,6 +19,13 @@ import type {
   SerializedRegistry,
 } from "./types.js";
 
+const DEVICE_WIDTHS = {
+  mobile: "390px",
+  tablet: "768px",
+  desktop: "100%",
+} as const;
+type Device = keyof typeof DEVICE_WIDTHS;
+
 export function PageEditor({
   page: initial,
   version,
@@ -45,6 +52,7 @@ export function PageEditor({
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
+  const [device, setDevice] = useState<Device>("desktop");
 
   const dispatch = (action: EditAction) => {
     setPage((p) => editReducer(p, action));
@@ -337,13 +345,33 @@ export function PageEditor({
 
           {showPreview ? (
             <div className="sr-col sr-col-preview">
-              <div className="sr-col-label">Live preview</div>
+              <div className="sr-preview-bar">
+                <div className="sr-col-label">Live preview</div>
+                <div
+                  className="sr-device"
+                  role="group"
+                  aria-label="Preview size"
+                >
+                  {(["mobile", "tablet", "desktop"] as Device[]).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`sr-btn sr-btn-icon${device === d ? " is-active" : ""}`}
+                      aria-pressed={device === d}
+                      onClick={() => setDevice(d)}
+                    >
+                      {d[0]!.toUpperCase() + d.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="sr-preview">
                 <iframe
                   key={previewKey}
                   src={previewSrc}
                   title="Preview"
                   className="sr-preview-frame"
+                  style={{ width: DEVICE_WIDTHS[device], margin: "0 auto" }}
                 />
               </div>
             </div>
