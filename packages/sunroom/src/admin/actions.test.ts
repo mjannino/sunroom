@@ -402,7 +402,7 @@ describe("saveSettingsAction", () => {
     const { saveSettingsAction } = await import("./actions.js");
     const res = await saveSettingsAction({
       seoDefaults: {},
-      site: { name: "Mara Voss", madeWith: true },
+      site: { name: "Mara Voss" },
       redirects: [],
     });
     expect(res.ok).toBe(true);
