@@ -121,6 +121,22 @@ describe("PageEditor", () => {
     ).toBe(true);
   });
 
+  it("selects a section via keyboard (Enter on the label)", () => {
+    render(
+      <PageEditor
+        page={page}
+        version="v1"
+        registry={registry}
+        actions={actionsMock()}
+        media={[]}
+        mediaActions={mediaActions()}
+      />,
+    );
+    expect(screen.queryByLabelText("heading")).toBeNull();
+    fireEvent.keyDown(screen.getByText("Hero"), { key: "Enter" });
+    expect(screen.getByLabelText("heading")).toBeTruthy();
+  });
+
   it("edits a text field and saves the whole page with the base version", async () => {
     const actions = actionsMock();
     render(

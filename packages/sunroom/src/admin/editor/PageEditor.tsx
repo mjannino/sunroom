@@ -158,7 +158,18 @@ export function PageEditor({
                       className={`sr-secrow${s.id === selected ? " is-active" : ""}`}
                       onActivate={() => setSelected(s.id)}
                     >
-                      <span className="sr-secrow-label">
+                      <span
+                        className="sr-secrow-label"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelected(s.id);
+                          }
+                        }}
+                      >
                         {registry[s.type]?.label ?? s.type}
                       </span>
                       {sectionIssues(s).length > 0 ? (

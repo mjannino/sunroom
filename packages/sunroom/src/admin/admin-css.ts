@@ -197,6 +197,7 @@ export const ADMIN_CSS = `
 .sr-btn:focus-visible,.sr-tb:focus-visible,.sr-menu-item:focus-visible,
 .sr-grip:focus-visible,.sr-link:focus-visible,.sr-newpage:focus-visible,
 .sr-upload:focus-visible,.sr-nav-item:focus-visible,
-.sr-media-thumb:focus-visible,.sr-page:focus-visible{
+.sr-media-thumb:focus-visible,.sr-page:focus-visible,
+.sr-secrow-label:focus-visible{
   outline:2px solid var(--sr-accent);outline-offset:2px;}
 `;
