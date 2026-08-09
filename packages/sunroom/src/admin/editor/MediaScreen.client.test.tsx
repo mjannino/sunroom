@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { expect, it, vi } from "vitest";
 import { MediaScreen } from "./MediaScreen.js";
 import type { MediaActions, MediaItem, MediaResult } from "./types.js";
 import type { Page, Settings } from "../../store/types.js";
@@ -51,12 +57,61 @@ const pageUsingTwice: Page = {
   ],
 };
 
-it("edits alt text (calls updateMedia on blur)", async () => {
+function open(item = "old") {
+  fireEvent.click(
+    screen.getByRole("button", { name: new RegExp(`open ${item}`, "i") }),
+  );
+  return screen.getByRole("dialog");
+}
+
+it("renders a grid tile per image with its alt caption", () => {
+  render(
+    <MediaScreen
+      media={items}
+      pages={[]}
+      settings={settings}
+      actions={actions()}
+    />,
+  );
+  expect(screen.getByRole("button", { name: /open old/i })).toBeTruthy();
+  expect(screen.getByText("old")).toBeTruthy(); // tile caption
+});
+
+it("shows a Missing alt hint on a tile with empty alt", () => {
+  const noAlt: MediaItem[] = [{ ...items[0]!, alt: "" }];
+  render(
+    <MediaScreen
+      media={noAlt}
+      pages={[]}
+      settings={settings}
+      actions={actions()}
+    />,
+  );
+  expect(screen.getByText(/missing alt/i)).toBeTruthy();
+});
+
+it("opens a lightbox with the full-res image and filename when a tile is clicked", () => {
+  render(
+    <MediaScreen
+      media={items}
+      pages={[]}
+      settings={settings}
+      actions={actions()}
+    />,
+  );
+  const dialog = open();
+  const img = within(dialog).getByAltText("old") as HTMLImageElement;
+  expect(img.src).toContain("https://cdn/m1.png");
+  expect(within(dialog).getByText("m1.png")).toBeTruthy();
+});
+
+it("edits alt text in the lightbox (calls updateMedia on changed blur)", async () => {
   const acts = actions();
   render(
     <MediaScreen media={items} pages={[]} settings={settings} actions={acts} />,
   );
-  const alt = screen.getByDisplayValue("old");
+  const dialog = open();
+  const alt = within(dialog).getByDisplayValue("old");
   fireEvent.change(alt, { target: { value: "new alt" } });
   fireEvent.blur(alt);
   await waitFor(() =>
@@ -64,31 +119,31 @@ it("edits alt text (calls updateMedia on blur)", async () => {
   );
 });
 
-it("does not call updateMedia when alt text is unchanged on blur", async () => {
+it("does not call updateMedia when alt is unchanged on blur", async () => {
   const acts = actions();
   render(
     <MediaScreen media={items} pages={[]} settings={settings} actions={acts} />,
   );
-  const alt = screen.getByDisplayValue("old");
-  fireEvent.blur(alt);
+  const dialog = open();
+  fireEvent.blur(within(dialog).getByDisplayValue("old"));
   await new Promise((r) => setTimeout(r, 0));
   expect(acts.updateMedia).not.toHaveBeenCalled();
 });
 
-it("counts an image used twice on the same page as 1 page", async () => {
-  const acts = actions();
+it("shows distinct-page usage in the lightbox (used twice on one page = 1 page)", () => {
   render(
     <MediaScreen
       media={items}
       pages={[pageUsingTwice]}
       settings={settings}
-      actions={acts}
+      actions={actions()}
     />,
   );
-  expect(screen.getByText(/used on 1 page/i)).toBeTruthy();
+  const dialog = open();
+  expect(within(dialog).getByText(/used on 1 page/i)).toBeTruthy();
 });
 
-it("deletes an unused image after confirm", async () => {
+it("deletes an unused image from the lightbox after confirm, then closes", async () => {
   vi.stubGlobal(
     "confirm",
     vi.fn(() => true),
@@ -97,14 +152,14 @@ it("deletes an unused image after confirm", async () => {
   render(
     <MediaScreen media={items} pages={[]} settings={settings} actions={acts} />,
   );
-  fireEvent.click(
-    screen.getByRole("button", { name: /delete m1|delete old/i }),
-  );
+  const dialog = open();
+  fireEvent.click(within(dialog).getByRole("button", { name: /delete old/i }));
   await waitFor(() => expect(acts.deleteMedia).toHaveBeenCalledWith("m1"));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull()); // closed
 });
 
-it("shows usage and confirms before deleting an in-use image", async () => {
-  const confirmSpy = vi.fn(() => false); // cancel
+it("confirms with usage before deleting an in-use image; cancel blocks delete", () => {
+  const confirmSpy = vi.fn(() => false);
   vi.stubGlobal("confirm", confirmSpy);
   const acts = actions();
   render(
@@ -115,10 +170,30 @@ it("shows usage and confirms before deleting an in-use image", async () => {
       actions={acts}
     />,
   );
-  expect(screen.getByText(/used on 1 page/i)).toBeTruthy();
-  fireEvent.click(
-    screen.getByRole("button", { name: /delete m1|delete old/i }),
+  const dialog = open();
+  fireEvent.click(within(dialog).getByRole("button", { name: /delete old/i }));
+  expect(confirmSpy).toHaveBeenCalledWith(
+    expect.stringMatching(/about \(section: hero\)/i),
   );
-  expect(confirmSpy).toHaveBeenCalled();
-  expect(acts.deleteMedia).not.toHaveBeenCalled(); // cancelled
+  expect(acts.deleteMedia).not.toHaveBeenCalled();
+});
+
+it("closes the lightbox on backdrop click and on Escape", () => {
+  render(
+    <MediaScreen
+      media={items}
+      pages={[]}
+      settings={settings}
+      actions={actions()}
+    />,
+  );
+  // backdrop click
+  const dialog = open();
+  fireEvent.click(dialog.parentElement as HTMLElement); // the .sr-modal-backdrop
+  expect(screen.queryByRole("dialog")).toBeNull();
+  // Escape — keydown bubbles from body up to the window listener; fireEvent
+  // wraps the resulting state update in act() so it flushes before the assert.
+  open();
+  fireEvent.keyDown(document.body, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).toBeNull();
 });
