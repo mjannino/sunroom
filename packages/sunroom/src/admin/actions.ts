@@ -315,6 +315,26 @@ export async function deleteMediaAction(
   }
 }
 
+export async function updateMediaAction(
+  id: string,
+  patch: { alt: string },
+): Promise<MediaResult<Record<string, never>>> {
+  "use server";
+  const author = await authOr();
+  if (!author) return UNAUTH_MEDIA;
+  try {
+    const s = await store();
+    await s.updateMedia(id, { alt: patch.alt.trim() }, { author });
+    return { ok: true } as MediaResult<Record<string, never>>;
+  } catch {
+    return {
+      ok: false,
+      reason: "error",
+      message: "Could not update the media.",
+    };
+  }
+}
+
 export async function saveSettingsAction(
   settings: Settings,
 ): Promise<ActionResult> {

@@ -12,6 +12,7 @@ import {
   reorderPagesAction,
   savePageAction,
   saveSettingsAction,
+  updateMediaAction,
 } from "../actions.js";
 import { screenFromSegments, serializeRegistry } from "../editor-core.js";
 // Deliberately NOT a relative import: see the "sunroom/client" entry in
@@ -37,6 +38,7 @@ const mediaActions: MediaActions = {
   requestUpload: requestUploadAction,
   commitMedia: commitMediaAction,
   deleteMedia: deleteMediaAction,
+  updateMedia: updateMediaAction,
 };
 
 interface Props {

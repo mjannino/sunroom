@@ -13,6 +13,7 @@ interface MediaCtx {
   actions: MediaActions;
   add: (item: MediaItem) => void;
   remove: (id: string) => void;
+  update: (id: string, patch: { alt: string }) => void;
 }
 const Ctx = createContext<MediaCtx | null>(null);
 
@@ -32,6 +33,8 @@ export function MediaProvider({
       actions,
       add: (item) => setItems((xs) => [item, ...xs]),
       remove: (id) => setItems((xs) => xs.filter((x) => x.id !== id)),
+      update: (id, patch) =>
+        setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x))),
     }),
     [items, actions],
   );

@@ -39,6 +39,9 @@ function mediaActions(over: Partial<MediaActions> = {}): MediaActions {
     deleteMedia: vi.fn(
       async () => ({ ok: true }) as MediaResult<Record<string, never>>,
     ),
+    updateMedia: vi.fn(
+      async () => ({ ok: true }) as MediaResult<Record<string, never>>,
+    ),
     ...over,
   };
 }

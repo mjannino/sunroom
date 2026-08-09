@@ -397,6 +397,49 @@ describe("deleteMediaAction", () => {
   });
 });
 
+describe("updateMediaAction", () => {
+  it("updates alt when authed", async () => {
+    await commitMediaAction({
+      storageKey: "uploads/x.jpg",
+      filename: "p.jpg",
+      mime: "image/jpeg",
+      width: 1,
+      height: 1,
+      size: 1,
+      alt: "old",
+    });
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    const id = store.listMedia()[0]!.id;
+    const { updateMediaAction } = await import("./actions.js");
+    const res = await updateMediaAction(id, { alt: "new alt" });
+    expect(res.ok).toBe(true);
+    expect(store.getMedia(id)?.alt).toBe("new alt");
+  });
+
+  it("updates NOTHING when unauthenticated", async () => {
+    await commitMediaAction({
+      storageKey: "uploads/x.jpg",
+      filename: "p.jpg",
+      mime: "image/jpeg",
+      width: 1,
+      height: 1,
+      size: 1,
+      alt: "old",
+    });
+    const { getStore } = await import("../store/singleton.js");
+    const { resolveConfig } = await import("../core/registry.js");
+    const store = await getStore(resolveConfig({ sections: {} }));
+    const id = store.listMedia()[0]!.id;
+    getSession.mockResolvedValue(null);
+    const { updateMediaAction } = await import("./actions.js");
+    const res = await updateMediaAction(id, { alt: "new alt" });
+    expect(res).toMatchObject({ ok: false, reason: "unauthorized" });
+    expect(store.getMedia(id)?.alt).toBe("old");
+  });
+});
+
 describe("saveSettingsAction", () => {
   it("persists site identity when authed", async () => {
     const { saveSettingsAction } = await import("./actions.js");

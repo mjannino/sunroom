@@ -56,6 +56,10 @@ export interface MediaActions {
     input: CommitMediaInput,
   ): Promise<MediaResult<{ id: string; url: string }>>;
   deleteMedia(id: string): Promise<MediaResult<Record<string, never>>>;
+  updateMedia(
+    id: string,
+    patch: { alt: string },
+  ): Promise<MediaResult<Record<string, never>>>;
 }
 
 export interface MediaItem {
