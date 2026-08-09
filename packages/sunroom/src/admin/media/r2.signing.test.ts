@@ -33,4 +33,23 @@ describe("createPresignedUpload (real signing)", () => {
     );
     expect(signedHeaders.split(";")).toContain("content-length");
   });
+
+  it("does NOT bake a request checksum into the presigned PUT (R2 rejects the empty-body CRC32)", async () => {
+    // Recent @aws-sdk/client-s3 defaults requestChecksumCalculation to
+    // "when_supported", which stamps an empty-body checksum
+    // (x-amz-checksum-crc32=AAAAAA==) + x-amz-sdk-checksum-algorithm into the
+    // presigned URL. The browser then PUTs the REAL bytes, so R2 sees a checksum
+    // mismatch and returns 403. The client must opt out ("when_required") so no
+    // checksum params appear on a plain PutObject presign.
+    const { uploadUrl } = await createPresignedUpload(
+      "x.jpg",
+      "image/jpeg",
+      1234,
+    );
+    const params = new URL(uploadUrl).searchParams;
+    expect(params.has("x-amz-sdk-checksum-algorithm")).toBe(false);
+    expect(
+      [...params.keys()].some((k) => k.startsWith("x-amz-checksum-")),
+    ).toBe(false);
+  });
 });

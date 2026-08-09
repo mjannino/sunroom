@@ -70,6 +70,12 @@ function client(cfg: R2Config): S3Client {
       accessKeyId: cfg.accessKeyId,
       secretAccessKey: cfg.secretAccessKey,
     },
+    // Newer @aws-sdk/client-s3 defaults request checksums to WHEN_SUPPORTED,
+    // which stamps an empty-body CRC32 (x-amz-checksum-crc32=AAAAAA==) into a
+    // PRESIGNED PutObject URL. The browser then PUTs the real bytes, R2 sees a
+    // checksum mismatch, and rejects with 403. Opt out so a plain PutObject
+    // presign carries no checksum params (R2 has no per-part checksum need here).
+    requestChecksumCalculation: "WHEN_REQUIRED",
   });
 }
 
