@@ -93,7 +93,7 @@ export function useMediaUpload(): {
       name: f.name,
       status: "uploading" as const,
     }));
-    setUploads((prev) => [...rows, ...prev]);
+    setUploads(rows); // replace, not prepend — a new batch clears prior rows/errors
     void Promise.allSettled(list.map((f, i) => uploadOne(f, rows[i]!.id)));
   }
 
