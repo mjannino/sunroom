@@ -200,4 +200,13 @@ export const ADMIN_CSS = `
 .sr-media-thumb:focus-visible,.sr-page:focus-visible,
 .sr-secrow-label:focus-visible{
   outline:2px solid var(--sr-accent);outline-offset:2px;}
+
+/* media management screen — dropzone, upload rows, alt-editable media rows */
+.sr-dropzone{border:1px dashed var(--sr-border);border-radius:10px;padding:18px;text-align:center;margin-bottom:14px;}
+.sr-dropzone.is-over{border-color:var(--sr-accent);background:rgba(var(--sr-accent-rgb),.06);}
+.sr-uploads{list-style:none;margin:0 0 14px;padding:0;}
+.sr-upload-row{font-size:12px;color:var(--sr-muted);padding:3px 0;}
+.sr-media-manage{list-style:none;margin:0;padding:0;}
+.sr-media-mrow{display:flex;align-items:center;gap:12px;padding:8px;border:1px solid var(--sr-border);border-radius:9px;margin-bottom:8px;background:var(--sr-surface);}
+.sr-media-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
 `;
