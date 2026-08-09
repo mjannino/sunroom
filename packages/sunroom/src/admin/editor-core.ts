@@ -77,10 +77,12 @@ export function screenFromSegments(
 ):
   | { screen: "pages" }
   | { screen: "settings" }
+  | { screen: "media" }
   | { screen: "editor"; slug: string } {
   const seg = segments ?? [];
   if (seg.length === 0) return { screen: "pages" };
   if (seg[0] === "settings") return { screen: "settings" };
+  if (seg[0] === "media") return { screen: "media" };
   if (seg[0] === "pages")
     return { screen: "editor", slug: paramsToSlug(seg.slice(1)) };
   return { screen: "pages" };

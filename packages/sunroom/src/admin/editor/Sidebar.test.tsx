@@ -10,15 +10,13 @@ const pages: PageSummary[] = [
 ];
 
 describe("Sidebar", () => {
-  it("marks the Pages nav item active, and Media/Settings disabled with a Soon marker", () => {
+  it("marks the Pages nav item active, and no items disabled with a Soon marker", () => {
     const html = renderToStaticMarkup(
       <Sidebar pages={pages} activeSlug={null} activeScreen="pages" />,
     );
     expect(html).toMatch(/<a class="sr-nav-item is-active" href="\/admin">/);
-    expect(html).toContain('class="sr-nav-item is-disabled"');
     const soonCount = html.match(/class="sr-soon"/g)?.length ?? 0;
-    expect(soonCount).toBe(1);
-    expect(html).toContain(">Soon<");
+    expect(soonCount).toBe(0);
     expect(html).toContain(">Media<");
     expect(html).toContain(">Settings<");
   });
@@ -61,5 +59,13 @@ describe("Sidebar", () => {
     expect(html).toMatch(
       /class="sr-nav-item is-active" href="\/admin\/settings"/,
     );
+  });
+
+  it("links Media and marks it active on the media screen", () => {
+    const html = renderToStaticMarkup(
+      <Sidebar pages={pages} activeSlug={null} activeScreen="media" />,
+    );
+    expect(html).toContain('href="/admin/media"');
+    expect(html).toMatch(/class="sr-nav-item is-active" href="\/admin\/media"/);
   });
 });

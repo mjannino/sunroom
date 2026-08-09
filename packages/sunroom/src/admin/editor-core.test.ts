@@ -163,6 +163,12 @@ describe("screenFromSegments", () => {
       });
     });
   });
+
+  describe("media", () => {
+    it("routes ['media'] to the media screen", () => {
+      expect(screenFromSegments(["media"])).toEqual({ screen: "media" });
+    });
+  });
 });
 
 describe("editReducer", () => {

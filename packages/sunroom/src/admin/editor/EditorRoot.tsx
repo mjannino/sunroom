@@ -18,7 +18,12 @@ import { screenFromSegments, serializeRegistry } from "../editor-core.js";
 // Deliberately NOT a relative import: see the "sunroom/client" entry in
 // tsup.config.ts's `external` list for why EditorRoot (server-only) must
 // reach these 'use client' components through the public package specifier.
-import { PageEditor, PagesScreen, SettingsScreen } from "sunroom/client";
+import {
+  MediaScreen,
+  PageEditor,
+  PagesScreen,
+  SettingsScreen,
+} from "sunroom/client";
 // Sidebar IS a relative import: it's a server component (no 'use client'),
 // so it must stay in the same server-only chunk as EditorRoot — routing it
 // through "sunroom/client" instead would be wrong (see the tsup.config.ts
@@ -83,6 +88,21 @@ export async function EditorRoot({
         onSave={saveSettingsAction}
         media={media}
         mediaActions={mediaActions}
+      />,
+    );
+  }
+
+  if (screen.screen === "media") {
+    const fullPages = store
+      .listPages()
+      .map((s) => store.getPage(s.slug)?.page)
+      .filter((p): p is NonNullable<typeof p> => !!p);
+    return body(
+      <MediaScreen
+        media={media}
+        pages={fullPages}
+        settings={store.getSettings()}
+        actions={mediaActions}
       />,
     );
   }
