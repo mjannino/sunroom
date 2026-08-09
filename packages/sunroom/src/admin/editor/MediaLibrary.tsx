@@ -1,7 +1,7 @@
 "use client";
-import { useState, type ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
 import { useMedia } from "./MediaContext.js";
-import type { MediaItem } from "./types.js";
+import { useMediaUpload } from "./use-media-upload.js";
 
 interface Props {
   onPick: (id: string) => void;
@@ -9,68 +9,16 @@ interface Props {
 }
 
 export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
-  const { items, actions, add, remove } = useMedia();
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { items, actions, remove } = useMedia();
+  const { uploads, uploadFiles } = useMediaUpload();
+  const uploading = uploads.some((u) => u.status === "uploading");
+  const error = uploads.find((u) => u.status === "error")?.message ?? null;
 
-  async function handleUpload(e: ChangeEvent<HTMLInputElement>): Promise<void> {
-    const file = e.target.files?.[0];
+  function handleUpload(e: ChangeEvent<HTMLInputElement>): void {
+    const files = e.target.files;
     e.target.value = ""; // allow re-selecting the same file later
-    if (!file) return;
-
-    setUploading(true);
-    setError(null);
-    try {
-      const { width, height } = await readImageDimensions(file);
-
-      const uploadRes = await actions.requestUpload(
-        file.name,
-        file.type,
-        file.size,
-      );
-      if (!uploadRes.ok) {
-        setError(uploadRes.message);
-        return;
-      }
-
-      const putRes = await fetch(uploadRes.uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-      if (!putRes.ok) {
-        setError("The upload failed.");
-        return;
-      }
-
-      const commitRes = await actions.commitMedia({
-        storageKey: uploadRes.storageKey,
-        filename: file.name,
-        mime: file.type,
-        width,
-        height,
-        size: file.size,
-        alt: file.name,
-      });
-      if (!commitRes.ok) {
-        setError(commitRes.message);
-        return;
-      }
-
-      const item: MediaItem = {
-        id: commitRes.id,
-        url: commitRes.url,
-        width,
-        height,
-        alt: file.name,
-        filename: file.name,
-      };
-      add(item);
-    } catch {
-      setError("The upload failed.");
-    } finally {
-      setUploading(false);
-    }
+    if (!files || files.length === 0) return;
+    uploadFiles(files);
   }
 
   async function handleDelete(id: string): Promise<void> {
@@ -93,9 +41,7 @@ export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
           accept="image/*"
           aria-label="Upload image"
           disabled={uploading}
-          onChange={(e) => {
-            void handleUpload(e);
-          }}
+          onChange={handleUpload}
         />
       </label>
       {error ? (
@@ -129,24 +75,4 @@ export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
       </ul>
     </div>
   );
-}
-
-function readImageDimensions(
-  file: File,
-): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      const width = img.naturalWidth;
-      const height = img.naturalHeight;
-      URL.revokeObjectURL(objectUrl);
-      resolve({ width, height });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error("Could not read the image."));
-    };
-    img.src = objectUrl;
-  });
 }
