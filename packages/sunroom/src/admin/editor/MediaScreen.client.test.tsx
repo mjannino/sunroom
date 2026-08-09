@@ -40,6 +40,16 @@ const pageUsing: Page = {
   seo: {},
   sections: [{ id: "s1", type: "hero", props: { image: "m1" } }],
 };
+const pageUsingTwice: Page = {
+  slug: "about",
+  title: "About",
+  position: 1,
+  seo: {},
+  sections: [
+    { id: "s1", type: "hero", props: { image: "m1" } },
+    { id: "s2", type: "gallery", props: { images: ["m1"] } },
+  ],
+};
 
 it("edits alt text (calls updateMedia on blur)", async () => {
   const acts = actions();
@@ -52,6 +62,30 @@ it("edits alt text (calls updateMedia on blur)", async () => {
   await waitFor(() =>
     expect(acts.updateMedia).toHaveBeenCalledWith("m1", { alt: "new alt" }),
   );
+});
+
+it("does not call updateMedia when alt text is unchanged on blur", async () => {
+  const acts = actions();
+  render(
+    <MediaScreen media={items} pages={[]} settings={settings} actions={acts} />,
+  );
+  const alt = screen.getByDisplayValue("old");
+  fireEvent.blur(alt);
+  await new Promise((r) => setTimeout(r, 0));
+  expect(acts.updateMedia).not.toHaveBeenCalled();
+});
+
+it("counts an image used twice on the same page as 1 page", async () => {
+  const acts = actions();
+  render(
+    <MediaScreen
+      media={items}
+      pages={[pageUsingTwice]}
+      settings={settings}
+      actions={acts}
+    />,
+  );
+  expect(screen.getByText(/used on 1 page/i)).toBeTruthy();
 });
 
 it("deletes an unused image after confirm", async () => {

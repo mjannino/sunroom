@@ -35,7 +35,8 @@ function MediaScreenInner({
   const { uploads, uploadFiles } = useMediaUpload();
   const [dragOver, setDragOver] = useState(false);
 
-  async function saveAlt(id: string, alt: string): Promise<void> {
+  async function saveAlt(id: string, raw: string): Promise<void> {
+    const alt = raw.trim();
     const res = await actions.updateMedia(id, { alt });
     if (res.ok) update(id, { alt });
   }
@@ -91,6 +92,7 @@ function MediaScreenInner({
       <ul className="sr-media-manage">
         {items.map((item) => {
           const usage = findMediaUsage(pages, settings, item.id);
+          const pageCount = new Set(usage.map((u) => u.slug)).size;
           return (
             <li key={item.id} className="sr-media-mrow">
               <img
@@ -106,12 +108,15 @@ function MediaScreenInner({
                   <input
                     className="sr-input"
                     defaultValue={item.alt}
-                    onBlur={(e) => void saveAlt(item.id, e.target.value)}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== (item.alt ?? ""))
+                        void saveAlt(item.id, e.target.value);
+                    }}
                   />
                 </label>
                 <span className="sr-slug">
                   {usage.length > 0
-                    ? `Used on ${usage.length} page${usage.length > 1 ? "s" : ""}`
+                    ? `Used on ${pageCount} page${pageCount > 1 ? "s" : ""}`
                     : "Unused"}
                 </span>
               </div>
