@@ -493,4 +493,23 @@ describe("media", () => {
     expect(await git(dir, ["status", "--porcelain"])).toBe("");
     expect(store.listMedia()).toEqual([]);
   });
+
+  it("updates a media record's alt and persists across reload", async () => {
+    const store = await freshStore();
+    await store.addMedia(media(), { author: MEDIA_AUTHOR });
+    await store.updateMedia("m1", { alt: "New alt" }, { author: MEDIA_AUTHOR });
+    expect(store.getMedia("m1")?.alt).toBe("New alt");
+    expect(await git(dir, ["log", "-1", "--format=%s"])).toBe(
+      "Update media m1",
+    );
+    const reloaded = await freshStore();
+    expect(reloaded.getMedia("m1")?.alt).toBe("New alt");
+  });
+
+  it("throws NotFoundError when updating an unknown media id", async () => {
+    const store = await freshStore();
+    await expect(
+      store.updateMedia("nope", { alt: "x" }, { author: MEDIA_AUTHOR }),
+    ).rejects.toThrow(/nope/);
+  });
 });

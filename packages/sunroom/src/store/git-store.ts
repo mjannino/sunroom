@@ -323,6 +323,24 @@ export class GitStore implements ContentStore {
     });
   }
 
+  async updateMedia(
+    id: string,
+    patch: { alt?: string },
+    { author }: { author: Author },
+  ): Promise<void> {
+    return this.withLock(async () => {
+      const current = this.media.get(id);
+      if (!current) throw new NotFoundError(id);
+      const next = new Map(this.media);
+      next.set(id, {
+        ...current,
+        ...(patch.alt !== undefined ? { alt: patch.alt } : {}),
+      });
+      await this.writeMedia(next, author, `Update media ${id}`);
+      this.media = next;
+    });
+  }
+
   private async writeMedia(
     next: Map<string, MediaRecord>,
     author: Author,

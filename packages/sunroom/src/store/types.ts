@@ -90,6 +90,11 @@ export interface ContentStore {
   getMedia(id: string): MediaRecord | null;
   addMedia(record: MediaRecord, options: { author: Author }): Promise<void>;
   deleteMedia(id: string, options: { author: Author }): Promise<void>;
+  updateMedia(
+    id: string,
+    patch: { alt?: string },
+    options: { author: Author },
+  ): Promise<void>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
