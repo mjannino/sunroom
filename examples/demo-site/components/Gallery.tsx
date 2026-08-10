@@ -11,7 +11,7 @@ export default function Gallery({
   title?: string;
   images?: ImageValue[];
 }) {
-  const list = images ?? [];
+  const list = (images ?? []).filter(Boolean) as ImageValue[];
   const [open, setOpen] = useState<number | null>(null);
 
   useEffect(() => {
