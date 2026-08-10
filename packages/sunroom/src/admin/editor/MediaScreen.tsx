@@ -4,6 +4,7 @@ import type { MediaActions, MediaItem } from "./types.js";
 import type { Page, Settings } from "../../store/types.js";
 import { MediaProvider, useMedia } from "./MediaContext.js";
 import { useMediaUpload } from "./use-media-upload.js";
+import { useMediaDelete } from "./use-media-delete.js";
 import { findMediaUsage } from "../media-usage.js";
 
 export function MediaScreen({
@@ -18,7 +19,12 @@ export function MediaScreen({
   actions: MediaActions;
 }): React.ReactElement {
   return (
-    <MediaProvider items={media} actions={actions}>
+    <MediaProvider
+      items={media}
+      actions={actions}
+      pages={pages}
+      settings={settings}
+    >
       <MediaScreenInner pages={pages} settings={settings} />
     </MediaProvider>
   );
@@ -31,8 +37,9 @@ function MediaScreenInner({
   pages: Page[];
   settings: Settings;
 }): React.ReactElement {
-  const { items, actions, update, remove } = useMedia();
+  const { items, actions, update } = useMedia();
   const { uploads, uploadFiles } = useMediaUpload();
+  const del = useMediaDelete();
   const [dragOver, setDragOver] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const item = items.find((i) => i.id === selected) ?? null;
@@ -51,20 +58,6 @@ function MediaScreenInner({
     const alt = raw.trim();
     const res = await actions.updateMedia(id, { alt });
     if (res.ok) update(id, { alt });
-  }
-
-  async function del(target: MediaItem): Promise<void> {
-    const usage = findMediaUsage(pages, settings, target.id);
-    const msg =
-      usage.length > 0
-        ? `Used on: ${usage.map((u) => `${u.slug || "(home)"} (${u.where})`).join(", ")} — delete anyway?`
-        : "Delete this image?";
-    if (!confirm(msg)) return;
-    const res = await actions.deleteMedia(target.id);
-    if (res.ok) {
-      remove(target.id);
-      setSelected(null);
-    }
   }
 
   const usage = item ? findMediaUsage(pages, settings, item.id) : [];
@@ -175,7 +168,7 @@ function MediaScreenInner({
                 type="button"
                 className="sr-btn sr-btn-danger"
                 aria-label={`delete ${item.alt || item.filename}`}
-                onClick={() => void del(item)}
+                onClick={() => void del(item, () => setSelected(null))}
               >
                 Delete
               </button>

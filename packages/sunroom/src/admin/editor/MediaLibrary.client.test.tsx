@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MediaProvider } from "./MediaContext.js";
 import { MediaLibrary } from "./MediaLibrary.js";
 import type { MediaActions, MediaItem, MediaResult } from "./types.js";
+import type { Page } from "../../store/types.js";
 
 const ITEMS: MediaItem[] = [
   {
@@ -46,9 +47,18 @@ function mediaActions(over: Partial<MediaActions> = {}): MediaActions {
   };
 }
 
-function renderLibrary(actions = mediaActions(), onPick = vi.fn()) {
+function renderLibrary(
+  actions = mediaActions(),
+  onPick = vi.fn(),
+  pages: Page[] = [],
+) {
   render(
-    <MediaProvider items={ITEMS} actions={actions}>
+    <MediaProvider
+      items={ITEMS}
+      actions={actions}
+      pages={pages}
+      settings={{ seoDefaults: {}, redirects: [] }}
+    >
       <MediaLibrary onPick={onPick} onClose={vi.fn()} />
     </MediaProvider>,
   );
@@ -147,9 +157,35 @@ describe("MediaLibrary", () => {
     vi.unstubAllGlobals();
   });
 
-  it("deletes an item via the action", async () => {
+  it("deletes an unused item after a plain confirm (✕ button)", async () => {
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
     const { actions } = renderLibrary();
-    fireEvent.click(screen.getByRole("button", { name: /delete Photo A/i }));
+    const btn = screen.getByRole("button", { name: /delete Photo A/i });
+    expect(btn.textContent).toBe("✕");
+    fireEvent.click(btn);
     await waitFor(() => expect(actions.deleteMedia).toHaveBeenCalledWith("a"));
+    vi.unstubAllGlobals();
+  });
+
+  it("confirms with usage and blocks delete on cancel for an in-use image", () => {
+    const confirmSpy = vi.fn(() => false);
+    vi.stubGlobal("confirm", confirmSpy);
+    const usingPage: Page = {
+      slug: "about",
+      title: "About",
+      position: 1,
+      seo: {},
+      sections: [{ id: "s1", type: "hero", props: { image: "a" } }],
+    };
+    const { actions } = renderLibrary(mediaActions(), vi.fn(), [usingPage]);
+    fireEvent.click(screen.getByRole("button", { name: /delete Photo A/i }));
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/about \(section: hero\)/i),
+    );
+    expect(actions.deleteMedia).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });

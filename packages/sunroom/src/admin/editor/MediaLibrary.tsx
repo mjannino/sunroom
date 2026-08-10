@@ -2,6 +2,7 @@
 import type { ChangeEvent } from "react";
 import { useMedia } from "./MediaContext.js";
 import { useMediaUpload } from "./use-media-upload.js";
+import { useMediaDelete } from "./use-media-delete.js";
 
 interface Props {
   onPick: (id: string) => void;
@@ -9,8 +10,9 @@ interface Props {
 }
 
 export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
-  const { items, actions, remove } = useMedia();
+  const { items } = useMedia();
   const { uploads, uploadFiles } = useMediaUpload();
+  const del = useMediaDelete();
   const uploading = uploads.some((u) => u.status === "uploading");
   const error = uploads.find((u) => u.status === "error")?.message ?? null;
 
@@ -19,11 +21,6 @@ export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
     e.target.value = ""; // allow re-selecting the same file later
     if (!files || files.length === 0) return;
     uploadFiles(files);
-  }
-
-  async function handleDelete(id: string): Promise<void> {
-    const res = await actions.deleteMedia(id);
-    if (res.ok) remove(id);
   }
 
   return (
@@ -64,11 +61,9 @@ export function MediaLibrary({ onPick, onClose }: Props): React.ReactElement {
               type="button"
               aria-label={`delete ${item.alt}`}
               className="sr-media-del"
-              onClick={() => {
-                void handleDelete(item.id);
-              }}
+              onClick={() => void del(item)}
             >
-              Delete
+              ✕
             </button>
           </li>
         ))}

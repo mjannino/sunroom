@@ -69,6 +69,11 @@ export async function EditorRoot({
     alt: m.alt,
     filename: m.filename,
   }));
+  const fullPages = store
+    .listPages()
+    .map((s) => store.getPage(s.slug)?.page)
+    .filter((p): p is NonNullable<typeof p> => !!p);
+  const settings = store.getSettings();
 
   const body = (screenNode: ReactElement) => (
     <>
@@ -93,15 +98,11 @@ export async function EditorRoot({
   }
 
   if (screen.screen === "media") {
-    const fullPages = store
-      .listPages()
-      .map((s) => store.getPage(s.slug)?.page)
-      .filter((p): p is NonNullable<typeof p> => !!p);
     return body(
       <MediaScreen
         media={media}
         pages={fullPages}
-        settings={store.getSettings()}
+        settings={settings}
         actions={mediaActions}
       />,
     );
@@ -122,6 +123,8 @@ export async function EditorRoot({
       actions={actions}
       media={media}
       mediaActions={mediaActions}
+      pages={fullPages}
+      settings={settings}
     />,
   );
 }

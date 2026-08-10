@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import type { Page, SectionInstance } from "../../store/types.js";
+import type { Page, SectionInstance, Settings } from "../../store/types.js";
 import type { ValidationIssue } from "../../errors.js";
 import {
   defaultProps,
@@ -33,6 +33,8 @@ export function PageEditor({
   actions,
   media,
   mediaActions,
+  pages = [],
+  settings,
 }: {
   page: Page;
   version: string;
@@ -40,6 +42,8 @@ export function PageEditor({
   actions: EditorActions;
   media: MediaItem[];
   mediaActions: MediaActions;
+  pages?: Page[];
+  settings?: Settings;
 }): React.ReactElement {
   const [page, setPage] = useState(initial);
   // The last applied (saved) page — the target that "Revert" restores to.
@@ -105,7 +109,12 @@ export function PageEditor({
   }
 
   return (
-    <MediaProvider items={media} actions={mediaActions}>
+    <MediaProvider
+      items={media}
+      actions={mediaActions}
+      pages={pages}
+      settings={settings}
+    >
       <div data-screen="editor" className="sr-screen">
         <div className="sr-edhead">
           <button
