@@ -105,6 +105,11 @@ export function SortableRow({
     transition,
     cursor: "grab",
   };
+  // dnd-kit's KeyboardSensor claims Space/Enter as drag-activation keys and
+  // preventDefaults them. Spread on the whole row, that eats spaces typed into
+  // nested inputs. Only let a keydown start a drag when it did NOT originate in
+  // an interactive control (mirrors the RowPointerSensor pointer guard).
+  const { onKeyDown: dragKeyDown, ...dragListeners } = listeners ?? {};
   return (
     <div
       ref={setNodeRef}
@@ -112,8 +117,12 @@ export function SortableRow({
       className={className}
       aria-label={`drag ${label ?? id}`}
       onClick={onActivate}
+      onKeyDown={(e) => {
+        if (startsFromInteractiveTarget(e.target)) return;
+        dragKeyDown?.(e);
+      }}
       {...attributes}
-      {...listeners}
+      {...dragListeners}
     >
       <span className="sr-grip" aria-hidden="true">
         ⠿

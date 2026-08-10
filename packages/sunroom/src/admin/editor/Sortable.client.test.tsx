@@ -34,6 +34,21 @@ describe("SortableRow", () => {
     fireEvent.click(screen.getByText("act"));
     expect(onClick).toHaveBeenCalled();
   });
+
+  it("does not eat Space typed in an input inside the row (no preventDefault)", () => {
+    render(
+      <SortableList ids={["a"]} onReorder={vi.fn()}>
+        <SortableRow id="a" label="Row A">
+          <input aria-label="name" />
+        </SortableRow>
+      </SortableList>,
+    );
+    const input = screen.getByLabelText("name");
+    const prevented = !fireEvent.keyDown(input, { key: " ", code: "Space" });
+    // fireEvent returns false if any handler called preventDefault. The dnd
+    // keyboard sensor must NOT claim Space here, so the event is not prevented.
+    expect(prevented).toBe(false);
+  });
 });
 
 describe("startsFromInteractiveTarget", () => {
