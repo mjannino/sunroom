@@ -240,6 +240,17 @@ await store.savePage(
             "SM7/57 workhorses. Full list available on request.</p>",
         },
       },
+      {
+        id: "gear-gallery",
+        type: "gallery",
+        props: {
+          title: "The room",
+          images: Array.from(
+            { length: 6 },
+            (_, i) => `gear-${String(i + 1).padStart(2, "0")}`,
+          ),
+        },
+      },
     ],
   },
   { baseVersion: null, author: AUTHOR },

@@ -4,6 +4,7 @@ import CreditsGrid from "@/components/CreditsGrid";
 import Embed from "@/components/Embed";
 import Discography from "@/components/Discography";
 import Carousel from "@/components/Carousel";
+import Gallery from "@/components/Gallery";
 import Prose from "@/components/Prose";
 import Cta from "@/components/Cta";
 
@@ -82,6 +83,17 @@ export default createSunroom({
           }),
           { label: "Items" },
         ),
+      },
+    }),
+    gallery: defineSection({
+      label: "Gallery",
+      component: Gallery,
+      fields: {
+        title: f.text({ label: "Section title" }),
+        images: f.array(f.image({ label: "Image" }), {
+          label: "Images",
+          itemLabel: "Image",
+        }),
       },
     }),
     prose: defineSection({
