@@ -153,7 +153,8 @@ export const ADMIN_CSS = `
 .sr-media-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .sr-media-del{position:absolute;top:3px;right:3px;font-size:10px;background:rgba(var(--sr-bg-rgb),.8);
   border:1px solid var(--sr-border);border-radius:6px;color:var(--sr-accent-soft);padding:2px 5px;}
-.sr-upload{font-size:12px;color:var(--sr-accent-soft);}
+.sr-upload{font-size:12px;color:var(--sr-accent-soft);cursor:pointer;}
+.sr-upload input[type="file"]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 .sr-alert{color:var(--sr-accent-hi);font-size:12px;}
 
 /* preview — let the iframed site paint its own background; the surface tone is
