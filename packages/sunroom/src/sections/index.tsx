@@ -1,13 +1,14 @@
 import { defineSection } from "../core/registry.js";
 import { f } from "../core/fields.js";
-import Gallery from "./Gallery.js";
-import Hero from "./Hero.js";
-import Cta from "./Cta.js";
+import { Gallery, Hero, Cta } from "sunroom/sections/client";
 
-export { Gallery };
-export { Hero };
-export { Cta };
-export { SectionsProvider, useSections } from "./provider.js";
+export {
+  Gallery,
+  Hero,
+  Cta,
+  SectionsProvider,
+  useSections,
+} from "sunroom/sections/client";
 
 export const gallerySection = defineSection({
   label: "Gallery",

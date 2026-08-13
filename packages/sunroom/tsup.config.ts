@@ -7,9 +7,29 @@ export default defineConfig({
     client: "src/client.ts",
     actions: "src/actions.ts",
     sections: "src/sections/index.tsx",
+    "sections-client": "src/sections/client.tsx",
   },
   format: ["esm"],
-  dts: true,
+  dts: {
+    // Unlike "sunroom/client" (only reached transitively, via EditorRoot.tsx,
+    // and never type-checked as part of the dts rollup graph because nothing
+    // exported from the "index" entry structurally needs its inferred type),
+    // "sunroom/sections/client" is imported directly by src/sections/index.tsx
+    // — which is ITSELF the "sections" tsup entry, so the dts build always
+    // type-checks it as a root file. At that point dist/sections-client.d.ts
+    // doesn't exist yet (same build is producing it), so plain package.json
+    // "exports" resolution 404s and the dts step fails with TS7016. This
+    // `paths` mapping is type-check-only (it does not affect the emitted JS,
+    // which keeps the real "sunroom/sections/client" specifier unbundled —
+    // see the `external` entry below): it tells the dts compiler to resolve
+    // the specifier straight to the source file, which is already part of
+    // the same multi-entry dts Program (as the "sections-client" entry).
+    compilerOptions: {
+      paths: {
+        "sunroom/sections/client": ["./src/sections/client.tsx"],
+      },
+    },
+  },
   clean: true,
   splitting: true,
   treeshake: false, // REQUIRED: rollup treeshake strips re-added directives
@@ -36,6 +56,7 @@ export default defineConfig({
     "arctic",
     "server-only",
     "sunroom/client",
+    "sunroom/sections/client",
   ],
   esbuildPlugins: [
     preserveDirectivesPlugin({

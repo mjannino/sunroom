@@ -22,6 +22,10 @@
     "./sections": {
       "types": "./dist/sections.d.ts",
       "import": "./dist/sections.js"
+    },
+    "./sections/client": {
+      "types": "./dist/sections-client.d.ts",
+      "import": "./dist/sections-client.js"
     }
   },
   "files": [

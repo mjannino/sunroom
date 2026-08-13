@@ -7,6 +7,9 @@ export default defineConfig({
       "server-only": fileURLToPath(
         new URL("./src/test/empty.ts", import.meta.url),
       ),
+      "sunroom/sections/client": fileURLToPath(
+        new URL("./src/sections/client.tsx", import.meta.url),
+      ),
     },
   },
   test: {
