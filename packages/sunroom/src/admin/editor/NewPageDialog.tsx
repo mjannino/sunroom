@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { EditorActions } from "./types.js";
 
 export function NewPageDialog({
@@ -17,6 +17,16 @@ export function NewPageDialog({
   const [seoDesc, setSeoDesc] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!open) {
+      setTitle("");
+      setSlug("");
+      setSeoTitle("");
+      setSeoDesc("");
+      setError(null);
+      setBusy(false);
+    }
+  }, [open]);
   if (!open) return null;
 
   async function submit(e: React.FormEvent) {
