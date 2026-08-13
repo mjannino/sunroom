@@ -21,6 +21,16 @@
   --font-label: var(--font-mono), ui-monospace, monospace;
 
   --measure: 68rem; /* content max-width */
+
+  /* --sr-* tokens read by the packaged sunroom/sections components — aliased
+     to the palette above so they stay in sync automatically. */
+  --sr-accent: var(--accent);
+  --sr-on-accent: var(--on-accent);
+  --sr-text: var(--text);
+  --sr-muted: var(--muted);
+  --sr-bg: var(--bg);
+  --sr-measure: var(--measure);
+  --sr-font-label: var(--font-label);
 }
 
 * {

@@ -1,30 +1,14 @@
 import { createSunroom, defineSection, f } from "sunroom";
-import Hero from "@/components/Hero";
+import { gallerySection, heroSection, ctaSection } from "sunroom/sections";
 import CreditsGrid from "@/components/CreditsGrid";
 import Embed from "@/components/Embed";
 import Discography from "@/components/Discography";
 import Carousel from "@/components/Carousel";
-import Gallery from "@/components/Gallery";
 import Prose from "@/components/Prose";
-import Cta from "@/components/Cta";
 
 export default createSunroom({
   sections: {
-    hero: defineSection({
-      label: "Hero",
-      component: Hero,
-      fields: {
-        image: f.image({ label: "Image", required: true }),
-        text: f.text({ label: "Text" }),
-        placement: f.select({
-          label: "Text placement",
-          options: [
-            { value: "overlay", label: "Overlay on image" },
-            { value: "above", label: "Above image" },
-          ],
-        }),
-      },
-    }),
+    hero: heroSection,
     creditsGrid: defineSection({
       label: "Credits grid",
       component: CreditsGrid,
@@ -85,17 +69,7 @@ export default createSunroom({
         ),
       },
     }),
-    gallery: defineSection({
-      label: "Gallery",
-      component: Gallery,
-      fields: {
-        title: f.text({ label: "Section title" }),
-        images: f.array(f.image({ label: "Image" }), {
-          label: "Images",
-          itemLabel: "Image",
-        }),
-      },
-    }),
+    gallery: gallerySection,
     prose: defineSection({
       label: "Prose",
       component: Prose,
@@ -121,23 +95,6 @@ export default createSunroom({
         ),
       },
     }),
-    cta: defineSection({
-      label: "Call to action",
-      component: Cta,
-      fields: {
-        label: f.text({ label: "Label" }),
-        action: f.select({
-          label: "Action",
-          options: [
-            { value: "contact", label: "Open contact form" },
-            { value: "link", label: "Go to link" },
-          ],
-        }),
-        href: f.link({
-          label: "Link",
-          showWhen: { field: "action", equals: "link" },
-        }),
-      },
-    }),
+    cta: ctaSection,
   },
 });

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import sunroom from "@/sunroom.config";
 import ContactModalProvider from "@/components/ContactModalProvider";
+import SectionsContactBridge from "@/components/SectionsContactBridge";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -15,17 +16,19 @@ export default async function SiteLayout({
   const site = await sunroom.getSettings();
   return (
     <ContactModalProvider>
-      <SiteHeader name={site.name} header={site.header} />
-      <main
-        style={{
-          maxWidth: "var(--measure)",
-          margin: "0 auto",
-          padding: "0 2rem",
-        }}
-      >
-        {children}
-      </main>
-      <SiteFooter />
+      <SectionsContactBridge>
+        <SiteHeader name={site.name} header={site.header} />
+        <main
+          style={{
+            maxWidth: "var(--measure)",
+            margin: "0 auto",
+            padding: "0 2rem",
+          }}
+        >
+          {children}
+        </main>
+        <SiteFooter />
+      </SectionsContactBridge>
     </ContactModalProvider>
   );
 }
