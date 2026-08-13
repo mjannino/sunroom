@@ -20,4 +20,10 @@ export const SECTIONS_CSS = `
 .srs-lightbox-prev{left:1rem;}
 .srs-lightbox-next{right:1rem;}
 @media (max-width:460px){.srs-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));}}
+
+.srs-hero{margin:3rem 0;}
+.srs-hero .srs-label{text-align:center;margin:0 0 1.25rem;}
+.srs-hero-frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;}
+.srs-hero-overlay{position:absolute;left:0;right:0;bottom:1.25rem;text-align:center;margin:0;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.55);}
+.srs-hero-img{width:100%;height:100%;object-fit:cover;}
 `;
