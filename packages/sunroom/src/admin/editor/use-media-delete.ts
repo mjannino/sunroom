@@ -21,7 +21,7 @@ export function useMediaDelete(): (
     const msg =
       usage.length > 0
         ? `Used on: ${usage.map((u) => `${u.slug || "(home)"} (${u.where})`).join(", ")} — delete anyway?`
-        : "Delete this image?";
+        : `Delete "${item.filename}"?`;
     if (!confirm(msg)) return;
     const res = await actions.deleteMedia(item.id);
     if (res.ok) {

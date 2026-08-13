@@ -61,7 +61,7 @@ it("reveals an image picker when the header type is Image", () => {
     />,
   );
   expect(screen.queryByRole("button", { name: /choose image/i })).toBeNull();
-  fireEvent.change(screen.getByLabelText(/website header/i), {
+  fireEvent.change(screen.getByLabelText(/type/i), {
     target: { value: "image" },
   });
   expect(screen.getByRole("button", { name: /choose image/i })).toBeTruthy();

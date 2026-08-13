@@ -142,7 +142,7 @@ export const ADMIN_CSS = `
 
 /* media dialog */
 .sr-modal-backdrop{position:fixed;inset:0;z-index:50;display:flex;align-items:center;
-  justify-content:center;background:rgba(0,0,0,.55);padding:20px;}
+  justify-content:center;background:rgba(var(--sr-bg-rgb),.72);padding:20px;}
 .sr-dialog{background:var(--sr-surface);border:1px solid var(--sr-border);border-radius:12px;
   padding:16px;max-width:640px;color:var(--sr-text);}
 .sr-dialog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}

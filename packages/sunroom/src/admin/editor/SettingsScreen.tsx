@@ -70,7 +70,7 @@ export function SettingsScreen({
           <legend className="sr-legend">Website header</legend>
           <div className="sr-field">
             <label className="sr-flabel">
-              Website header{" "}
+              Type{" "}
               <select
                 className="sr-input"
                 value={headerType}

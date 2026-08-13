@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 import { useMediaUpload } from "./use-media-upload.js";
 import { MediaProvider } from "./MediaContext.js";
 import type { MediaActions, MediaResult } from "./types.js";
