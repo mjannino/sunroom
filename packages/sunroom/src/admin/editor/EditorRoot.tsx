@@ -59,6 +59,21 @@ export async function EditorRoot({
   const store = await getStore(resolveConfig(config));
   const screen = screenFromSegments(segments);
 
+  const body = (screenNode: ReactElement) => (
+    <>
+      <Sidebar
+        pages={store.listPages()}
+        activeSlug={screen.screen === "editor" ? screen.slug : null}
+        activeScreen={screen.screen}
+      />
+      <main className="sr-main">{screenNode}</main>
+    </>
+  );
+
+  if (screen.screen === "pages") {
+    return body(<PagesScreen pages={store.listPages()} actions={actions} />);
+  }
+
   const base = process.env.R2_PUBLIC_BASE;
   const resolve = makeResolveMedia(store.listMedia(), base);
   const media = store.listMedia().map((m) => ({
@@ -74,17 +89,6 @@ export async function EditorRoot({
     .map((s) => store.getPage(s.slug)?.page)
     .filter((p): p is NonNullable<typeof p> => !!p);
   const settings = store.getSettings();
-
-  const body = (screenNode: ReactElement) => (
-    <>
-      <Sidebar
-        pages={store.listPages()}
-        activeSlug={screen.screen === "editor" ? screen.slug : null}
-        activeScreen={screen.screen}
-      />
-      <main className="sr-main">{screenNode}</main>
-    </>
-  );
 
   if (screen.screen === "settings") {
     return body(
@@ -106,10 +110,6 @@ export async function EditorRoot({
         actions={mediaActions}
       />,
     );
-  }
-
-  if (screen.screen === "pages") {
-    return body(<PagesScreen pages={store.listPages()} actions={actions} />);
   }
 
   const entry = store.getPage(screen.slug);
