@@ -6,6 +6,7 @@ export default defineConfig({
     index: "src/index.ts",
     client: "src/client.ts",
     actions: "src/actions.ts",
+    sections: "src/sections/index.tsx",
   },
   format: ["esm"],
   dts: true,

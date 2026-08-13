@@ -2,8 +2,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { f } from "../core/fields.js";
 import { defineSection, resolveConfig } from "../core/registry.js";
+import { SECTIONS_CSS } from "../sections/sections-css.js";
 import type { SectionInstance } from "../store/types.js";
 import { Sections } from "./sections.js";
+
+// `Sections` injects the section-library CSS once, as the fragment's first
+// child. Match that exactly so these tests still assert the rest of the
+// rendered output precisely, rather than weakening them to `toContain`.
+const STYLE_TAG = `<style>${SECTIONS_CSS}</style>`;
 
 function Hero({ heading }: { heading: string }) {
   return <h1>{heading}</h1>;
@@ -42,13 +48,15 @@ describe("Sections", () => {
     const html = renderToStaticMarkup(
       <Sections config={config} sections={sections} />,
     );
-    expect(html).toBe("<h1>Welcome</h1><blockquote>Lovely</blockquote>");
+    expect(html).toBe(
+      `${STYLE_TAG}<h1>Welcome</h1><blockquote>Lovely</blockquote>`,
+    );
   });
 
   it("renders nothing for an empty section list", () => {
     expect(
       renderToStaticMarkup(<Sections config={config} sections={[]} />),
-    ).toBe("");
+    ).toBe(STYLE_TAG);
   });
 
   it("skips an unregistered section type instead of crashing the page", () => {
@@ -62,7 +70,7 @@ describe("Sections", () => {
       <Sections config={config} sections={sections} />,
     );
 
-    expect(html).toBe("<h1>Welcome</h1>");
+    expect(html).toBe(`${STYLE_TAG}<h1>Welcome</h1>`);
     expect(warn).toHaveBeenCalledOnce();
     expect(warn.mock.calls[0]?.[0]).toContain("deleted-component");
     expect(warn.mock.calls[0]?.[0]).toContain("sunroom check");

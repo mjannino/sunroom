@@ -5,9 +5,15 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { f } from "./core/fields.js";
 import { defineSection } from "./core/registry.js";
+import { SECTIONS_CSS } from "./sections/sections-css.js";
 import { GitStore } from "./store/git-store.js";
 import { resetStores } from "./store/singleton.js";
 import { createSunroom } from "./sunroom.js";
+
+// `Sections` (rendered inside `Page`) injects the section-library CSS once,
+// as the fragment's first child. Match that exactly so these tests still
+// assert the rest of the rendered output precisely.
+const STYLE_TAG = `<style>${SECTIONS_CSS}</style>`;
 
 function Hero({ heading }: { heading: string }) {
   return <h1>{heading}</h1>;
@@ -84,14 +90,14 @@ describe("generateStaticParams", () => {
 describe("Page", () => {
   it("renders the home page for an absent slug param", async () => {
     const element = await sunroom().Page({ params: Promise.resolve({}) });
-    expect(renderToStaticMarkup(element)).toBe("<h1>Welcome</h1>");
+    expect(renderToStaticMarkup(element)).toBe(`${STYLE_TAG}<h1>Welcome</h1>`);
   });
 
   it("renders a page by slug", async () => {
     const element = await sunroom().Page({
       params: Promise.resolve({ slug: ["about"] }),
     });
-    expect(renderToStaticMarkup(element)).toBe("<h1>About</h1>");
+    expect(renderToStaticMarkup(element)).toBe(`${STYLE_TAG}<h1>About</h1>`);
   });
 
   it("calls notFound() for an unknown slug", async () => {

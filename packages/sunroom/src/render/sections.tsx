@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { SunroomConfig } from "../core/registry.js";
+import { SECTIONS_CSS } from "../sections/sections-css.js";
 import type { SectionInstance } from "../store/types.js";
 import { resolveMediaInProps, type ResolveMedia } from "./media.js";
 
@@ -24,6 +25,7 @@ export function Sections({
 }: SectionsProps): ReactElement {
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: SECTIONS_CSS }} />
       {sections.map((section) => {
         const definition = config.sections[section.type];
 

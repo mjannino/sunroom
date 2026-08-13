@@ -18,6 +18,10 @@
     "./actions": {
       "types": "./dist/actions.d.ts",
       "import": "./dist/actions.js"
+    },
+    "./sections": {
+      "types": "./dist/sections.d.ts",
+      "import": "./dist/sections.js"
     }
   },
   "files": [
