@@ -26,4 +26,8 @@ export const SECTIONS_CSS = `
 .srs-hero-frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;}
 .srs-hero-overlay{position:absolute;left:0;right:0;bottom:1.25rem;text-align:center;margin:0;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.55);}
 .srs-hero-img{width:100%;height:100%;object-fit:cover;}
+
+.srs-cta{display:grid;place-items:center;margin:5rem 0;}
+.srs-cta-btn{font-family:var(--sr-font-label,ui-monospace,monospace);text-transform:uppercase;letter-spacing:.14em;font-size:.95rem;cursor:pointer;text-decoration:none;padding:1.1rem 2.5rem;background:var(--sr-text,#f3e7e1);color:var(--sr-bg,#181210);border:0;}
+.srs-cta-btn:hover{background:var(--sr-accent,#ff6f52);color:var(--sr-on-accent,#2a0f08);}
 `;
