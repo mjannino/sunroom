@@ -1,6 +1,6 @@
 import { defineSection } from "../core/registry.js";
 import { f } from "../core/fields.js";
-import { Gallery, Hero, Cta } from "sunroom/sections/client";
+import { Gallery, Hero, Cta, Carousel } from "sunroom/sections/client";
 import CreditsGrid from "./CreditsGrid.js";
 import Discography from "./Discography.js";
 
@@ -8,6 +8,7 @@ export {
   Gallery,
   Hero,
   Cta,
+  Carousel,
   SectionsProvider,
   useSections,
 } from "sunroom/sections/client";
@@ -59,6 +60,22 @@ export const ctaSection = defineSection({
       label: "Link",
       showWhen: { field: "action", equals: "link" },
     }),
+  },
+});
+
+export const carouselSection = defineSection({
+  label: "Carousel",
+  component: Carousel,
+  fields: {
+    title: f.text({ label: "Section title" }),
+    items: f.array(
+      f.object({
+        image: f.image({ label: "Image" }),
+        name: f.text({ label: "Name" }),
+        note: f.text({ label: "Note" }),
+      }),
+      { label: "Items" },
+    ),
   },
 });
 

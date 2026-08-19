@@ -9,6 +9,7 @@ import {
   ctaSection,
   creditsGridSection,
   discographySection,
+  carouselSection,
 } from "./index.js";
 
 describe("section definitions", () => {
@@ -76,5 +77,15 @@ describe("section definitions", () => {
     };
     expect(entries.type).toBe("array");
     expect(entries.itemLabel).toBe("Entry");
+  });
+  it("carouselSection has title + items(array of object)", () => {
+    expect(carouselSection.label).toBe("Carousel");
+    expect(Object.keys(carouselSection.fields)).toEqual(["title", "items"]);
+    const items = carouselSection.fields.items as {
+      type: string;
+      of: { type: string; fields: Record<string, unknown> };
+    };
+    expect(items.type).toBe("array");
+    expect(Object.keys(items.of.fields)).toEqual(["image", "name", "note"]);
   });
 });
