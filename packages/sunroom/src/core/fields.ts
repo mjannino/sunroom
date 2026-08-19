@@ -11,7 +11,7 @@ export interface ImageValue {
   alt?: string;
 }
 
-interface Base {
+export interface Base {
   label?: string;
   required?: boolean;
   /** Show this field only when a SIBLING field equals a value. */
