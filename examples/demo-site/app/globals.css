@@ -30,6 +30,10 @@
   --sr-muted: var(--muted);
   --sr-bg: var(--bg);
   --sr-font-label: var(--font-label);
+  --sr-surface: var(--surface-2);
+  --sr-border: var(--border);
+  --sr-font-heading: var(--font-heading);
+  --sr-font-prose: var(--font-prose);
 }
 
 * {
