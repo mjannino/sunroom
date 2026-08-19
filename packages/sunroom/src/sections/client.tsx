@@ -14,3 +14,4 @@ export { default as Cta } from "./Cta.js";
 export { default as Carousel } from "./Carousel.js";
 export { default as Embed } from "./Embed.js";
 export { SectionsProvider, useSections } from "./provider.js";
+export { ContactButton } from "./ContactButton.js";

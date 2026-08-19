@@ -11,6 +11,8 @@ import {
   discographySection,
   carouselSection,
   embedSection,
+  proseSection,
+  proseWithSidebarSection,
 } from "./index.js";
 
 describe("section definitions", () => {
@@ -105,6 +107,33 @@ describe("section definitions", () => {
       "spotify",
       "youtube",
       "soundcloud",
+    ]);
+  });
+  it("proseSection has kicker + richText body", () => {
+    expect(proseSection.label).toBe("Prose");
+    expect(Object.keys(proseSection.fields)).toEqual(["kicker", "body"]);
+    expect((proseSection.fields.body as { type: string }).type).toBe(
+      "richText",
+    );
+  });
+
+  it("proseWithSidebarSection adds a sidebar object with four fields", () => {
+    expect(proseWithSidebarSection.label).toBe("Prose with sidebar");
+    expect(Object.keys(proseWithSidebarSection.fields)).toEqual([
+      "kicker",
+      "body",
+      "sidebar",
+    ]);
+    const sidebar = proseWithSidebarSection.fields.sidebar as {
+      type: string;
+      fields: Record<string, unknown>;
+    };
+    expect(sidebar.type).toBe("object");
+    expect(Object.keys(sidebar.fields)).toEqual([
+      "contactBlurb",
+      "ctaLabel",
+      "bookingHeading",
+      "bookingBody",
     ]);
   });
 });

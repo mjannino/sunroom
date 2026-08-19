@@ -3,6 +3,7 @@ import { f } from "../core/fields.js";
 import { Gallery, Hero, Cta, Carousel, Embed } from "sunroom/sections/client";
 import CreditsGrid from "./CreditsGrid.js";
 import Discography from "./Discography.js";
+import Prose from "./Prose.js";
 
 export {
   Gallery,
@@ -16,6 +17,7 @@ export {
 
 export { default as CreditsGrid } from "./CreditsGrid.js";
 export { default as Discography } from "./Discography.js";
+export { default as Prose } from "./Prose.js";
 
 export const gallerySection = defineSection({
   label: "Gallery",
@@ -124,6 +126,33 @@ export const discographySection = defineSection({
         url: f.link({ label: "Link (optional)" }),
       }),
       { label: "Entries", itemLabel: "Entry" },
+    ),
+  },
+});
+
+export const proseSection = defineSection({
+  label: "Prose",
+  component: Prose,
+  fields: {
+    kicker: f.text({ label: "Kicker" }),
+    body: f.richText({ label: "Body" }),
+  },
+});
+
+export const proseWithSidebarSection = defineSection({
+  label: "Prose with sidebar",
+  component: Prose,
+  fields: {
+    kicker: f.text({ label: "Kicker" }),
+    body: f.richText({ label: "Body" }),
+    sidebar: f.object(
+      {
+        contactBlurb: f.textarea({ label: "Contact blurb" }),
+        ctaLabel: f.text({ label: "CTA label" }),
+        bookingHeading: f.text({ label: "Booking heading" }),
+        bookingBody: f.richText({ label: "Booking body" }),
+      },
+      { label: "Sidebar" },
     ),
   },
 });
