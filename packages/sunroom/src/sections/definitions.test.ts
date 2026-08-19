@@ -3,7 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 // it so this pure descriptor test loads under vitest (no package test uses
 // next/image today, so it may not resolve at runtime here).
 vi.mock("next/image", () => ({ default: () => null }));
-import { gallerySection, heroSection, ctaSection } from "./index.js";
+import {
+  gallerySection,
+  heroSection,
+  ctaSection,
+  creditsGridSection,
+  discographySection,
+} from "./index.js";
 
 describe("section definitions", () => {
   it("gallerySection has the expected label + fields", () => {
@@ -39,5 +45,36 @@ describe("section definitions", () => {
         equals: "link",
       },
     );
+  });
+  it("creditsGridSection has title + records(array of object)", () => {
+    expect(creditsGridSection.label).toBe("Credits grid");
+    expect(Object.keys(creditsGridSection.fields)).toEqual([
+      "title",
+      "records",
+    ]);
+    const records = creditsGridSection.fields.records as {
+      type: string;
+      of: { type: string; fields: Record<string, unknown> };
+    };
+    expect(records.type).toBe("array");
+    expect(records.of.type).toBe("object");
+    expect(Object.keys(records.of.fields)).toEqual([
+      "cover",
+      "band",
+      "release",
+    ]);
+  });
+  it("discographySection has title + entries(array) with itemLabel", () => {
+    expect(discographySection.label).toBe("Discography list");
+    expect(Object.keys(discographySection.fields)).toEqual([
+      "title",
+      "entries",
+    ]);
+    const entries = discographySection.fields.entries as {
+      type: string;
+      itemLabel?: string;
+    };
+    expect(entries.type).toBe("array");
+    expect(entries.itemLabel).toBe("Entry");
   });
 });

@@ -1,6 +1,8 @@
 import { defineSection } from "../core/registry.js";
 import { f } from "../core/fields.js";
 import { Gallery, Hero, Cta } from "sunroom/sections/client";
+import CreditsGrid from "./CreditsGrid.js";
+import Discography from "./Discography.js";
 
 export {
   Gallery,
@@ -9,6 +11,9 @@ export {
   SectionsProvider,
   useSections,
 } from "sunroom/sections/client";
+
+export { default as CreditsGrid } from "./CreditsGrid.js";
+export { default as Discography } from "./Discography.js";
 
 export const gallerySection = defineSection({
   label: "Gallery",
@@ -54,5 +59,36 @@ export const ctaSection = defineSection({
       label: "Link",
       showWhen: { field: "action", equals: "link" },
     }),
+  },
+});
+
+export const creditsGridSection = defineSection({
+  label: "Credits grid",
+  component: CreditsGrid,
+  fields: {
+    title: f.text({ label: "Section title" }),
+    records: f.array(
+      f.object({
+        cover: f.image({ label: "Cover" }),
+        band: f.text({ label: "Band" }),
+        release: f.text({ label: "Release" }),
+      }),
+      { label: "Records" },
+    ),
+  },
+});
+
+export const discographySection = defineSection({
+  label: "Discography list",
+  component: Discography,
+  fields: {
+    title: f.text({ label: "Section title" }),
+    entries: f.array(
+      f.object({
+        label: f.text({ label: "Label" }),
+        url: f.link({ label: "Link (optional)" }),
+      }),
+      { label: "Entries", itemLabel: "Entry" },
+    ),
   },
 });
