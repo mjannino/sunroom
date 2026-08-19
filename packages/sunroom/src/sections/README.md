@@ -1,6 +1,6 @@
 # Section library
 
-Built-in, ready-to-register sections: `Gallery`, `Hero`, `Cta`. Import the
+Built-in, ready-to-register sections: `Gallery`, `Hero`, `Cta`, `CreditsGrid`, `Discography`, `Carousel`, `Embed`, `Prose`. Import the
 package export `sunroom/sections` (built from this directory's `index.tsx`)
 rather than reaching into `src/sections/*` directly.
 
@@ -42,14 +42,18 @@ still render with sensible (dark, warm) defaults. Set the properties on
 whatever ancestor wraps your rendered page (e.g. `:root` or a theme wrapper)
 to restyle the sections without touching component code.
 
-| Token             | Fallback                  | Used for                                                               |
-| ----------------- | ------------------------- | ---------------------------------------------------------------------- |
-| `--sr-font-label` | `ui-monospace, monospace` | Section label typography (`.srs-label`) and the CTA button font        |
-| `--sr-muted`      | `#a98a7e`                 | Section label color                                                    |
-| `--sr-text`       | `#f3e7e1`                 | Gallery lightbox close/nav icon color; CTA button's default background |
-| `--sr-bg`         | `#181210`                 | CTA button's default text color                                        |
-| `--sr-accent`     | `#ff6f52`                 | CTA button's hover background                                          |
-| `--sr-on-accent`  | `#2a0f08`                 | CTA button's hover text color                                          |
+| Token               | Fallback                  | Used for                                                               |
+| ------------------- | ------------------------- | ---------------------------------------------------------------------- |
+| `--sr-font-label`   | `ui-monospace, monospace` | Section label typography (`.srs-label`) and the CTA button font        |
+| `--sr-muted`        | `#a98a7e`                 | Section label color                                                    |
+| `--sr-text`         | `#f3e7e1`                 | Gallery lightbox close/nav icon color; CTA button's default background |
+| `--sr-bg`           | `#181210`                 | CTA button's default text color                                        |
+| `--sr-accent`       | `#ff6f52`                 | CTA button's hover background                                          |
+| `--sr-on-accent`    | `#2a0f08`                 | CTA button's hover text color                                          |
+| `--sr-surface`      | `#2c1e1a`                 | Inset surface (embed player background)                                |
+| `--sr-border`       | `#3a2820`                 | Hairline borders (discography, carousel, prose rail)                   |
+| `--sr-font-heading` | `Georgia, serif`          | Heading/label serif for card + list text                               |
+| `--sr-font-prose`   | `Georgia, serif`          | Body serif for prose                                                   |
 
 ## Wiring the CTA's contact action
 
