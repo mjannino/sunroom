@@ -5,6 +5,9 @@ import Carousel from "./Carousel.js";
 
 vi.mock("next/image", () => ({ default: () => null }));
 
+// jsdom doesn't implement Element.scrollBy; define a no-op so vi.spyOn can wrap it.
+HTMLElement.prototype.scrollBy ??= () => {};
+
 afterEach(() => vi.restoreAllMocks());
 
 it("prev/next buttons scroll the track", () => {
