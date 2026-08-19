@@ -1,6 +1,6 @@
 import { defineSection } from "../core/registry.js";
 import { f } from "../core/fields.js";
-import { Gallery, Hero, Cta, Carousel } from "sunroom/sections/client";
+import { Gallery, Hero, Cta, Carousel, Embed } from "sunroom/sections/client";
 import CreditsGrid from "./CreditsGrid.js";
 import Discography from "./Discography.js";
 
@@ -9,6 +9,7 @@ export {
   Hero,
   Cta,
   Carousel,
+  Embed,
   SectionsProvider,
   useSections,
 } from "sunroom/sections/client";
@@ -76,6 +77,23 @@ export const carouselSection = defineSection({
       }),
       { label: "Items" },
     ),
+  },
+});
+
+export const embedSection = defineSection({
+  label: "Embedded player",
+  component: Embed,
+  fields: {
+    provider: f.select({
+      label: "Provider",
+      options: [
+        { value: "spotify", label: "Spotify" },
+        { value: "youtube", label: "YouTube" },
+        { value: "soundcloud", label: "SoundCloud" },
+      ],
+    }),
+    url: f.link({ label: "Share URL" }),
+    title: f.text({ label: "Title" }),
   },
 });
 

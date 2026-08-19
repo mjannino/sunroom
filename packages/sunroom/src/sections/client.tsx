@@ -12,4 +12,5 @@ export { default as Gallery } from "./Gallery.js";
 export { default as Hero } from "./Hero.js";
 export { default as Cta } from "./Cta.js";
 export { default as Carousel } from "./Carousel.js";
+export { default as Embed } from "./Embed.js";
 export { SectionsProvider, useSections } from "./provider.js";

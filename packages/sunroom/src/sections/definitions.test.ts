@@ -10,6 +10,7 @@ import {
   creditsGridSection,
   discographySection,
   carouselSection,
+  embedSection,
 } from "./index.js";
 
 describe("section definitions", () => {
@@ -87,5 +88,23 @@ describe("section definitions", () => {
     };
     expect(items.type).toBe("array");
     expect(Object.keys(items.of.fields)).toEqual(["image", "name", "note"]);
+  });
+  it("embedSection has provider(select) + url + title", () => {
+    expect(embedSection.label).toBe("Embedded player");
+    expect(Object.keys(embedSection.fields)).toEqual([
+      "provider",
+      "url",
+      "title",
+    ]);
+    const provider = embedSection.fields.provider as {
+      type: string;
+      options: { value: string }[];
+    };
+    expect(provider.type).toBe("select");
+    expect(provider.options.map((o) => o.value)).toEqual([
+      "spotify",
+      "youtube",
+      "soundcloud",
+    ]);
   });
 });
