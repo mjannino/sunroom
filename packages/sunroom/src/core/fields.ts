@@ -11,6 +11,9 @@ export interface ImageValue {
   alt?: string;
 }
 
+/** Exported only so section descriptor .d.ts output can name it (fixes TS4023);
+ * not part of the public API — not re-exported via src/index.ts.
+ */
 export interface Base {
   label?: string;
   required?: boolean;
